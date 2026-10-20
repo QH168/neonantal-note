@@ -20,15 +20,23 @@ export default defineConfig({
         display: 'standalone',
         start_url: base,
         scope: base,
-        theme_color: '#0284c7',
-        background_color: '#ffffff',
+        theme_color: '#0B79B8',
+        background_color: '#F2F7FB',
         icons: [
           { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
           { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
         ]
       },
-      workbox: { globPatterns: ['**/*.{js,css,html,png,svg}'] }
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,png,svg}'],
+        // Lưu phông chữ Be Vietnam Pro để dùng khi không có mạng
+        runtimeCaching: [{
+          urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/,
+          handler: 'CacheFirst',
+          options: { cacheName: 'google-fonts', expiration: { maxEntries: 20, maxAgeSeconds: 31536000 }, cacheableResponse: { statuses: [0, 200] } }
+        }]
+      }
     })
   ]
 });

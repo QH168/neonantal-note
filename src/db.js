@@ -51,6 +51,7 @@ export async function addRow(table, fields) {
     id: uuid(),
     ...fields,
     deleted: false,
+    createdAt: Date.now(),
     updatedAt: Date.now(),
     deviceId: await getDeviceId()
   };

@@ -1,22 +1,27 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from '../db.js';
+import { db, requestPersistentStorage } from '../db.js';
 import {
   isIOS, hasFolderAccess, canShareFiles, prepareBackupFile, shareFile, downloadFile,
   chooseBackupFolder, getBackupFolder, saveToFolder, findLatestInFolder,
   importBackupFile, markExported
 } from '../lib/backup.js';
+import { SheetHead } from './ui.jsx';
 
 const fmt = (ts) => (ts ? new Date(ts).toLocaleString('vi-VN') : 'chưa có');
 
-export default function BackupPanel() {
+export default function BackupPanel({ onClose }) {
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
-  const [pendingFile, setPendingFile] = useState(null); // dùng khi iOS chặn lần chia sẻ đầu
+  const [pendingFile, setPendingFile] = useState(null); // khi iOS chặn lần chia sẻ đầu
+  const [persisted, setPersisted] = useState(null);
 
   const lastExport = useLiveQuery(() => db.meta.get('lastExport'))?.value;
   const lastImport = useLiveQuery(() => db.meta.get('lastImport'))?.value;
   const folder = useLiveQuery(() => db.meta.get('backupDir'))?.value;
+  const pcFolder = hasFolderAccess() && !isIOS();
+
+  useEffect(() => { requestPersistentStorage().then(setPersisted).catch(() => setPersisted(false)); }, []);
 
   const overdue = !lastExport || Date.now() - lastExport.at > 24 * 3600 * 1000;
   const run = async (fn) => {
@@ -26,11 +31,9 @@ export default function BackupPanel() {
     } finally { setBusy(false); }
   };
 
-  // ----- Xuất -----
   const handleExport = () => run(async () => {
     const file = await prepareBackupFile();
-
-    if (hasFolderAccess() && !isIOS()) {
+    if (pcFolder) {
       const dir = (await getBackupFolder()) || (await chooseBackupFolder());
       await saveToFolder(dir, file);
       await markExported(file.name);
@@ -60,54 +63,56 @@ export default function BackupPanel() {
     setMsg('Đã mở bảng Chia sẻ.');
   });
 
-  // ----- Nhập -----
+  const report = (file, r) => setMsg(`Đã nhập ${file.name}: thêm ${r.added}, cập nhật ${r.updated}, giữ nguyên ${r.skipped}.`);
   const handlePickFile = (e) => {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
-    run(async () => {
-      const r = await importBackupFile(file);
-      setMsg(`Đã nhập ${file.name}: thêm ${r.added}, cập nhật ${r.updated}, giữ nguyên ${r.skipped}.`);
-    });
+    run(async () => report(file, await importBackupFile(file)));
   };
-
   const handleImportLatest = () => run(async () => {
     const dir = await getBackupFolder();
     if (!dir) { setMsg('Chưa chọn thư mục OneDrive.'); return; }
     const file = await findLatestInFolder(dir, { excludeDevice: 'pc' });
     if (!file) { setMsg('Không thấy file sao lưu nào từ iPhone trong thư mục.'); return; }
-    const r = await importBackupFile(file);
-    setMsg(`Đã nhập ${file.name}: thêm ${r.added}, cập nhật ${r.updated}, giữ nguyên ${r.skipped}.`);
+    report(file, await importBackupFile(file));
   });
 
   return (
-    <section className="card">
-      <h2>Sao lưu &amp; OneDrive</h2>
-      <p className={overdue ? 'warn' : 'muted'}>
-        Lần xuất gần nhất: {fmt(lastExport?.at)}{overdue && ' — nên xuất bản sao lưu hôm nay'}
-      </p>
-      <p className="muted">Lần nhập gần nhất: {fmt(lastImport?.at)}{lastImport && ` (${lastImport.file})`}</p>
+    <>
+      <SheetHead title="Sao lưu & OneDrive" onClose={onClose} closeLabel="Đóng sao lưu" />
+      <div className="stack4">
+        <p className={'m0 small ' + (overdue ? 'warn' : 'muted')}>
+          Lần xuất gần nhất: {fmt(lastExport?.at)}{overdue && ' — nên xuất bản sao lưu hôm nay'}
+        </p>
+        <p className="m0 small muted">Lần nhập gần nhất: {fmt(lastImport?.at)}{lastImport && ` (${lastImport.file})`}</p>
+      </div>
 
-      <div className="row">
-        <button className="primary" disabled={busy} onClick={handleExport}>Xuất sao lưu</button>
-        <label className={`button ${busy ? 'disabled' : ''}`}>
+      <div className="row8 wrap">
+        <button type="button" className="btn primary" disabled={busy} onClick={handleExport}>Xuất sao lưu</button>
+        <label className={'btn' + (busy ? ' disabled' : '')}>
           Nhập từ file…
           <input type="file" accept=".json,application/json" hidden onChange={handlePickFile} disabled={busy} />
         </label>
       </div>
+      {pendingFile && <button type="button" className="btn primary" onClick={handleSharePending}>Chia sẻ file</button>}
 
-      {pendingFile && <button className="primary" onClick={handleSharePending}>Chia sẻ file</button>}
-
-      {hasFolderAccess() && !isIOS() && (
-        <div className="row">
-          <button disabled={busy} onClick={() => run(async () => {
+      {pcFolder && (
+        <div className="row8 wrap">
+          <button type="button" className="btn ghost" disabled={busy} onClick={() => run(async () => {
             const d = await chooseBackupFolder(); setMsg(`Đã chọn thư mục: ${d.name}`);
           })}>{folder ? `Thư mục: ${folder.name} (đổi)` : 'Chọn thư mục OneDrive'}</button>
-          {folder && <button disabled={busy} onClick={handleImportLatest}>Lấy bản mới nhất từ iPhone</button>}
+          {folder && <button type="button" className="btn ghost" disabled={busy} onClick={handleImportLatest}>Lấy bản mới nhất từ iPhone</button>}
         </div>
       )}
 
-      {msg && <p className="msg">{msg}</p>}
-    </section>
+      {msg && <p role="status" className="msg">{msg}</p>}
+
+      <div className="muted xsmall">
+        Dữ liệu nằm trong máy này{persisted ? ' và đã được trình duyệt giữ lâu dài' : ''}. Xuất sao lưu lên OneDrive mỗi ngày để
+        không mất khi đổi máy; nhập file ở máy kia để có cùng dữ liệu.
+        {persisted === false && isIOS() && ' Trên iPhone, luôn mở app bằng icon ở Màn hình chính.'}
+      </div>
+    </>
   );
 }
