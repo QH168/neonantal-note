@@ -60,7 +60,7 @@ export default function App() {
   const total = isTask ? dayTasks.length : patients.length;
   const done = isTask ? dayTasks.filter((t) => t.done).length : patients.filter((p) => p.done).length;
   const pct = total ? Math.round((done / total) * 100) : 0;
-  const heading = isTask ? (isToday ? 'Công việc hôm nay' : 'Công việc ngày ' + fmtDM(viewDate)) : 'Khám bệnh sáng nay';
+  const heading = isTask ? (isToday ? 'Việc hôm nay' : 'Việc ngày ' + fmtDM(viewDate)) : 'Khám bệnh hôm nay';
   const dateText = fmtLong(parseIso(isTask ? viewDate : today));
 
   const pickZone = (k) => { setActive(k); if (k !== 'all') setNewZone(k); };

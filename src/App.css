@@ -13,7 +13,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .loading{padding:40px;text-align:center;color:var(--muted)}
 
 /* chữ */
-.h1{margin:0;font-size:26px;font-weight:700;letter-spacing:-.01em}
+.h1{margin:0;font-size:26px;line-height:1.25;font-weight:700;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .h1-ph{font-size:22px}
 .h2{margin:0;font-size:18px;font-weight:700}
 .muted{color:var(--muted)}.warn{color:var(--warn)}
@@ -174,3 +174,50 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .phone-app .btn{min-height:44px}
 .grow-ph{flex:1}
 @media (min-width:900px){.grow-ph{flex:none}}
+
+/* ===== iPhone: thang chữ gọn (theo bản thiết kế "iPhone 15 – chữ gọn") =====
+   Ô nhập giữ 16px để Safari không tự phóng to khi chạm vào. */
+.phone-app{font-variant-numeric:tabular-nums}
+.phone-app .h1-ph{font-size:20px}
+.phone-app .ph-head .muted.small{font-size:12px}
+.phone-app .prog-text{font-size:13px}
+.phone-app .seg button{font-size:14px}
+.phone-app .badge{font-size:11px}
+.phone-app .chip{font-size:14px}
+.phone-app .chip .zone-count{font-size:12px}
+.phone-app .exam-hint{font-size:13px}
+.phone-app .group-title{font-size:15px}
+.phone-app .group-btn .small{font-size:12px}
+.phone-app .empty{font-size:14px}
+.phone-app .task-row{min-height:50px}
+.phone-app .task-text{font-size:15px;line-height:1.35;padding:6px 4px}
+.phone-app .pri{width:24px;height:24px;font-size:13px}
+.phone-app .pri-btn{font-size:15px}
+.phone-app .btn{font-size:14px}
+.phone-app .btn.primary,.phone-app .btn.big{font-size:15px}
+.phone-app .btn.ghost,.phone-app .btn.tint{font-size:13px}
+.phone-app .xsmall{font-size:12px}
+.phone-app .bold{font-size:14px}
+.phone-app .pat-row{min-height:54px}
+.phone-app .pat-open{min-height:50px}
+.phone-app .pat-code{font-size:15px}
+.phone-app .pat-main .small{font-size:12px}
+.phone-app .pat-todo{font-size:13px}
+.phone-app .pat-note{font-size:12px}
+.phone-app .left-badge{font-size:11px}
+.phone-app .add-dashed{font-size:14px}
+.phone-app .status{font-size:13px}
+/* ô tick nhỏ còn 80%, vùng chạm giữ nguyên */
+.phone-app .chk .box{width:21px;height:21px;border-radius:6px}
+.phone-app .chk .box svg{width:13px;height:13px}
+.phone-app .chk.small .box{width:19px;height:19px;border-radius:5px}
+.phone-app .chk.small .box svg{width:11px;height:11px}
+/* bảng trượt lên (chi tiết bé, tổng hợp, lịch, sao lưu) */
+.phone-app .sheet .h2{font-size:17px}
+.phone-app .sheet .field .muted.small{font-size:12px}
+.phone-app .sheet .todo-text{font-size:15px}
+.phone-app .calc-box{font-size:14px}
+.phone-app .err-box{font-size:13px}
+.phone-app .cal-title{font-size:15px}
+.phone-app .cal-wd{font-size:11px}
+.phone-app .msg{font-size:13px}

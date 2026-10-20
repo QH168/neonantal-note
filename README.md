@@ -5,7 +5,7 @@ Dữ liệu lưu **trong từng máy** (IndexedDB), sao lưu và chuyển giữa
 Không có máy chủ nào giữ dữ liệu bệnh nhân. Chỉ dùng mã/số giường, không ghi họ tên.
 
 ## Tính năng
-- **Việc:** thêm việc theo khu (NICU, CT, KAN, PS-PM, BM) với mức khẩn cấp 1–4; đánh dấu xong; chạm số để đổi mức;
+- **Việc:** thêm việc theo khu (NICU, CT, KAN, PS-PM, BM, DV) với mức khẩn cấp 1–4; đánh dấu xong; chạm số để đổi mức;
   lọc theo khu; thu gọn từng khu; lịch tháng (số việc chưa xong mỗi ngày); "Xoá việc đã xong"; dòng nhắc "Khám: còn x việc".
 - **Khám:** phòng tự đặt tên; thêm bé theo phòng; hồ sơ nhanh (ngày sinh ddmm, tuổi thai 346 = 34w6d, cân nặng, ghi chú);
   việc cần làm của từng bé; đánh dấu đã khám; **Tính tuần tuổi** (ngày tuổi, tuổi thai hiệu chỉnh, số ngày đến 40w);
