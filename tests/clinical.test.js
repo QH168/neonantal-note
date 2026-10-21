@@ -17,14 +17,14 @@ test('tính ngày tuổi và tuổi thai hiệu chỉnh', () => {
   const r = calcAge({ dob: '0810', ga: '346' }, NOW);
   assert.equal(r.days, '12 ngày');
   assert.equal(r.pma, '36w4d');
-  assert.equal(r.to40, 'Còn 24 ngày đến 40w');
+  assert.equal(r.to40, undefined); // không còn hiện "còn bao nhiêu ngày đến 40w"
 });
 
 test('ngày sinh "tương lai" được hiểu là năm trước; ngày sai báo lỗi', () => {
   const r = calcAge({ dob: '2512', ga: '280' }, NOW); // 25/12/2025
   assert.equal(r.days, '299 ngày');
   assert.ok(calcAge({ dob: '3102', ga: '346' }, NOW).err);
-  assert.ok(calcAge({ dob: '0810', ga: '34' }, NOW).err);
+  assert.ok(calcAge({ dob: '0810', ga: '4' }, NOW).err);
 });
 
 test('tổng hợp y lệnh', () => {
@@ -44,4 +44,40 @@ test('tổng hợp y lệnh', () => {
 test('cộng ngày qua tháng', () => {
   assert.equal(addDays('2026-11-01', -1), '2026-10-31');
   assert.equal(isoOf(new Date(2026, 0, 5)), '2026-01-05');
+});
+
+test('nhập tuổi thai theo nhiều cách', () => {
+  for (const s of ['346', '34w6d', '34w6', '34+6', '34 6', '34.6', '34,6', '34/6', '3406', '34 tuần 6 ngày', ' 346 ']) {
+    assert.deepEqual(parseGa(s), { w: 34, d: 6, days: 244 }, s);
+  }
+  assert.deepEqual(parseGa('34'), { w: 34, d: 0, days: 238 });
+  assert.equal(parseGa('347'), null);
+  assert.equal(parseGa('196'), null);
+  assert.equal(parseGa(''), null);
+});
+
+test('nhập ngày sinh theo nhiều cách', () => {
+  for (const s of ['0810', '08/10', '8/10', '8-10', '8.10', '08/10/2026', '081026', '08102026']) {
+    const r = calcAge({ dob: s, ga: '346' }, NOW);
+    assert.equal(r.days, '12 ngày', s);
+  }
+  assert.match(calcAge({ dob: '', ga: '346' }, NOW).err, /Chưa nhập ngày sinh/);
+  assert.match(calcAge({ dob: '0810', ga: '' }, NOW).err, /Chưa nhập tuổi thai/);
+  assert.match(calcAge({ dob: '0810', ga: '34x' }, NOW).err, /Chưa đọc được tuổi thai "34x"/);
+  assert.match(calcAge({ dob: '01/12/2026', ga: '346' }, NOW).err, /sau ngày hôm nay/);
+});
+
+test('6 ví dụ đã thống nhất (tính ngày 21/10/2026)', () => {
+  const now = new Date(2026, 9, 21);
+  const cases = [
+    ['0508', '25', '77 ngày', '36w0d'],
+    ['2110', '346', '0 ngày', '34w6d'],
+    ['1410', '286', '7 ngày', '29w6d'],
+    ['0109', '240', '50 ngày', '31w1d'],
+    ['2009', '320', '31 ngày', '36w3d'],
+    ['0410', '390', '17 ngày', '41w3d']
+  ];
+  for (const [dob, ga, days, pma] of cases) {
+    assert.deepEqual(calcAge({ dob, ga }, now), { days, pma }, dob + ' ' + ga);
+  }
 });

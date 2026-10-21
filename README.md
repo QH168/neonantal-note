@@ -8,7 +8,7 @@ Không có máy chủ nào giữ dữ liệu bệnh nhân. Chỉ dùng mã/số 
 - **Việc:** thêm việc theo khu (NICU, CT, KAN, PS-PM, BM, DV) với mức khẩn cấp 1–4; đánh dấu xong; chạm số để đổi mức;
   lọc theo khu; thu gọn từng khu; lịch tháng (số việc chưa xong mỗi ngày); "Xoá việc đã xong"; dòng nhắc "Khám: còn x việc".
 - **Khám:** phòng tự đặt tên; thêm bé theo phòng; hồ sơ nhanh (ngày sinh ddmm, tuổi thai 346 = 34w6d, cân nặng, ghi chú);
-  việc cần làm của từng bé; đánh dấu đã khám; **Tính tuần tuổi** (ngày tuổi, tuổi thai hiệu chỉnh, số ngày đến 40w);
+  việc cần làm của từng bé; đánh dấu đã khám; **Tính tuần tuổi** (ngày tuổi, tuổi thai hiệu chỉnh dạng 36w3d);
   **Lấy danh sách hôm qua** (hoặc ngày khám gần nhất); **Tổng hợp y lệnh** sửa được và sao chép.
 - **Sao lưu (biểu tượng đám mây):** xuất file lên OneDrive, nhập file từ máy kia; chấm đỏ nhắc khi quá 24 giờ chưa sao lưu.
 - Giao diện sáng/tối; iPhone dùng bảng trượt lên, PC dùng khung bên phải.

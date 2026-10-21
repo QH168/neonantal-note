@@ -192,7 +192,7 @@ export function PatientDetail({ p, todos, onClose }) {
       <SheetHead title={f.code || 'Bệnh nhân mới'} onClose={() => { flush(); onClose(); }} closeLabel="Đóng chi tiết" />
       <div className="grid2">
         {field('code', 'Mã / giường', { full: true })}
-        {field('dob', 'Ngày sinh (ddmm)', { num: true, ph: '0510' })}
+        {field('dob', 'Ngày sinh (ngày tháng)', { num: true, ph: '0810' })}
         {field('ga', 'Tuổi thai lúc sinh', { num: true, ph: '346 = 34w6d' })}
         {field('wt', 'Cân nặng (g)', { num: true, ph: '1850', full: true })}
       </div>
@@ -201,7 +201,6 @@ export function PatientDetail({ p, todos, onClose }) {
         <div className="calc-box">
           <span>Ngày tuổi: <strong>{calc.days}</strong></span>
           <span>Tuổi thai hiệu chỉnh: <strong>{calc.pma}</strong></span>
-          <span>{calc.to40}</span>
         </div>
       )}
       {calc?.err && <div className="err-box">{calc.err}</div>}
