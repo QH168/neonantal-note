@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { ZONES } from '../db.js';
 import { addTask, toggleTask, cycleUrgency, removeTask } from '../lib/actions.js';
 import { isoOf, parseIso } from '../lib/dates.js';
-import { CheckBtn, PriDot, PRI_NAME, Chevron, XIcon } from './ui.jsx';
+import { CheckBtn, PriDot, PRI_NAME, PRI_LEVELS, priLabel, Chevron, XIcon } from './ui.jsx';
 
 const byPri = (a, b) => (a.done ? 1 : 0) - (b.done ? 1 : 0) || a.urgency - b.urgency || (a.createdAt || 0) - (b.createdAt || 0);
 
@@ -32,7 +32,7 @@ function TaskRow({ t, chips }) {
         label={(t.done ? 'Bỏ đánh dấu hoàn thành: ' : 'Đánh dấu hoàn thành: ') + t.text} />
       <span className={'task-text' + (t.done ? ' done' : '')}>{t.text}</span>
       <button type="button" className="icon-btn" onClick={() => cycleUrgency(t)}
-        aria-label={`Độ khẩn cấp ${t.urgency} (${PRI_NAME[t.urgency]}), bấm để đổi`}>
+        aria-label={`Mức ưu tiên ${t.urgency} (${PRI_NAME[t.urgency]}), bấm để đổi`}>
         <PriDot n={t.urgency} faded={t.done} />
       </button>
       <button type="button" className="icon-btn muted" aria-label="Xoá việc" onClick={() => removeTask(t.id)}><XIcon /></button>
@@ -76,9 +76,9 @@ export function TaskForm({ variant, date, zone, setZone, pri, setPri }) {
   };
   const priBtns = (
     <div className="pri-pick">
-      {[1, 2, 3, 4].map((n) => (
-        <button key={n} type="button" aria-label={`Độ khẩn cấp ${n} (${PRI_NAME[n]})`} aria-pressed={pri === n} onClick={() => setPri(n)}
-          className="pri-btn" style={{ borderColor: `var(--p${n}e)`, ...(pri === n ? { background: `var(--p${n})`, color: `var(--p${n}i)` } : {}) }}>{n}</button>
+      {PRI_LEVELS.map((n) => (
+        <button key={n} type="button" aria-label={`Mức ưu tiên ${n} (${PRI_NAME[n]})`} aria-pressed={pri === n} onClick={() => setPri(n)}
+          className={'pri-btn' + (n === 5 ? ' wide' : '')} style={{ borderColor: `var(--p${n}e)`, ...(pri === n ? { background: `var(--p${n})`, color: `var(--p${n}i)` } : {}) }}>{priLabel(n)}</button>
       ))}
     </div>
   );
@@ -103,7 +103,7 @@ export function TaskForm({ variant, date, zone, setZone, pri, setPri }) {
         {input}
         <div className="task-form-bar">
           {zoneSel}
-          <div className="row8"><span className="muted small">Khẩn cấp</span>{priBtns}</div>
+          <div className="row8"><span className="muted small">Ưu tiên</span>{priBtns}</div>
           <span className="grow" />
           <button type="submit" className="btn primary">Thêm việc</button>
         </div>

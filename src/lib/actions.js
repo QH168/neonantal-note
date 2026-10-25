@@ -20,7 +20,8 @@ async function doSeed() {
 // ---------- Mục Việc ----------
 export const addTask = (t) => addRow('tasks', { ...t, done: false });
 export const toggleTask = (t) => updateRow('tasks', t.id, { done: !t.done });
-export const cycleUrgency = (t) => updateRow('tasks', t.id, { urgency: (t.urgency % 4) + 1 });
+// Chạm vào số để đổi mức: 1→2→3→4→5 (chị NV)→1
+export const cycleUrgency = (t) => updateRow('tasks', t.id, { urgency: (t.urgency % 5) + 1 });
 export const removeTask = (id) => softDelete('tasks', id);
 export async function clearDone(date) {
   const done = await db.tasks.where('date').equals(date).filter((t) => alive(t) && t.done).toArray();

@@ -1,6 +1,6 @@
 /* Màu sắc theo prototype: xanh da trời, sáng/tối */
-.th{color-scheme:light;--bg:#F2F7FB;--surface:#FFFFFF;--surface2:#EAF1F7;--line:#D6E2EC;--edge:#B4C6D6;--ink:#12202B;--muted:#4A5D6E;--box:#6B7F91;--done:#5A6E7F;--track:#DDE8F1;--accent:#0B79B8;--accentInk:#FFFFFF;--tint:#DCEFFB;--tint2:#E6F2FB;--tintInk:#075985;--badge:#12202B;--badgeInk:#FFFFFF;--errBg:#FBEAE8;--errInk:#8E1B13;--warn:#9A5B00;--shadow:rgba(18,32,43,.18);--overlay:rgba(18,32,43,.45);--p1:#C62828;--p1i:#FFFFFF;--p1e:#C62828;--p2:#F2B90F;--p2i:#12202B;--p2e:#A67800;--p3:#2E7D32;--p3i:#FFFFFF;--p3e:#2E7D32;--p4:#1A3FA6;--p4i:#FFFFFF;--p4e:#1A3FA6}
-.th.dark{color-scheme:dark;--bg:#0E151C;--surface:#17212B;--surface2:#1F2C38;--line:#2A3948;--edge:#3B4E60;--ink:#E8EFF5;--muted:#9FB1C1;--box:#7F93A5;--done:#8DA0B2;--track:#263747;--accent:#5BB8EE;--accentInk:#06202F;--tint:#123248;--tint2:#14304A;--tintInk:#9AD3F5;--badge:#E8EFF5;--badgeInk:#0E151C;--errBg:#3A1B18;--errInk:#FFB4AB;--warn:#F5C26B;--shadow:rgba(0,0,0,.5);--overlay:rgba(0,0,0,.6);--p1:#EF5350;--p1i:#1A0A0A;--p1e:#EF5350;--p2:#F2B90F;--p2i:#12202B;--p2e:#F2B90F;--p3:#4CAF50;--p3i:#0B1F0C;--p3e:#4CAF50;--p4:#7C93FF;--p4i:#0A1240;--p4e:#7C93FF}
+.th{color-scheme:light;--bg:#F2F7FB;--surface:#FFFFFF;--surface2:#EAF1F7;--line:#D6E2EC;--edge:#B4C6D6;--ink:#12202B;--muted:#4A5D6E;--box:#6B7F91;--done:#5A6E7F;--track:#DDE8F1;--accent:#0B79B8;--accentInk:#FFFFFF;--tint:#DCEFFB;--tint2:#E6F2FB;--tintInk:#075985;--badge:#12202B;--badgeInk:#FFFFFF;--errBg:#FBEAE8;--errInk:#8E1B13;--warn:#9A5B00;--shadow:rgba(18,32,43,.18);--overlay:rgba(18,32,43,.45);--p1:#C62828;--p1i:#FFFFFF;--p1e:#C62828;--p2:#F2B90F;--p2i:#12202B;--p2e:#A67800;--p3:#2E7D32;--p3i:#FFFFFF;--p3e:#2E7D32;--p4:#1A3FA6;--p4i:#FFFFFF;--p4e:#1A3FA6;--p5:#7B3FA0;--p5i:#FFFFFF;--p5e:#7B3FA0}
+.th.dark{color-scheme:dark;--bg:#0E151C;--surface:#17212B;--surface2:#1F2C38;--line:#2A3948;--edge:#3B4E60;--ink:#E8EFF5;--muted:#9FB1C1;--box:#7F93A5;--done:#8DA0B2;--track:#263747;--accent:#5BB8EE;--accentInk:#06202F;--tint:#123248;--tint2:#14304A;--tintInk:#9AD3F5;--badge:#E8EFF5;--badgeInk:#0E151C;--errBg:#3A1B18;--errInk:#FFB4AB;--warn:#F5C26B;--shadow:rgba(0,0,0,.5);--overlay:rgba(0,0,0,.6);--p1:#EF5350;--p1i:#1A0A0A;--p1e:#EF5350;--p2:#F2B90F;--p2i:#12202B;--p2e:#F2B90F;--p3:#4CAF50;--p3i:#0B1F0C;--p3e:#4CAF50;--p4:#7C93FF;--p4i:#0A1240;--p4e:#7C93FF;--p5:#C9A0E8;--p5i:#22102F;--p5e:#C9A0E8}
 
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg,#F2F7FB);color:var(--ink);font-family:'Be Vietnam Pro',system-ui,-apple-system,sans-serif;-webkit-text-size-adjust:100%}
@@ -221,3 +221,12 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .phone-app .cal-title{font-size:15px}
 .phone-app .cal-wd{font-size:11px}
 .phone-app .msg{font-size:13px}
+
+/* Mức ưu tiên 5 "chị NV": dạng viên thuốc vì chữ dài hơn số */
+.pri.wide{width:auto;padding:0 8px;border-radius:12px;font-size:12px;white-space:nowrap}
+.pri-btn.wide{width:auto;padding:0 10px;border-radius:22px;font-size:13px;white-space:nowrap}
+.phone-app .pri.wide{font-size:11px;padding:0 7px}
+.phone-app .pri-btn.wide{font-size:12px;padding:0 8px}
+/* iPhone: 5 nút ưu tiên + "Thêm việc" vừa một hàng */
+.phone-app .task-form-ph .pri-pick{gap:4px}
+.phone-app .task-form-ph .btn.primary{white-space:nowrap;padding:0 10px}
