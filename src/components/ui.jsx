@@ -35,14 +35,14 @@ export function CheckBtn({ done, label, onClick, small }) {
   );
 }
 
-export const PRI_NAME = { 1: 'đỏ', 2: 'vàng', 3: 'xanh lá', 4: 'xanh dương', 5: 'chị NV' };
+export const PRI_NAME = { 1: 'đỏ', 2: 'vàng', 3: 'xanh lá', 4: 'xanh dương', 5: 'NV' };
 export const PRI_LEVELS = [1, 2, 3, 4, 5];
-/** Chữ hiện trên nút/huy hiệu: số 1–4, riêng mức 5 ghi "chị NV". */
-export const priLabel = (n) => (n === 5 ? 'chị NV' : String(n));
+/** Chữ hiện trên nút/huy hiệu: số 1–4, riêng mức 5 ghi "NV". */
+export const priLabel = (n) => (n === 5 ? 'NV' : String(n));
 
 /** Vòng tròn số mức khẩn cấp. */
 export function PriDot({ n, faded }) {
-  return <span className={'pri' + (n === 5 ? ' wide' : '')} style={{ background: `var(--p${n})`, color: `var(--p${n}i)`, opacity: faded ? 0.45 : 1 }}>{priLabel(n)}</span>;
+  return <span className={'pri' + (n === 5 ? ' nv' : '')} style={{ background: `var(--p${n})`, color: `var(--p${n}i)`, opacity: faded ? 0.45 : 1 }}>{priLabel(n)}</span>;
 }
 
 /** Bảng trượt lên (iPhone) / hộp giữa màn hình (PC). */

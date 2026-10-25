@@ -78,7 +78,7 @@ export function TaskForm({ variant, date, zone, setZone, pri, setPri }) {
     <div className="pri-pick">
       {PRI_LEVELS.map((n) => (
         <button key={n} type="button" aria-label={`Mức ưu tiên ${n} (${PRI_NAME[n]})`} aria-pressed={pri === n} onClick={() => setPri(n)}
-          className={'pri-btn' + (n === 5 ? ' wide' : '')} style={{ borderColor: `var(--p${n}e)`, ...(pri === n ? { background: `var(--p${n})`, color: `var(--p${n}i)` } : {}) }}>{priLabel(n)}</button>
+          className={'pri-btn' + (n === 5 ? ' nv' : '')} style={{ borderColor: `var(--p${n}e)`, ...(pri === n ? { background: `var(--p${n})`, color: `var(--p${n}i)` } : {}) }}>{priLabel(n)}</button>
       ))}
     </div>
   );

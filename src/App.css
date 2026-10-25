@@ -222,11 +222,11 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .phone-app .cal-wd{font-size:11px}
 .phone-app .msg{font-size:13px}
 
-/* Mức ưu tiên 5 "chị NV": dạng viên thuốc vì chữ dài hơn số */
-.pri.wide{width:auto;padding:0 8px;border-radius:12px;font-size:12px;white-space:nowrap}
-.pri-btn.wide{width:auto;padding:0 10px;border-radius:22px;font-size:13px;white-space:nowrap}
-.phone-app .pri.wide{font-size:11px;padding:0 7px}
-.phone-app .pri-btn.wide{font-size:12px;padding:0 8px}
+/* Mức ưu tiên 5 "NV": vẫn là hình tròn như số 1–4, chữ nhỏ hơn một chút để vừa 2 ký tự */
+.pri.nv{font-size:11px;letter-spacing:-.02em}
+.pri-btn.nv{font-size:14px;letter-spacing:-.02em}
+.phone-app .pri.nv{font-size:10px}
+.phone-app .pri-btn.nv{font-size:13px}
 /* iPhone: 5 nút ưu tiên + "Thêm việc" vừa một hàng */
 .phone-app .task-form-ph .pri-pick{gap:4px}
 .phone-app .task-form-ph .btn.primary{white-space:nowrap;padding:0 10px}
