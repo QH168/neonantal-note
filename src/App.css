@@ -1,6 +1,6 @@
 /* Màu sắc theo prototype: xanh da trời, sáng/tối */
-.th{color-scheme:light;--bg:#F2F7FB;--surface:#FFFFFF;--surface2:#EAF1F7;--line:#D6E2EC;--edge:#B4C6D6;--ink:#12202B;--muted:#4A5D6E;--box:#6B7F91;--done:#5A6E7F;--track:#DDE8F1;--accent:#0B79B8;--accentInk:#FFFFFF;--tint:#DCEFFB;--tint2:#E6F2FB;--tintInk:#075985;--badge:#12202B;--badgeInk:#FFFFFF;--errBg:#FBEAE8;--errInk:#8E1B13;--warn:#9A5B00;--shadow:rgba(18,32,43,.18);--overlay:rgba(18,32,43,.45);--p1:#C62828;--p1i:#FFFFFF;--p1e:#C62828;--p2:#F2B90F;--p2i:#12202B;--p2e:#A67800;--p3:#2E7D32;--p3i:#FFFFFF;--p3e:#2E7D32;--p4:#1A3FA6;--p4i:#FFFFFF;--p4e:#1A3FA6;--p5:#7B3FA0;--p5i:#FFFFFF;--p5e:#7B3FA0}
-.th.dark{color-scheme:dark;--bg:#0E151C;--surface:#17212B;--surface2:#1F2C38;--line:#2A3948;--edge:#3B4E60;--ink:#E8EFF5;--muted:#9FB1C1;--box:#7F93A5;--done:#8DA0B2;--track:#263747;--accent:#5BB8EE;--accentInk:#06202F;--tint:#123248;--tint2:#14304A;--tintInk:#9AD3F5;--badge:#E8EFF5;--badgeInk:#0E151C;--errBg:#3A1B18;--errInk:#FFB4AB;--warn:#F5C26B;--shadow:rgba(0,0,0,.5);--overlay:rgba(0,0,0,.6);--p1:#EF5350;--p1i:#1A0A0A;--p1e:#EF5350;--p2:#F2B90F;--p2i:#12202B;--p2e:#F2B90F;--p3:#4CAF50;--p3i:#0B1F0C;--p3e:#4CAF50;--p4:#7C93FF;--p4i:#0A1240;--p4e:#7C93FF;--p5:#C9A0E8;--p5i:#22102F;--p5e:#C9A0E8}
+.th{color-scheme:light;--bg:#F2F7FB;--surface:#FFFFFF;--surface2:#EAF1F7;--line:#D6E2EC;--edge:#B4C6D6;--ink:#12202B;--muted:#4A5D6E;--box:#6B7F91;--done:#5A6E7F;--track:#DDE8F1;--accent:#0B79B8;--accentInk:#FFFFFF;--tint:#DCEFFB;--tint2:#E6F2FB;--tintInk:#075985;--badge:#12202B;--badgeInk:#FFFFFF;--errBg:#FBEAE8;--errInk:#8E1B13;--warn:#9A5B00;--shadow:rgba(18,32,43,.18);--overlay:rgba(18,32,43,.45);--p1:#C62828;--p1i:#FFFFFF;--p1e:#C62828;--p2:#F2B90F;--p2i:#12202B;--p2e:#A67800;--p3:#2E7D32;--p3i:#FFFFFF;--p3e:#2E7D32;--p4:#1A3FA6;--p4i:#FFFFFF;--p4e:#1A3FA6;--p5:#7B3FA0;--p5i:#FFFFFF;--p5e:#7B3FA0;--vtAct:#9AD3F5}
+.th.dark{color-scheme:dark;--bg:#0E151C;--surface:#17212B;--surface2:#1F2C38;--line:#2A3948;--edge:#3B4E60;--ink:#E8EFF5;--muted:#9FB1C1;--box:#7F93A5;--done:#8DA0B2;--track:#263747;--accent:#5BB8EE;--accentInk:#06202F;--tint:#123248;--tint2:#14304A;--tintInk:#9AD3F5;--badge:#E8EFF5;--badgeInk:#0E151C;--errBg:#3A1B18;--errInk:#FFB4AB;--warn:#F5C26B;--shadow:rgba(0,0,0,.5);--overlay:rgba(0,0,0,.6);--p1:#EF5350;--p1i:#1A0A0A;--p1e:#EF5350;--p2:#F2B90F;--p2i:#12202B;--p2e:#F2B90F;--p3:#4CAF50;--p3i:#0B1F0C;--p3e:#4CAF50;--p4:#7C93FF;--p4i:#0A1240;--p4e:#7C93FF;--p5:#C9A0E8;--p5i:#22102F;--p5e:#C9A0E8;--vtAct:#0B79B8}
 
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg,#F2F7FB);color:var(--ink);font-family:'Be Vietnam Pro',system-ui,-apple-system,sans-serif;-webkit-text-size-adjust:100%}
@@ -272,3 +272,37 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   .swipe-del-t{display:none}
   .swipe:hover .swipe-del{opacity:1}
 }
+
+/* ===== v8 đợt 2: viết tắt ===== */
+/* nút "/a" trên đầu (cạnh đám mây) */
+.vt-btn{color:var(--accent);font-size:15px;font-weight:700;letter-spacing:-.02em}
+/* iPhone: 4 nút trên đầu — thu khoảng cách giữa các nút để tiêu đề vẫn một dòng, vùng chạm giữ 44px */
+.phone-app .ph-head .row8.none{gap:4px}
+/* dải gợi ý + thông báo "Đã thay" đặt ngay cạnh ô gõ */
+.vt-strip{display:flex;flex-direction:column;gap:6px}
+.vt-sug{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px;border-radius:12px;background:var(--surface);border:1px solid var(--line)}
+.vt-sug-t{width:100%;font-size:12px;color:var(--muted)}
+.vt-chip{max-width:100%;min-height:44px;padding:0 14px;border-radius:22px;border:1px solid var(--edge);background:var(--surface);color:var(--ink);font-size:14px;display:flex;align-items:center;overflow:hidden;white-space:nowrap}
+.vt-chip:first-of-type{border:2px solid var(--accent);background:var(--tint);color:var(--tintInk)}
+.vt-chip-k{flex:none;font-weight:700}
+.vt-chip-v{margin-left:6px;min-width:0;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+.vt-toast{display:flex;align-items:center;gap:8px;min-height:52px;padding:4px 8px 4px 12px;border-radius:12px;background:var(--badge);color:var(--badgeInk);font-size:13px}
+.vt-undo{flex:none;min-width:44px;min-height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--vtAct);background:transparent;color:var(--vtAct);font-size:13px;font-weight:600}
+/* thư viện viết tắt */
+.sheet.vt-sheet{height:90%}
+.sheet-wrap.center .sheet.vt-sheet{height:min(720px,100%)}
+.vt-form{display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:14px;background:var(--tint2)}
+.vt-key{flex:none;width:104px}
+.vt-in{background:var(--surface)}
+.vt-ask{display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-radius:12px;background:var(--surface);border:2px solid var(--warn);font-size:14px;line-height:1.4}
+.vt-list{flex:1;min-height:120px;overflow-y:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:14px;display:flex;flex-direction:column}
+.vt-item-wrap{border-bottom:1px solid var(--line)}
+.vt-item-wrap:last-child{border-bottom:0}
+.vt-item-wrap.on{background:var(--tint)}
+.vt-item-wrap .swipe{border-radius:0}
+.vt-item{display:flex;align-items:center;gap:8px;min-height:50px;padding-left:12px;background:var(--surface)}
+.vt-item-wrap.on .vt-item{background:var(--tint)}
+.vt-k{flex:none;width:70px;font-size:14px;font-weight:700;color:var(--tintInk);overflow-wrap:anywhere}
+.vt-v{flex:1;min-width:0;font-size:14px;line-height:1.35;overflow-wrap:anywhere}
+.vt-empty{padding:24px 16px}
+@media (hover:hover) and (pointer:fine){.vt-key{width:140px}}

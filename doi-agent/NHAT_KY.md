@@ -8,6 +8,22 @@
 |---|---|---|---|---|
 | 1 | Cuộn dọc danh sách bằng ngón tay khi có SwipeRow chưa kiểm được bằng máy (Chromium headless) — bác sĩ thử trên iPhone. | Lưu ý | Bác sĩ thử vuốt dọc/trái trên iPhone; nếu vướng thì giao phiếu chỉnh. | Giao diện |
 | 2 | Ảnh chuẩn `doi-agent/anh-chuan/` chưa cập nhật cho v8. | Lưu ý | Cập nhật sau khi bác sĩ xem giao diện v8 trên máy thật. | Kiểm thử |
+| 3 | Ô thêm việc một dòng: gõ "/ctm" rồi Enter thì gửi luôn, không thay chữ (phiếu chỉ yêu cầu dấu cách). | Lưu ý | Hỏi bác sĩ có muốn Enter cũng thay chữ trước khi gửi không. | Giao diện |
+| 4 | Bản tối: hộp thông báo "Đã thay" nền sáng, đọc rõ nhưng sáng hơn phần còn lại. | Lưu ý | Bác sĩ xem trên máy thật; nếu chói thì chỉnh màu `--vtAct` và nền hộp. | Giao diện |
+| 5 | PC: ô lịch tháng 39×48px (có từ trước, không phải do v8.1). | Lưu ý | Phóng to ô nếu bác sĩ dùng chuột/chạm trên PC. | Giao diện |
+| 6 | Thiết kế có dòng chữ "MỚI" dưới nút "/a" nhưng chưa làm vì đè thanh tiến độ. | Lưu ý | Hỏi bác sĩ có cần dòng "MỚI" không; nếu cần thì chọn chỗ đặt khác. | Giao diện |
+
+## 29/10/2026 — v8.1 — Đợt 2: viết tắt
+- Phiếu: `doi-agent/phieu-viec/2026-10-28-v8-dot2-viet-tat.json` (bác sĩ duyệt bản thiết kế v8 ngày 28/10/2026).
+- Đã đổi (lời thường):
+  1. Gõ "/chữ tắt" rồi dấu cách ở mọi ô gõ chữ (thêm việc, ghi chú việc, việc của bé, ghi chú của bé, khung Tổng hợp y lệnh) → tự thay bằng nội dung; không phân biệt hoa/thường; "8/10", "1/2", "x/kmdm" không đổi.
+  2. Gõ "/km" hiện tối đa 4 gợi ý, chạm để chèn; sau khi thay có "Đã thay /key" và nút Hoàn tác khoảng 4 giây.
+  3. Nút "/a" trên đầu mở "Thư viện viết tắt": thêm (trùng thì hỏi ghi đè), sửa bằng bút chì, tìm (gõ không dấu cũng ra), vuốt trái để xoá.
+  4. 13 mục mẫu tự thêm một lần; mục đã xoá không quay lại. Thư viện được sao lưu cùng dữ liệu.
+  - Kỹ thuật: bảng mới `abbrevs` qua `db.version(2)` (version(1) không đổi), có trong `DATA_TABLES`; `BACKUP_VERSION` giữ 1 (bảng tuỳ chọn: file cũ nhập được, app cũ nhập file mới được); file mới `src/lib/viet-tat.js`, `src/components/VietTat.jsx`, `src/components/ThuVien.jsx`; thẻ mới `doi-agent/the-tinh-nang/viet-tat.md`.
+- Kết quả kiểm: Kiểm thử độc lập ĐẠT; npm test 73/73; dựng thử thành công (`npm run build` thật chạy trên GitHub Actions); vùng chạm ≥44px, ô nhập 16px, tiêu đề một dòng cả 2 tab; nâng cấp CSDL tại chỗ (bản đợt 1 → bản mới, cùng hồ sơ trình duyệt): dữ liệu cũ giống hệt từng byte, 13 mục mẫu, mở lại không nhân đôi, mục đã xoá không quay lại; sao lưu xuất/nhập qua giao diện đạt, nhập file kiểu cũ không lỗi; thay chữ đạt ở cả 5 loại ô; hồi quy đợt 1 và Khám đạt; tính tay 2 ca tuổi khớp.
+- Quan sát: ghi vào Chờ duyệt mục 3–6 (mức Lưu ý).
+- Ảnh chuẩn chưa cập nhật (xem Chờ duyệt mục 2).
 
 ## 28/10/2026 — v8.0 — Đợt 1: nhãn loại việc, khu mới, ghi chú, vuốt xoá
 - Phiếu: `doi-agent/phieu-viec/2026-10-28-v8-dot1-viec.json` (bác sĩ duyệt bản thiết kế v8 ngày 28/10/2026).

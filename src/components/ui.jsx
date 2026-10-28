@@ -16,6 +16,9 @@ export const CalIcon = () => (
 export const CloudIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" strokeWidth="1.7" {...S}><path d="M6 15.5H5.2a3.2 3.2 0 0 1-.4-6.4A4.8 4.8 0 0 1 14.2 8a3.8 3.8 0 0 1 .8 7.5H14" /><path d="M10 17V10.5M7.6 12.8 10 10.4l2.4 2.4" /></svg>
 );
+export const PencilIcon = ({ size = 17 }) => (
+  <svg width={size} height={size} viewBox="0 0 18 18" strokeWidth="1.6" {...S}><path d="M11.5 3.5l3 3-8 8H3.5v-3z" /></svg>
+);
 export const Chevron = ({ dir = 'right', size = 16, style }) => {
   const d = { right: 'M6 3.5l4.5 4.5L6 12.5', down: 'M4 6l4 4 4-4', left: 'M10 3.5L5.5 8l4.5 4.5' }[dir];
   return <svg width={size} height={size} viewBox="0 0 16 16" strokeWidth="2" style={style} {...S}><path d={d} /></svg>;
@@ -65,7 +68,7 @@ let dangMo = null;    // hàm đóng của dòng đang mở: chỉ một dòng m
  * Chuột (PC): rê vào dòng thì hiện nút thùng rác ở cuối dòng. Nút luôn có trong thứ tự Tab.
  * `label` là tên việc (để đọc "Xoá việc: <tên>"). `className` áp cho phần thân dòng.
  */
-export function SwipeRow({ label, onDelete, className = '', children }) {
+export function SwipeRow({ label, onDelete, className = '', kind = 'việc', children }) {
   const ref = useRef(null);
   const st = useRef(null);
   const vuaVuot = useRef(false);
@@ -116,7 +119,7 @@ export function SwipeRow({ label, onDelete, className = '', children }) {
 
   return (
     <div ref={ref} className={'swipe' + (open || drag !== null ? ' reveal' : '')}>
-      <button type="button" className="swipe-del" aria-label={'Xoá việc: ' + label} onClick={() => { setOpen(false); onDelete(); }}>
+      <button type="button" className="swipe-del" aria-label={`Xoá ${kind}: ${label}`} onClick={() => { setOpen(false); onDelete(); }}>
         <TrashIcon /><span className="swipe-del-t">Xoá</span>
       </button>
       <div className={'swipe-body ' + className + (drag !== null ? ' drag' : '')}
@@ -129,7 +132,7 @@ export function SwipeRow({ label, onDelete, className = '', children }) {
 }
 
 /** Bảng trượt lên (iPhone) / hộp giữa màn hình (PC). */
-export function Sheet({ label, onClose, children, wide }) {
+export function Sheet({ label, onClose, children, wide, className = '' }) {
   useEffect(() => {
     const k = (e) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', k);
@@ -140,7 +143,7 @@ export function Sheet({ label, onClose, children, wide }) {
   return (
     <div className={'sheet-wrap' + (wide ? ' center' : '')}>
       <button type="button" className="sheet-backdrop" aria-label={'Đóng ' + label.toLowerCase()} onClick={onClose} />
-      <section className="sheet" role="dialog" aria-modal="true" aria-label={label}>
+      <section className={'sheet' + (className ? ' ' + className : '')} role="dialog" aria-modal="true" aria-label={label}>
         {children}
       </section>
     </div>

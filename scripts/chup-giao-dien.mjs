@@ -89,7 +89,7 @@ const seed = async (page) => page.evaluate(async () => {
 });
 
 // ---------- đo ----------
-const VUNG_CHAM = ['.chk', '.icon-btn', '.pri-btn', '.tag-zone', '.swipe-del', '.round-btn', '.seg button', '.pill-btn', '.chip'];
+const VUNG_CHAM = ['.chk', '.icon-btn', '.pri-btn', '.tag-zone', '.swipe-del', '.round-btn', '.seg button', '.pill-btn', '.chip', '.vt-chip', '.vt-undo'];
 const measure = (page) => page.evaluate((sels) => {
   const vis = (e) => { const r = e.getBoundingClientRect(); const s = getComputedStyle(e); return r.width > 0 && r.height > 0 && s.visibility !== 'hidden'; };
   const name = (e) => (e.getAttribute('aria-label') || e.textContent || e.className).trim().slice(0, 40);
@@ -151,6 +151,129 @@ const sangToi = async (page) => {
   const b = page.getByRole('button', { name: /Chuyển sang giao diện/ });
   await b.click();
 };
+
+
+// ---------- thử viết tắt (v8 đợt 2) ----------
+const TIEU_DE_MOT_DONG = async (page, T, ten) => {
+  const r = await page.evaluate(() => { const h = document.querySelector('h1'); return { sw: h.scrollWidth, cw: h.clientWidth, t: h.textContent }; });
+  T['tieuDe_' + ten] = r.t + ' (' + r.sw + '/' + r.cw + ')';
+  if (r.sw > r.cw) ketQua.loi.push(`Tiêu đề "${r.t}" bị cắt (${r.sw} > ${r.cw}) ở ${ten}`);
+};
+// gõ thật từng phím vào ô thêm việc (ph hoặc pc); không bấm "Thêm việc"
+async function thuGoNhanh(page, T, tien, chamBangTay) {
+  const o = page.getByLabel('Nội dung công việc');
+  const xoa = async () => { await o.fill(''); await page.waitForTimeout(100); };
+  await o.click();
+  await xoa();
+  await page.keyboard.type('Xem lại /kmdm ');
+  T.thayKmdm = await o.inputValue();
+  if (T.thayKmdm !== 'Xem lại Khí máu động mạch ') ketQua.loi.push('Viết tắt: "Xem lại /kmdm " thành "' + T.thayKmdm + '"');
+  await page.keyboard.type('xong');
+  T.conTroDung = await o.inputValue();
+  if (T.conTroDung !== 'Xem lại Khí máu động mạch xong') ketQua.loi.push('Viết tắt: con trỏ sai chỗ sau khi thay — "' + T.conTroDung + '"');
+  await xoa();
+  await page.keyboard.type('Xem lại /kmdm ');
+  T.thongBaoThay = (await page.locator('.vt-toast').first().textContent()) || '';
+  if (!/Đã thay \/kmdm/.test(T.thongBaoThay)) ketQua.loi.push('Viết tắt: thiếu thông báo "Đã thay /kmdm"');
+  await chup(page, tien + '-viet-tat-hoan-tac', true);
+  await page.getByRole('button', { name: 'Hoàn tác', exact: true }).click();
+  T.sauHoanTac = await o.inputValue();
+  if (T.sauHoanTac !== 'Xem lại /kmdm ') ketQua.loi.push('Viết tắt: Hoàn tác ra "' + T.sauHoanTac + '"');
+  T.toastSauHoanTac = await page.locator('.vt-toast').count();
+  if (T.toastSauHoanTac) ketQua.loi.push('Viết tắt: thông báo vẫn còn sau Hoàn tác');
+  await xoa();
+  await page.keyboard.type('Xem lại 8/10 ');
+  T.tamPhan = await o.inputValue();
+  if (T.tamPhan !== 'Xem lại 8/10 ') ketQua.loi.push('Viết tắt: "8/10 " bị đổi thành "' + T.tamPhan + '"');
+  await xoa();
+  await page.keyboard.type('Xem /kmxx ');
+  T.khongCo = await o.inputValue();
+  if (T.khongCo !== 'Xem /kmxx ') ketQua.loi.push('Viết tắt: key không có trong thư viện bị đổi: ' + T.khongCo);
+  // gợi ý
+  await xoa();
+  await page.keyboard.type('Xem lại /km');
+  T.soGoiY = await page.locator('.vt-chip').count();
+  if (T.soGoiY < 2) ketQua.loi.push('Viết tắt: gõ "/km" mà thấy ' + T.soGoiY + ' gợi ý (mong đợi >= 2)');
+  await chup(page, tien + '-goi-y', true);
+  const chip = page.locator('.vt-chip', { hasText: '/kmtm' });
+  if (chamBangTay) await chip.tap(); else await chip.click();
+  await page.waitForTimeout(150);
+  T.sauChamGoiY = await o.inputValue();
+  if (T.sauChamGoiY !== 'Xem lại Khí máu tĩnh mạch ') ketQua.loi.push('Viết tắt: chạm gợi ý /kmtm ra "' + T.sauChamGoiY + '"');
+  T.giuFocus = await page.evaluate(() => document.activeElement?.id || document.activeElement?.tagName);
+  if (!/draft/.test(T.giuFocus)) ketQua.loi.push('Viết tắt: chạm gợi ý làm mất focus của ô (' + T.giuFocus + ')');
+  await page.getByRole('button', { name: 'Hoàn tác', exact: true }).click();
+  T.hoanTacGoiY = await o.inputValue();
+  if (T.hoanTacGoiY !== 'Xem lại /km ') ketQua.loi.push('Viết tắt: Hoàn tác gợi ý ra "' + T.hoanTacGoiY + '"');
+  await xoa();
+  await o.blur();
+}
+// mở thư viện bằng nút "/a", thử thêm / trùng / tìm / sửa / xoá
+async function thuThuVien(page, T, tien, cdp) {
+  await page.getByRole('button', { name: 'Thư viện viết tắt', exact: true }).click();
+  const hop = page.getByRole('dialog', { name: 'Thư viện viết tắt' });
+  await hop.waitFor();
+  await hop.locator('.vt-item-wrap').first().waitFor();
+  const dem = () => hop.locator('.vt-item-wrap').count();
+  T.thuVienMau = await dem();
+  if (T.thuVienMau !== 13) ketQua.loi.push('Thư viện: có ' + T.thuVienMau + ' mục mẫu (mong đợi 13)');
+  await chup(page, tien + '-thu-vien', true);
+  // thiếu chữ
+  await hop.getByRole('button', { name: 'Thêm vào thư viện' }).click();
+  T.baoLoiThieu = (await hop.getByRole('alert').first().textContent()) || '';
+  if (!/Chưa gõ/.test(T.baoLoiThieu)) ketQua.loi.push('Thư viện: bỏ trống mà không báo lỗi');
+  await hop.getByLabel('Viết tắt', { exact: true }).fill('/hcn');
+  await hop.getByRole('button', { name: 'Thêm vào thư viện' }).click();
+  if (!/Chưa gõ chữ cần đổi/.test((await hop.getByRole('alert').first().textContent()) || '')) ketQua.loi.push('Thư viện: thiếu "Đổi thành" mà không báo lỗi');
+  await hop.getByLabel('Đổi thành').fill('Hội chẩn ngoại khoa');
+  await hop.getByRole('button', { name: 'Thêm vào thư viện' }).click();
+  await page.waitForTimeout(300);
+  T.sauKhiThem = await dem();
+  if (T.sauKhiThem !== 14) ketQua.loi.push('Thư viện: thêm /hcn mà danh sách có ' + T.sauKhiThem + ' mục');
+  if (!(await hop.locator('.vt-k', { hasText: '/hcn' }).count())) ketQua.loi.push('Thư viện: không thấy /hcn trong danh sách');
+  // trùng key → hỏi ghi đè
+  await hop.getByLabel('Viết tắt', { exact: true }).fill('HCN');
+  await hop.getByLabel('Đổi thành').fill('Hội chẩn ngoại');
+  await hop.getByRole('button', { name: 'Thêm vào thư viện' }).click();
+  await page.waitForTimeout(200);
+  T.hoiGhiDe = (await hop.locator('.vt-ask').textContent()) || '';
+  if (!/Ghi đè/.test(T.hoiGhiDe)) ketQua.loi.push('Thư viện: key trùng mà không hỏi ghi đè');
+  await chup(page, tien + '-thu-vien-ghi-de', true);
+  await hop.getByRole('button', { name: 'Ghi đè', exact: true }).click();
+  await page.waitForTimeout(300);
+  T.sauGhiDe = (await hop.locator('.vt-item-wrap', { hasText: '/hcn' }).textContent()) || '';
+  if (!/Hội chẩn ngoại(?! khoa)/.test(T.sauGhiDe) || (await dem()) !== 14) ketQua.loi.push('Thư viện: ghi đè không đúng — ' + T.sauGhiDe);
+  // tìm
+  await hop.getByRole('searchbox').fill('hoi chan');
+  T.timKhongDau = await dem();
+  if (T.timKhongDau !== 1) ketQua.loi.push('Thư viện: tìm "hoi chan" ra ' + T.timKhongDau + ' mục (mong đợi 1)');
+  await hop.getByRole('searchbox').fill('');
+  // sửa bằng bút chì
+  await hop.getByRole('button', { name: 'Sửa /hcn' }).click();
+  await hop.getByLabel('Đổi thành').fill('Hội chẩn ngoại khoa nhi');
+  await hop.getByRole('button', { name: 'Lưu thay đổi' }).click();
+  await page.waitForTimeout(300);
+  T.sauSua = (await hop.locator('.vt-item-wrap', { hasText: '/hcn' }).textContent()) || '';
+  if (!/ngoại khoa nhi/.test(T.sauSua)) ketQua.loi.push('Thư viện: sửa không lưu — ' + T.sauSua);
+  // xoá
+  const dong = hop.locator('.vt-item-wrap', { hasText: '/hcn' });
+  if (cdp) {
+    const c = await tamDiem(dong.locator('.vt-v'));
+    await vuotNgang(cdp, c.b.x + c.b.width - 6, c.b.x + c.b.width - 150, c.y);
+    await page.waitForTimeout(300);
+    await chup(page, tien + '-thu-vien-vuot', true);
+  } else {
+    await dong.hover();
+    await page.waitForTimeout(250);
+    await chup(page, tien + '-thu-vien-re-chuot', true);
+  }
+  await dong.getByRole('button', { name: 'Xoá viết tắt: /hcn' }).click();
+  await page.waitForTimeout(300);
+  T.sauXoa = await dem();
+  if (T.sauXoa !== 13) ketQua.loi.push('Thư viện: xoá /hcn mà còn ' + T.sauXoa + ' mục');
+  await hop.getByRole('button', { name: 'Đóng thư viện', exact: true }).click();
+  await page.waitForTimeout(250);
+}
 
 // iPhone 15
 {
@@ -261,7 +384,32 @@ const sangToi = async (page) => {
     await cdp.detach();
   }
 
+  {
+    const T = ketQua.thuChucNang.vietTatIphone = {};
+    await TIEU_DE_MOT_DONG(page, T, 'viec');
+    await thuGoNhanh(page, T, 'iphone', true);
+    const cdp = await ctx.newCDPSession(page);
+    await thuThuVien(page, T, 'iphone', cdp);
+    await cdp.detach();
+    // khung ghi chú của việc
+    const dg = page.locator('.swipe', { hasText: 'Gọi người nhà giường 12' }).locator('.task-main');
+    await dg.scrollIntoViewIfNeeded();
+    const cg = await tamDiem(dg);
+    await page.touchscreen.tap(cg.x, cg.y);
+    await page.touchscreen.tap(cg.x, cg.y);
+    const ta = page.locator('#ghichu-viec');
+    await ta.waitFor();
+    await ta.click();
+    await page.keyboard.type('Gửi /cay ');
+    T.ghiChuViec = await ta.inputValue();
+    if (T.ghiChuViec !== 'Gửi Cấy máu ') ketQua.loi.push('Viết tắt: khung ghi chú việc ra "' + T.ghiChuViec + '"');
+    await page.waitForTimeout(600);
+    await page.getByRole('button', { name: 'Xong', exact: true }).click();
+    await page.waitForTimeout(250);
+  }
+
   await page.getByRole('button', { name: 'Khám', exact: true }).click();
+  await TIEU_DE_MOT_DONG(page, ketQua.thuChucNang.vietTatIphone, 'kham');
   await chup(page, 'iphone-kham-truoc-khi-lay', true);
 
   const lay = page.getByRole('button', { name: /Lấy danh sách/ });
@@ -304,6 +452,30 @@ const sangToi = async (page) => {
     await chup(page, 'iphone-chi-tiet-vuot', true);
     await cdp.detach();
   }
+  {
+    const T = ketQua.thuChucNang.vietTatKham = {};
+    const gc = page.locator('#ghichu-be');
+    await gc.click();
+    await page.keyboard.press('End');
+    await page.keyboard.type(' Làm /ctm ');
+    T.ghiChuBe = await gc.inputValue();
+    if (!/Làm Công thức máu $/.test(T.ghiChuBe)) ketQua.loi.push('Viết tắt: ô Ghi chú của bé ra "' + T.ghiChuBe + '"');
+    await page.waitForTimeout(700); // tự lưu 0,4 giây
+    const luu = await page.evaluate(async () => {
+      const db = await new Promise((res) => { const r = indexedDB.open('ghichu-sosinh'); r.onsuccess = () => res(r.result); });
+      const all = await new Promise((res) => { const r = db.transaction('exam_patients').objectStore('exam_patients').getAll(); r.onsuccess = () => res(r.result); });
+      db.close();
+      return all.filter((p) => p.code === 'G01' && p.examDate === '2026-10-21').map((p) => p.note);
+    });
+    T.daLuuGhiChuBe = luu.join(' | ');
+    if (!luu.some((n) => /Công thức máu/.test(n))) ketQua.loi.push('Viết tắt: ghi chú của bé đã thay chữ nhưng chưa tự lưu');
+    const td = page.getByPlaceholder('Thêm việc cần làm…');
+    await td.click();
+    await page.keyboard.type('Đo /bil ');
+    T.viecCuaBe = await td.inputValue();
+    if (T.viecCuaBe !== 'Đo Bilirubin toàn phần, trực tiếp ') ketQua.loi.push('Viết tắt: ô thêm việc của bé ra "' + T.viecCuaBe + '"');
+    await td.fill('');
+  }
   await page.getByRole('button', { name: 'Đóng chi tiết', exact: true }).click();
 
   await page.getByRole('button', { name: 'Tổng hợp', exact: true }).click();
@@ -311,12 +483,35 @@ const sangToi = async (page) => {
   ketQua.thuChucNang.tongHop = tongHop.split('\n').slice(0, 6).join(' | ');
   if (!/Tiếp tục y lệnh cũ/.test(tongHop)) ketQua.loi.push('Tổng hợp y lệnh thiếu "Tiếp tục y lệnh cũ" cho bé không có việc mới');
   await chup(page, 'iphone-tong-hop', true);
+  {
+    const ta = page.locator('textarea.mono');
+    await ta.click();
+    await page.keyboard.press('Control+End');
+    await page.keyboard.type('\nThêm /dgd ');
+    const t2 = await ta.inputValue();
+    ketQua.thuChucNang.vietTatTongHop = t2.split('\n').slice(-1)[0];
+    if (!/Thêm Điện giải đồ $/.test(t2)) ketQua.loi.push('Viết tắt: khung Tổng hợp ra "' + ketQua.thuChucNang.vietTatTongHop + '"');
+  }
   await page.getByRole('button', { name: 'Đóng tổng hợp', exact: true }).click();
 
   await sangToi(page);
   await chup(page, 'iphone-kham-toi', false);
   await page.getByRole('button', { name: 'Việc', exact: true }).click();
   await chup(page, 'iphone-viec-toi', true);
+  {
+    const o = page.getByLabel('Nội dung công việc');
+    await o.click();
+    await page.keyboard.type('Xem lại /km');
+    await chup(page, 'iphone-goi-y-toi', true);
+    await page.keyboard.type('dm ');
+    await chup(page, 'iphone-viet-tat-hoan-tac-toi', true);
+    await o.fill('');
+    await o.blur();
+    await page.getByRole('button', { name: 'Thư viện viết tắt', exact: true }).click();
+    await page.getByRole('dialog', { name: 'Thư viện viết tắt' }).waitFor();
+    await chup(page, 'iphone-thu-vien-toi', true);
+    await page.getByRole('button', { name: 'Đóng thư viện', exact: true }).click();
+  }
   await ctx.close();
 }
 
@@ -340,6 +535,11 @@ const sangToi = async (page) => {
     await chup(page, 'pc-ghi-chu', false);
     await page.keyboard.press('Escape');
     await page.waitForTimeout(200);
+  }
+  {
+    const T = ketQua.thuChucNang.vietTatPc = {};
+    await thuGoNhanh(page, T, 'pc', false);
+    await thuThuVien(page, T, 'pc', null);
   }
   await page.getByRole('button', { name: 'Khám', exact: true }).click();
   await page.getByRole('button', { name: /Lấy danh sách/ }).click();

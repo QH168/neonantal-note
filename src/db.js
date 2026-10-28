@@ -13,9 +13,14 @@ db.version(1).stores({
   meta: 'key'                                                  // cài đặt: deviceId, thư mục sao lưu...
 });
 
-// Khi thêm bảng/cột tìm kiếm sau này: thêm db.version(2).stores({...}) bên dưới, KHÔNG sửa version(1).
+// Khi thêm bảng/cột tìm kiếm sau này: thêm db.version(N).stores({...}) bên dưới, KHÔNG sửa version(1).
 
-export const DATA_TABLES = ['tasks', 'rooms', 'exam_patients', 'patient_todos'];
+// Bác sĩ duyệt 28/10/2026 (v8 đợt 2): bảng viết tắt. Chỉ khai báo bảng mới; Dexie giữ nguyên các bảng và dữ liệu cũ.
+db.version(2).stores({
+  abbrevs: 'id, key, updatedAt'                                // thư viện viết tắt: key (chữ thường, không có '/'), text
+});
+
+export const DATA_TABLES = ['tasks', 'rooms', 'exam_patients', 'patient_todos', 'abbrevs'];
 export const ZONES = ['NICU', 'CT', 'KAN', 'PS-PM', 'Ngoại Trú', 'DV', 'HP', 'HS'];
 // Khu cũ: chỉ hiện (chip + nhóm) khi còn việc chưa xoá mang khu này; không có trong ô chọn khu khi thêm việc.
 export const LEGACY_ZONES = ['BM'];

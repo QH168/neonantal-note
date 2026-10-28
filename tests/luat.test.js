@@ -36,6 +36,15 @@ test('luật 2: không đổi tên cơ sở dữ liệu và khối db.version(1)
     'khối db.version(1) đã bị sửa — hãy thêm db.version(2) thay vì sửa version(1)');
 });
 
+test('luật 2b: có db.version(2) chứa abbrevs và DATA_TABLES có abbrevs', () => {
+  // bác sĩ duyệt 28/10/2026 (v8 đợt 2 — viết tắt)
+  const db = read('src/db.js');
+  const v2 = /db\.version\(2\)\.stores\(\{([\s\S]*?)\}\);/.exec(db);
+  assert.ok(v2, 'không tìm thấy khối db.version(2)');
+  assert.match(v2[1], /abbrevs:\s*'id, key, updatedAt'/);
+  assert.match(db, /DATA_TABLES = \[[^\]]*'abbrevs'[^\]]*\]/);
+});
+
 test('luật 3: ô nhập trên iPhone ≥16px (Safari không tự phóng to)', () => {
   const css = read('src/App.css').replace(/\/\*[\s\S]*?\*\//g, '');
   const oNhap = /(^|[\s,>.])(input|select|textarea)\b|\.(input|select|bare-input|textarea|mono)\b/;

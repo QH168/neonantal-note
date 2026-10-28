@@ -4,6 +4,7 @@ import { ZONES, LEGACY_ZONES } from '../db.js';
 import { addTask, toggleTask, cycleUrgency, removeTask, setTaskTags, setTaskNote } from '../lib/actions.js';
 import { isoOf, parseIso } from '../lib/dates.js';
 import { TAGS, TAG_COLOR, laViecMoi, batTatNhan, sapViec, khuHienThi, boDemCham, themCham } from '../lib/viec.js';
+import { useVietTat } from './VietTat.jsx';
 import { CheckBtn, PriDot, PRI_NAME, Chevron, XIcon, SwipeRow, TagDot, Sheet, SheetHead } from './ui.jsx';
 
 /** Thanh khu vực: dạng cột (PC) hoặc chip vuốt ngang (iPhone). */
@@ -59,23 +60,24 @@ function NoteSheet({ t, wide, onClose }) {
     if (pending.current !== null) { const x = pending.current; pending.current = null; setTaskNote(t.id, x); }
   };
   useEffect(() => () => flush(), []); // lưu nốt khi đóng
-  const change = (e) => {
-    const x = e.target.value;
+  const change = (x) => {
     setV(x);
     pending.current = x;
     clearTimeout(timer.current);
     timer.current = setTimeout(flush, 400);
   };
+  const vt = useVietTat(v, change, { onBlur: flush });
   const close = () => { flush(); onClose(); };
   const clear = () => { setV(''); pending.current = ''; flush(); };
   return (
     <Sheet label="Ghi chú" onClose={close} wide={wide}>
       <SheetHead title="Ghi chú" onClose={close} closeLabel="Đóng ghi chú" />
       <div className="muted small">Cho việc: <strong className="ink">{t.text}</strong></div>
-      <label className="field">
-        <span className="sr-only">Nội dung ghi chú</span>
-        <textarea rows={5} className="input textarea" value={v} onChange={change} onBlur={flush} autoFocus />
-      </label>
+      <div className="field">
+        <label htmlFor="ghichu-viec" className="sr-only">Nội dung ghi chú</label>
+        {vt.strip}
+        <textarea id="ghichu-viec" rows={5} className="input textarea" {...vt.props} autoFocus />
+      </div>
       <div className="muted xsmall">Tự lưu khi gõ. Ghi chú hiện chữ nhỏ dưới tên việc.</div>
       <div className="row8">
         <button type="button" className="btn danger-outline grow" disabled={!v} onClick={clear}>Xoá ghi chú</button>
@@ -158,6 +160,7 @@ export function TaskGroups({ dayTasks, active, collapsed, onToggle, chips }) {
 /** Form thêm việc. variant 'pc' = khung trên đầu; 'ph' = thanh dưới cùng iPhone. */
 export function TaskForm({ variant, date, zone, setZone, tags, setTags }) {
   const [draft, setDraft] = useState('');
+  const vt = useVietTat(draft, setDraft);
   const submit = async (e) => {
     e.preventDefault();
     const text = draft.trim();
@@ -188,13 +191,14 @@ export function TaskForm({ variant, date, zone, setZone, tags, setTags }) {
   const input = (
     <>
       <label htmlFor={variant + '-draft'} className="sr-only">Nội dung công việc</label>
-      <input id={variant + '-draft'} type="text" value={draft} onChange={(e) => setDraft(e.target.value)}
+      <input id={variant + '-draft'} type="text" {...vt.props}
         placeholder="Ghi chú việc cần làm…" autoComplete="off" className={variant === 'pc' ? 'bare-input' : 'input grow'} />
     </>
   );
   if (variant === 'pc') {
     return (
       <form onSubmit={submit} className="card task-form-pc">
+        {vt.strip}
         {input}
         <div className="task-form-bar">
           {zoneSel}
@@ -207,6 +211,7 @@ export function TaskForm({ variant, date, zone, setZone, tags, setTags }) {
   }
   return (
     <form onSubmit={submit} className="task-form-ph">
+      {vt.strip}
       <div className="row8">{input}{zoneSel}</div>
       <div className="muted xsmall">Nhãn (chọn được nhiều):</div>
       <div className="row8">{tagBtns}<button type="submit" className="btn primary grow">Thêm việc</button></div>

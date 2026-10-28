@@ -6,6 +6,8 @@ import { ZONES } from './db.js';
 import { fmtLong, fmtDM, parseIso } from './lib/dates.js';
 import { ZoneNav, TaskGroups, TaskForm, Calendar, monthOf } from './components/Tasks.jsx';
 import { ExamActions, RoomManager, RoomList, PatientDetail, SummaryPanel } from './components/Exam.jsx';
+import ThuVien from './components/ThuVien.jsx';
+import { VietTatProvider } from './components/VietTat.jsx';
 import BackupPanel from './components/BackupPanel.jsx';
 import { Sheet, Sun, Moon, CalIcon, CloudIcon, Chevron } from './components/ui.jsx';
 
@@ -18,6 +20,10 @@ function readTheme() {
 }
 
 export default function App() {
+  return <VietTatProvider><AppChinh /></VietTatProvider>;
+}
+
+function AppChinh() {
   const today = useToday();
   const wide = useWide();
   const data = useAppData(today);
@@ -37,6 +43,7 @@ export default function App() {
   const [selPid, setSelPid] = useState(null);
   const [sumOpen, setSumOpen] = useState(false);
   const [backupOpen, setBackupOpen] = useState(false);
+  const [vtOpen, setVtOpen] = useState(false);
 
   useEffect(() => { ensureSeed(); }, []);
   useEffect(() => {
@@ -83,6 +90,10 @@ export default function App() {
       <CloudIcon />{backupDue && <span className="dot-alert" />}
     </button>
   );
+  const vtBtn = (
+    <button type="button" className="round-btn vt-btn" onClick={() => setVtOpen(true)} aria-label="Thư viện viết tắt">/a</button>
+  );
+  const vtSheet = vtOpen && <ThuVien wide={wide} onClose={() => setVtOpen(false)} />;
   const tabs = (
     <div className={'seg' + (wide ? '' : ' full')}>
       <button type="button" aria-pressed={isTask} onClick={() => setTab('task')}>Việc</button>
@@ -106,7 +117,7 @@ export default function App() {
       <div className="pc">
         <div className="pc-top">
           {tabs}
-          <div className="row8">{backupBtn}{themeBtn}</div>
+          <div className="row8">{vtBtn}{backupBtn}{themeBtn}</div>
         </div>
 
         <aside className="pc-side">
@@ -161,6 +172,7 @@ export default function App() {
           </>
         )}
         {backupSheet}
+        {vtSheet}
       </div>
     );
   }
@@ -175,6 +187,7 @@ export default function App() {
             <h1 className="h1 h1-ph">{heading}</h1>
           </div>
           <div className="row8 none">
+            {vtBtn}
             {backupBtn}
             {themeBtn}
             {isTask && (
@@ -230,6 +243,7 @@ export default function App() {
         </Sheet>
       )}
       {backupSheet}
+      {vtSheet}
     </div>
   );
 }

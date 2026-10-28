@@ -6,6 +6,7 @@ import {
 } from '../lib/actions.js';
 import { calcAge, gaFmt, copyText } from '../lib/clinical.js';
 import { addDays, fmtDM } from '../lib/dates.js';
+import { useVietTat } from './VietTat.jsx';
 import { CheckBtn, Chevron, XIcon, SheetHead, SwipeRow } from './ui.jsx';
 
 /** Nút "Lấy danh sách hôm qua" + "Quản lý phòng". */
@@ -159,14 +160,16 @@ export function PatientDetail({ p, todos, onClose }) {
     if (Object.keys(ch).length) updatePatient(p.id, ch);
   };
   useEffect(() => () => flush(), []); // lưu nốt khi đóng
-  const set = (k) => (e) => {
-    const v = e.target.value;
+  const setField = (k, v) => {
     setF((x) => ({ ...x, [k]: v }));
     pending.current[k] = v;
     if (k === 'dob' || k === 'ga') setCalc(null);
     clearTimeout(timer.current);
     timer.current = setTimeout(flush, 400);
   };
+  const set = (k) => (e) => setField(k, e.target.value);
+  const vtNote = useVietTat(f.note, (x) => setField('note', x), { onBlur: flush });
+  const vtTodo = useVietTat(todoDraft, setTodoDraft);
   const submitTodo = async (e) => {
     e.preventDefault();
     const text = todoDraft.trim();
@@ -214,19 +217,21 @@ export function PatientDetail({ p, todos, onClose }) {
             <span className={'todo-text' + (t.done ? ' done' : '')}>{t.text}</span>
           </SwipeRow>
         ))}
+        {vtTodo.strip}
         <form onSubmit={submitTodo} className="row8">
           <label className="grow row0">
             <span className="sr-only">Việc cần làm mới</span>
-            <input type="text" className="input grow" value={todoDraft} onChange={(e) => setTodoDraft(e.target.value)} placeholder="Thêm việc cần làm…" autoComplete="off" />
+            <input type="text" className="input grow" {...vtTodo.props} placeholder="Thêm việc cần làm…" autoComplete="off" />
           </label>
           <button type="submit" className="btn primary">Thêm</button>
         </form>
       </div>
 
-      <label className="field">
-        <span className="bold">Ghi chú</span>
-        <textarea rows={3} className="input textarea" value={f.note} onChange={set('note')} onBlur={flush} />
-      </label>
+      <div className="field">
+        <label htmlFor="ghichu-be" className="bold">Ghi chú</label>
+        {vtNote.strip}
+        <textarea id="ghichu-be" rows={3} className="input textarea" {...vtNote.props} />
+      </div>
 
       <div className="stack8">
         <button type="button" aria-pressed={p.done} onClick={() => updatePatient(p.id, { done: !p.done })}
@@ -243,6 +248,7 @@ export function PatientDetail({ p, todos, onClose }) {
 export function SummaryPanel({ build, onClose }) {
   const [text, setText] = useState(build);
   const [msg, setMsg] = useState('');
+  const vt = useVietTat(text, (x) => { setText(x); setMsg(''); });
   const copy = async () => {
     const ok = await copyText(text);
     setMsg(ok ? 'Đã sao chép' : 'Chưa sao chép được, hãy chọn hết nội dung trong khung rồi sao chép.');
@@ -250,10 +256,11 @@ export function SummaryPanel({ build, onClose }) {
   return (
     <>
       <SheetHead title="Tổng hợp y lệnh" onClose={onClose} closeLabel="Đóng tổng hợp" />
-      <label className="field">
-        <span className="sr-only">Nội dung tổng hợp, có thể sửa trước khi sao chép</span>
-        <textarea rows={14} className="input textarea mono" value={text} onChange={(e) => { setText(e.target.value); setMsg(''); }} />
-      </label>
+      <div className="field">
+        <label htmlFor="tonghop-noidung" className="sr-only">Nội dung tổng hợp, có thể sửa trước khi sao chép</label>
+        {vt.strip}
+        <textarea id="tonghop-noidung" rows={14} className="input textarea mono" {...vt.props} />
+      </div>
       <div className="row8 wrap">
         <button type="button" className="btn primary grow-ph" onClick={copy}>Sao chép</button>
         <button type="button" className="btn ghost" onClick={() => { setText(build()); setMsg(''); }}>Soạn lại từ danh sách</button>

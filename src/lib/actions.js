@@ -1,6 +1,7 @@
 // Mọi thao tác ghi dữ liệu của app. Luôn đi qua addRow/updateRow/softDelete để có updatedAt.
 import { chuanHoaTags } from './viec.js';
 import { sapBe, orderTiepTheo } from './thu-tu.js';
+import { chuanKey, BO_MAU } from './viet-tat.js';
 import { db, addRow, updateRow, softDelete, getDeviceId, getMeta, setMeta } from '../db.js';
 
 const alive = (r) => !r.deleted;
@@ -11,12 +12,30 @@ export function ensureSeed() {
   return (seeding ||= doSeed()); // chỉ chạy một lần dù được gọi nhiều lần
 }
 async function doSeed() {
-  if (await getMeta('seeded')) return;
-  const n = await db.rooms.filter(alive).count();
-  if (n === 0) {
-    for (let i = 1; i <= 3; i++) await addRow('rooms', { name: 'Phòng ' + i, order: i });
+  if (!(await getMeta('seeded'))) {
+    const n = await db.rooms.filter(alive).count();
+    if (n === 0) {
+      for (let i = 1; i <= 3; i++) await addRow('rooms', { name: 'Phòng ' + i, order: i });
+    }
+    await setMeta('seeded', true);
   }
-  await setMeta('seeded', true);
+  await seedAbbrevs();
+}
+
+// Gieo bộ viết tắt mẫu đúng MỘT LẦN (meta 'abbrevSeeded'). id cố định 'mau-<key>' nên hai máy cùng gieo
+// rồi gộp sao lưu vẫn ra một dòng; mục đã có (còn hoặc đã xoá) theo key thì không gieo lại, nên mục
+// bác sĩ đã xoá không quay lại và dữ liệu nhập từ sao lưu không bị nhân đôi.
+export async function seedAbbrevs() {
+  if (await getMeta('abbrevSeeded')) return;
+  await getDeviceId();
+  await db.transaction('rw', db.abbrevs, db.meta, async () => {
+    const have = new Set((await db.abbrevs.toArray()).map((r) => r.key));
+    for (const m of BO_MAU) {
+      if (have.has(m.key)) continue;
+      await addRow('abbrevs', { id: 'mau-' + m.key, key: m.key, text: m.text });
+    }
+    await setMeta('abbrevSeeded', true);
+  });
 }
 
 // ---------- Mục Việc ----------
@@ -105,3 +124,37 @@ export async function copyPatientsFrom(srcDate, today) {
   });
   return added;
 }
+
+// ---------- Viết tắt ----------
+// addAbbrev trả về:
+//   { ok: true, row }                  đã thêm
+//   { loi: 'key-rong' | 'noidung-rong' }  thiếu chữ
+//   { trung: true, muc }               key đã có (muc = dòng đang có) → giao diện hỏi ghi đè,
+//                                      đồng ý thì gọi updateAbbrev(muc.id, { text })
+const mucSongTheoKey = (key) => db.abbrevs.where('key').equals(key).filter(alive).first();
+export async function addAbbrev(key, text) {
+  const k = chuanKey(key);
+  const t = String(text ?? '').trim();
+  if (!k) return { loi: 'key-rong' };
+  if (!t) return { loi: 'noidung-rong' };
+  const muc = await mucSongTheoKey(k);
+  if (muc) return { trung: true, muc };
+  return { ok: true, row: await addRow('abbrevs', { key: k, text: t }) };
+}
+// changes có thể gồm key và/hoặc text. Đổi key sang key của mục khác → { trung: true, muc }.
+export async function updateAbbrev(id, changes) {
+  const c = { ...changes };
+  if ('key' in c) {
+    c.key = chuanKey(c.key);
+    if (!c.key) return { loi: 'key-rong' };
+    const muc = await mucSongTheoKey(c.key);
+    if (muc && muc.id !== id) return { trung: true, muc };
+  }
+  if ('text' in c) {
+    c.text = String(c.text ?? '').trim();
+    if (!c.text) return { loi: 'noidung-rong' };
+  }
+  await updateRow('abbrevs', id, c);
+  return { ok: true };
+}
+export const removeAbbrev = (id) => softDelete('abbrevs', id);

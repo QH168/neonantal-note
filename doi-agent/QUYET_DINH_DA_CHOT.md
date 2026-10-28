@@ -5,7 +5,7 @@
 
 ## Chung
 - ⚙ Chỉ dùng mã/số giường, không có ô họ tên bệnh nhân.
-- ⚙ Tên cơ sở dữ liệu `ghichu-sosinh`; không sửa `db.version(1)`.
+- ⚙ Tên cơ sở dữ liệu `ghichu-sosinh`; không sửa `db.version(1)`. CSDL đang ở `db.version(2)` (thêm bảng `abbrevs`); `db.version(1)` giữ nguyên. ⚙ (luat.test.js luật 2b)
 - Link app giữ nguyên: https://qh168.github.io/neonantal-note/
 - ⚙ Không thêm thư viện npm mới nếu phiếu việc không cho phép.
 - Sao lưu JSON lên OneDrive; gộp theo dòng, bản sửa sau cùng thắng; xoá = đánh dấu `deleted`. ⚙ (merge.test.js)
@@ -33,6 +33,14 @@
 - "Lấy danh sách hôm qua": chép bé + việc chưa xong từ ngày khám gần nhất trước hôm nay, không trùng phòng + mã. ⚙ (ảnh chụp thử tự động)
   Giữ đúng thứ tự bé như ngày nguồn; bé thêm tay nằm cuối phòng (bác sĩ duyệt 28/10/2026). ⚙ (tests/thu-tu.test.js)
 - "Tổng hợp y lệnh": văn bản sửa được, có nút Sao chép; bé không có việc mới ghi "Tiếp tục y lệnh cũ". ⚙
+
+## Viết tắt (bác sĩ duyệt 28/10/2026)
+- ⚙ Gõ "/chữ tắt" rồi dấu cách ở mọi ô gõ chữ (thêm việc, ghi chú việc, việc của bé, ghi chú của bé, khung Tổng hợp y lệnh) → tự thay bằng nội dung; không phân biệt hoa/thường. (viet-tat.test.js)
+- ⚙ Luật không đổi: "8/10", "1/2", "x/kmdm" (không đứng đầu từ) và key không có trong thư viện giữ nguyên. (viet-tat.test.js)
+- Gõ "/km" hiện tối đa 4 gợi ý, chạm để chèn; sau khi thay có "Đã thay /key" và nút Hoàn tác khoảng 4 giây. ⚙ (viet-tat.test.js: gợi ý, chèn, hoàn tác)
+- Nút "/a" trên đầu mở "Thư viện viết tắt": thêm (key trùng thì hỏi ghi đè), sửa bằng bút chì, tìm (gõ không dấu cũng ra), vuốt trái để xoá.
+- ⚙ 13 mục mẫu tự thêm một lần duy nhất; mục bác sĩ đã xoá không quay lại; bác sĩ tự thêm mục khác. (viet-tat.test.js: bộ mẫu 13 mục)
+- ⚙ Thư viện được sao lưu cùng dữ liệu (bảng `abbrevs` trong `DATA_TABLES`); file sao lưu cũ vẫn nhập được, `BACKUP_VERSION` giữ 1. (merge.test.js, luat.test.js luật 2b)
 
 ## Tính tuần tuổi (chỉ chạy khi bấm nút)
 - Hiện "Ngày tuổi" và "Tuổi thai hiệu chỉnh" dạng đủ tuần + ngày (36w0d, 36w3d). ⚙

@@ -73,3 +73,12 @@ export function useAppData(today) {
 
   return { ready, tasks: tasks || [], rooms: rooms || [], patients: patients || [], todosByPid, prev: prev || { date: null, count: 0 }, roomUse: roomUse || {}, lastExport };
 }
+
+/** Danh sách viết tắt còn sống, xếp theo key; undefined-an toàn (chưa tải xong thì []). */
+export function useAbbrevs() {
+  const list = useLiveQuery(
+    () => db.abbrevs.filter(alive).toArray().then((a) => a.sort((x, y) => (x.key < y.key ? -1 : x.key > y.key ? 1 : 0))),
+    []
+  );
+  return list || [];
+}
