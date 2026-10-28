@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useAppData, useToday, useWide } from './hooks.js';
 import { ensureSeed, clearDone } from './lib/actions.js';
 import { buildSummary } from './lib/clinical.js';
+import { ZONES } from './db.js';
 import { fmtLong, fmtDM, parseIso } from './lib/dates.js';
 import { ZoneNav, TaskGroups, TaskForm, Calendar, monthOf } from './components/Tasks.jsx';
 import { ExamActions, RoomManager, RoomList, PatientDetail, SummaryPanel } from './components/Exam.jsx';
@@ -29,7 +30,7 @@ export default function App() {
   const [calSheet, setCalSheet] = useState(false); // iPhone: lịch trượt lên
   const [active, setActive] = useState('all');
   const [newZone, setNewZone] = useState('NICU');
-  const [newPri, setNewPri] = useState(3);
+  const [newTags, setNewTags] = useState([]);
   const [collapsed, setCollapsed] = useState({});
   const [roomCollapsed, setRoomCollapsed] = useState({});
   const [roomEdit, setRoomEdit] = useState(false);
@@ -63,7 +64,8 @@ export default function App() {
   const heading = isTask ? (isToday ? 'Việc hôm nay' : 'Việc ngày ' + fmtDM(viewDate)) : 'Khám bệnh hôm nay';
   const dateText = fmtLong(parseIso(isTask ? viewDate : today));
 
-  const pickZone = (k) => { setActive(k); if (k !== 'all') setNewZone(k); };
+  // khu cũ (BM) không có trong ô chọn khu khi thêm việc
+  const pickZone = (k) => { setActive(k); if (ZONES.includes(k)) setNewZone(k); };
   const toggleIn = (setter) => (k) => setter((c) => ({ ...c, [k]: !c[k] }));
   const goToday = () => { setViewDate(today); setCalMonth(monthOf(today)); };
   const summary = () => buildSummary({ rooms, patients, todosByPid });
@@ -139,7 +141,7 @@ export default function App() {
 
         {isTask ? (
           <main className="pc-main">
-            <TaskForm variant="pc" date={viewDate} zone={newZone} setZone={setNewZone} pri={newPri} setPri={setNewPri} />
+            <TaskForm variant="pc" date={viewDate} zone={newZone} setZone={setNewZone} tags={newTags} setTags={setNewTags} />
             <TaskGroups dayTasks={dayTasks} active={active} collapsed={collapsed} onToggle={toggleIn(setCollapsed)} />
           </main>
         ) : (
@@ -195,10 +197,11 @@ export default function App() {
           <ZoneNav chips dayTasks={dayTasks} active={active} onPick={pickZone} />
           <main className="ph-main">
             {examHint}
+            {dayTasks.length > 0 && <div className="muted xsmall">Chạm 2 lần: ghi chú · Vuốt trái: xoá</div>}
             <TaskGroups chips dayTasks={dayTasks} active={active} collapsed={collapsed} onToggle={toggleIn(setCollapsed)} />
             {clearDoneBtn}
           </main>
-          <TaskForm variant="ph" date={viewDate} zone={newZone} setZone={setNewZone} pri={newPri} setPri={setNewPri} />
+          <TaskForm variant="ph" date={viewDate} zone={newZone} setZone={setNewZone} tags={newTags} setTags={setNewTags} />
         </>
       ) : (
         <main className="ph-main exam">

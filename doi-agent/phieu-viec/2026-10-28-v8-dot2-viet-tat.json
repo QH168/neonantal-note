@@ -1,0 +1,37 @@
+{
+  "ten": "v8 đợt 2 — Viết tắt: gõ '/chữ tắt' rồi dấu cách để thay chữ; thư viện viết tắt (bảng mới, có sao lưu)",
+  "ngay": "2026-10-28",
+  "khuVuc": "Sao lưu (bảng mới), Khung chung, Việc, Khám",
+  "loai": "lon",
+  "canBacSiDuyet": true,
+  "daDuyet": "Bác sĩ duyệt bản thiết kế 'Ghi chú Sơ sinh v8 — thiết kế' (màn hình 5, 6) ngày 28/10/2026 23:42; bộ mẫu 13 mục giữ sẵn, bác sĩ tự thêm sau",
+  "agent": ["du-lieu", "giao-dien", "kiem-thu", "ghi-chep"],
+  "dacTa": {
+    "duLieu": "Bảng mới `abbrevs` (id, key, text, …, updatedAt, deleted) qua `db.version(2).stores({ abbrevs: 'id, key, updatedAt' })` — KHÔNG sửa db.version(1). Thêm 'abbrevs' vào DATA_TABLES để sao lưu/gộp như các bảng khác. File sao lưu cũ (không có bảng abbrevs) vẫn nhập được; có bài kiểm tra. Nếu đổi cấu trúc file thì tăng BACKUP_VERSION theo luật agent Dữ liệu.",
+    "boMau": "Lần đầu chạy bản mới: tạo 13 mục mẫu (một lần, đánh dấu bằng meta, mục bác sĩ đã xoá không tự quay lại): /kmdm Khí máu động mạch; /kmtm Khí máu tĩnh mạch; /ctm Công thức máu; /crp CRP định lượng; /cay Cấy máu; /xqn X-quang ngực thẳng; /sat Siêu âm tim; /san Siêu âm não xuyên thóp; /bil Bilirubin toàn phần, trực tiếp; /dgd Điện giải đồ; /dhmm Đường huyết mao mạch; /rop Khám sàng lọc ROP; /oae Đo OAE sàng lọc thính lực. Lưu `key` không có dấu '/', chữ thường.",
+    "luatThay": "Hàm thuần trong src/lib/: khi người dùng vừa gõ dấu cách và ngay trước đó là một 'từ' bắt đầu bằng '/' ở đầu dòng hoặc sau khoảng trắng → nếu phần sau '/' (không phân biệt hoa/thường) trùng một key → thay cả '/key' bằng text, giữ dấu cách, đặt con trỏ sau dấu cách. '8/10', '1/2', 'a/b' không bị đổi. Key không có → giữ nguyên. Có bài kiểm tra (gồm tiếng Việt có dấu, giữa câu, đầu dòng, nhiều dòng).",
+    "goiY": "Khi đang gõ '/' + vài chữ (chưa có dấu cách): hiện dải gợi ý tối đa 4 mục khớp đầu key (chip ≥44px chiều cao vùng chạm), chạm chip → chèn text + dấu cách. Sau khi thay: thông báo nhỏ 'Đã thay /key' + nút 'Hoàn tác' (~4 giây) trả lại '/key '.",
+    "apDung": "Mọi ô gõ chữ: ô thêm việc (TaskForm), khung ghi chú việc (đợt 1), ô thêm việc cần làm của bé, ô Ghi chú của bé (PatientDetail), khung Tổng hợp y lệnh. Một hook/thành phần dùng chung, giữ ô nhập ≥16px.",
+    "thuVien": "Nút mới trên đầu màn hình (cạnh đám mây), chữ '/a', aria-label 'Thư viện viết tắt', vùng chạm 44px, có ở cả iPhone và PC. Mở bảng 'Thư viện viết tắt': form thêm (Viết tắt + Đổi thành, nút 'Thêm vào thư viện'; key trùng thì hỏi/ghi đè rõ ràng), ô tìm, danh sách (sửa bằng nút bút chì; xoá bằng vuốt trái → thùng rác như đợt 1, PC rê chuột).",
+    "khongLam": "Không gửi dữ liệu ra mạng; không thêm thư viện npm."
+  },
+  "fileDuocSua": [
+    "src/db.js",
+    "src/lib/*.js",
+    "src/hooks.js",
+    "src/components/*.jsx",
+    "src/App.jsx",
+    "src/App.css",
+    "tests/*.test.js",
+    "package.json",
+    "scripts/chup-giao-dien.mjs"
+  ],
+  "tieuChiDat": [
+    "Gõ '/kmdm' rồi dấu cách trong bất kỳ ô gõ nào → thành 'Khí máu động mạch '; '8/10 ' không đổi",
+    "Gợi ý hiện khi gõ '/km'; chạm gợi ý thì chèn đúng; có Hoàn tác",
+    "Thư viện mở bằng nút '/a': thêm, sửa, tìm, vuốt xoá được; có sẵn 13 mục mẫu",
+    "Sao lưu xuất/nhập có bảng viết tắt; file sao lưu cũ vẫn nhập được; dữ liệu cũ trên iPhone không mất (db.version(2) nâng cấp tại chỗ)",
+    "npm test đạt; luật cứng giữ nguyên (db.version(1) không đổi)"
+  ],
+  "ghiChu": "Làm SAU khi đợt 1 đã đạt kiểm thử. Mọi phiếu được phép sửa doi-agent/** (hồ sơ)."
+}

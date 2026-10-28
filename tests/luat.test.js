@@ -76,7 +76,11 @@ test('luật 6: không hiện "còn bao nhiêu ngày đến 40w"', () => {
 });
 
 test('luật 7: khu vực, mức ưu tiên, định dạng sao lưu giữ đúng như đã chốt', () => {
-  assert.match(read('src/db.js'), /ZONES = \['NICU', 'CT', 'KAN', 'PS-PM', 'BM', 'DV'\]/);
+  // bác sĩ duyệt 28/10/2026: khu mới; 'BM' thành khu cũ, chỉ hiện khi còn việc cũ
+  assert.match(read('src/db.js'), /ZONES = \['NICU', 'CT', 'KAN', 'PS-PM', 'Ngoại Trú', 'DV', 'HP', 'HS'\]/);
+  assert.match(read('src/db.js'), /LEGACY_ZONES = \['BM'\]/);
+  // bác sĩ duyệt 28/10/2026: 5 nhãn loại việc
+  assert.match(read('src/lib/viec.js'), /TAGS = \['NV', 'BM', 'CK', 'HC', 'XN'\]/);
   const ui = read('src/components/ui.jsx');
   assert.match(ui, /PRI_NAME = \{ 1: 'đỏ', 2: 'vàng', 3: 'xanh lá', 4: 'xanh dương', 5: 'NV' \}/);
   assert.match(read('src/lib/actions.js'), /urgency: \(t\.urgency % 5\) \+ 1/, 'vòng đổi mức 1→2→3→4→NV→1');

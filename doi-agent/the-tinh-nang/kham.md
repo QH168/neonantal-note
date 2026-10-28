@@ -7,7 +7,7 @@
   - `ExamActions` — nút "Lấy danh sách hôm qua" (hoặc "ngày dd/mm" nếu ngày khám gần nhất không phải hôm qua) + "Quản lý phòng".
   - `RoomManager`, `RoomNameInput` — thêm/đổi tên/xoá phòng (khoá xoá khi phòng đã có bé).
   - `RoomList`, `PatientRow` — danh sách theo phòng.
-  - `PatientDetail` — chi tiết bé; gõ tới đâu lưu tới đó (0,4 giây); nút "Tính tuần tuổi"; xoá bé hỏi xác nhận.
+  - `PatientDetail` — chi tiết bé; gõ tới đâu lưu tới đó (0,4 giây); nút "Tính tuần tuổi"; xoá bé hỏi xác nhận; việc cần làm của bé xoá bằng vuốt trái (`SwipeRow` trong `src/components/ui.jsx`, không còn dấu ×; PC rê chuột hiện thùng rác).
   - `SummaryPanel` — khung tổng hợp sửa được + Sao chép.
 - `src/lib/actions.js` — `ensureSeed` (tạo Phòng 1–3), `addRoom`, `renameRoom`, `removeRoom`, `addPatient`, `updatePatient`,
   `removePatient`, `addTodo`, `toggleTodo`, `removeTodo`, `copyPatientsFrom`.

@@ -19,18 +19,18 @@
 
 | Khu vực | File, hàm chính | Agent phụ trách | Thẻ chi tiết |
 |---|---|---|---|
-| Việc | `src/components/Tasks.jsx` (ZoneNav, TaskGroups, TaskForm, Calendar, byPri); `src/lib/actions.js` (addTask, toggleTask, cycleUrgency, removeTask, clearDone) | Giao diện; Thuật toán khi đổi luật sắp xếp | `doi-agent/the-tinh-nang/viec.md` |
+| Việc | `src/components/Tasks.jsx` (ZoneNav, TaskGroups, TaskRow, TagSheet, NoteSheet, TaskForm, Calendar); `src/lib/actions.js` (addTask, setTaskTags, setTaskNote, toggleTask, cycleUrgency, removeTask, clearDone); `src/lib/viec.js` (TAGS, TAG_COLOR, laViecMoi, chuanHoaTags, batTatNhan, soSanhViec, sapViec, khuHienThi, boDemCham, themCham) | Giao diện; Thuật toán khi đổi luật sắp xếp | `doi-agent/the-tinh-nang/viec.md` |
 | Khám | `src/components/Exam.jsx` (ExamActions, RoomManager, RoomList, PatientDetail, SummaryPanel); `src/lib/actions.js` (phòng, bệnh nhân, việc của bé, copyPatientsFrom); `src/lib/thu-tu.js` (soSanhBe, sapBe, orderTiepTheo — thứ tự bé) | Giao diện + Thuật toán | `doi-agent/the-tinh-nang/kham.md` |
 | Tính tuần tuổi, tổng hợp y lệnh | `src/lib/clinical.js` (parseGa, parseDob, calcAge, gaFmt, buildSummary, copyText); `src/lib/dates.js` | Thuật toán | `doi-agent/the-tinh-nang/tuan-tuoi.md` |
 | Sao lưu, gộp dữ liệu | `src/db.js`; `src/lib/merge.js`; `src/lib/backup.js`; `src/components/BackupPanel.jsx` | Dữ liệu và sao lưu | `doi-agent/the-tinh-nang/sao-luu.md` |
-| Khung chung | `src/App.jsx`; `src/App.css`; `src/components/ui.jsx`; `src/hooks.js`; `src/main.jsx`; `index.html`; `vite.config.js` | Giao diện | `doi-agent/the-tinh-nang/khung-chung.md` |
+| Khung chung | `src/App.jsx`; `src/App.css`; `src/components/ui.jsx` (SwipeRow, TagDot, Sheet); `src/hooks.js`; `src/main.jsx`; `index.html`; `vite.config.js` | Giao diện | `doi-agent/the-tinh-nang/khung-chung.md` |
 
 ## 3. Tra theo lời nói thường
 
 | Bác sĩ nói… | Khu vực |
 |---|---|
-| ô tick, chấm màu, số ưu tiên, huy hiệu, NV, lịch tháng, "Xoá việc đã xong", khu NICU/CT/KAN… | Việc |
-| phòng, bé, mã giường, "Lấy danh sách hôm qua", việc cần làm của bé, đã khám, xoá bé | Khám |
+| ô tick, nhãn NV/BM/CK/HC/XN, chạm 2 lần ghi chú, chạm 3 lần sửa nhãn, vuốt trái xoá việc, thùng rác, chấm số 1–4 (việc cũ), lịch tháng, "Xoá việc đã xong", khu NICU/CT/KAN/PS-PM/Ngoại Trú/DV/HP/HS | Việc |
+| phòng, bé, mã giường, "Lấy danh sách hôm qua", việc cần làm của bé (vuốt trái để xoá), đã khám, xoá bé | Khám |
 | tuần tuổi, ngày tuổi, tuổi thai hiệu chỉnh, 34w6d, ngày sinh 0810, tổng hợp y lệnh, sao chép | Tính tuần tuổi, tổng hợp y lệnh |
 | đám mây, chấm đỏ, OneDrive, file JSON, nhập/xuất, đổi máy, mất dữ liệu | Sao lưu, gộp dữ liệu |
 | sáng/tối, cỡ chữ, tiêu đề, tab Việc/Khám, giao diện PC/iPhone, icon app | Khung chung |
@@ -41,8 +41,9 @@
   + `src/lib/clinical.js` (buildSummary nếu cần in ra). Không cần đổi `db.js` nếu ô đó không dùng để tìm/lọc.
 - Thêm cột cần tìm/lọc hoặc bảng mới → `src/db.js` (db.version(2)) + `DATA_TABLES` + `src/lib/backup.js` + bài kiểm tra gộp. Là **việc lớn**, cần bác sĩ duyệt phiếu.
 - Đổi cách tính tuổi thai/ngày tuổi → chạy lại `doi-agent/ca-chuan-lam-sang.md` và `tests/clinical.test.js`; kiểm cả `buildSummary` (in tuổi hiệu chỉnh).
-- Đổi mức ưu tiên → `src/components/ui.jsx` (PRI_NAME, PRI_LEVELS, PriDot) + `src/lib/actions.js` (cycleUrgency) + `src/App.css` (--p1…--p5).
-- Đổi khu vực → `src/db.js` (ZONES) — các việc cũ vẫn mang tên khu cũ.
+- Đổi nhãn loại việc (NV/BM/CK/HC/XN) → `src/lib/viec.js` (TAGS, TAG_COLOR) + `src/components/ui.jsx` (TagDot) + `src/App.css` (--p1…--p5). Việc cũ (không có `tags`) vẫn dùng mức 1–5: `src/components/ui.jsx` (PRI_NAME, PRI_LEVELS, PriDot) + `src/lib/actions.js` (cycleUrgency); NV cũ màu tím (--p5), NV mới màu đỏ (--p1) — đúng yêu cầu, không gộp.
+- Đổi khu vực → `src/db.js` (ZONES cho việc mới, LEGACY_ZONES cho khu cũ như BM) + `src/lib/viec.js` (khuHienThi: khu cũ chỉ hiện khi còn việc chưa xoá).
+- Vuốt trái để xoá (Việc + việc của bé) dùng chung `SwipeRow` trong `src/components/ui.jsx`; sửa chỗ này phải xem cả `src/components/Tasks.jsx` và `src/components/Exam.jsx`.
 - Đổi cỡ chữ iPhone → `src/App.css` khối "thang chữ gọn"; ô nhập phải ≥16px; vùng chạm ≥44px.
 - Thêm bé / chép bé phải gán `order` qua `orderTiepTheo`/`sapBe` (`src/lib/thu-tu.js`); danh sách hiển thị sắp bằng `sapBe` trong `src/hooks.js`.
 - Mọi thao tác ghi dữ liệu → qua `src/lib/actions.js` → `addRow/updateRow/softDelete` trong `src/db.js` (để có updatedAt cho gộp sao lưu).
@@ -56,12 +57,14 @@
 | `tests/merge.test.js` | gộp sao lưu, định dạng file, tên file |
 | `tests/luat.test.js` | luật cứng: không họ tên, không đổi CSDL, ô nhập ≥16px, màn hình không ghi thẳng CSDL, không thêm thư viện lạ, không hiện "đến 40w" |
 | `tests/ban-do.test.js` | bản đồ khớp với mã thật |
+| `tests/viec.test.js` | nhãn việc, sắp xếp việc, khu hiển thị, đếm chạm |
 | `tests/thu-tu.test.js` | thứ tự bé trong ngày khám (order, createdAt, id; bé cũ; bé thêm tay) |
 | `scripts/chup-giao-dien.mjs` | (chạy trong môi trường Claude) ảnh iPhone 15 + PC, đo vùng chạm, cỡ chữ ô nhập, thử "Lấy danh sách hôm qua" |
 | `scripts/kiem-pham-vi.mjs` | agent chỉ sửa đúng file ghi trong phiếu việc |
 
 ## 6. Trạng thái hiện tại
 
-- Phiên bản: **v7.2** (v7.1 + sửa 4 mục chờ duyệt).
-- Lần sửa gần nhất: 28/10/2026 — "Lấy danh sách hôm qua" giữ đúng thứ tự bé; khung Tổng hợp y lệnh 16px; nút "Khám: còn x việc" cao 44px; xoá `TaskDemo.jsx`.
+- Phiên bản: **v8.0** (đợt 1 của v8).
+- Lần sửa gần nhất: 28/10/2026 — tab Việc: nhãn loại việc NV/BM/CK/HC/XN (chọn nhiều, sửa bằng chạm 3 lần), khu mới (NICU, CT, KAN, PS-PM, Ngoại Trú, DV, HP, HS), ghi chú bằng chạm 2 lần, vuốt trái để xoá (Việc + việc của bé trong Khám), việc xếp theo thứ tự thêm.
+- Việc tiếp theo: **đợt 2 — viết tắt** (phiếu đã duyệt, CHƯA làm): `doi-agent/phieu-viec/2026-10-28-v8-dot2-viet-tat.json`.
 - Việc còn chờ bác sĩ quyết: xem mục "Chờ duyệt" trong `doi-agent/NHAT_KY.md`.

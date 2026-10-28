@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test tests/merge.test.js tests/clinical.test.js tests/ca-chuan.test.js tests/luat.test.js tests/ban-do.test.js tests/thu-tu.test.js"
+    "test": "node --test tests/merge.test.js tests/clinical.test.js tests/ca-chuan.test.js tests/luat.test.js tests/ban-do.test.js tests/thu-tu.test.js tests/viec.test.js"
   },
   "dependencies": {
     "dexie": "^4.0.8",

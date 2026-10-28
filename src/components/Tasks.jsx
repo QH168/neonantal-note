@@ -1,16 +1,15 @@
 // Mục Việc: khu vực, danh sách theo khu, form thêm việc, lịch.
-import { useState } from 'react';
-import { ZONES } from '../db.js';
-import { addTask, toggleTask, cycleUrgency, removeTask } from '../lib/actions.js';
+import { useRef, useState, useEffect } from 'react';
+import { ZONES, LEGACY_ZONES } from '../db.js';
+import { addTask, toggleTask, cycleUrgency, removeTask, setTaskTags, setTaskNote } from '../lib/actions.js';
 import { isoOf, parseIso } from '../lib/dates.js';
-import { CheckBtn, PriDot, PRI_NAME, PRI_LEVELS, priLabel, Chevron, XIcon } from './ui.jsx';
-
-const byPri = (a, b) => (a.done ? 1 : 0) - (b.done ? 1 : 0) || a.urgency - b.urgency || (a.createdAt || 0) - (b.createdAt || 0);
+import { TAGS, TAG_COLOR, laViecMoi, batTatNhan, sapViec, khuHienThi, boDemCham, themCham } from '../lib/viec.js';
+import { CheckBtn, PriDot, PRI_NAME, Chevron, XIcon, SwipeRow, TagDot, Sheet, SheetHead } from './ui.jsx';
 
 /** Thanh khu vực: dạng cột (PC) hoặc chip vuốt ngang (iPhone). */
 export function ZoneNav({ dayTasks, active, onPick, chips }) {
   const items = [['all', 'Tất cả', dayTasks.filter((t) => !t.done).length]].concat(
-    ZONES.map((z) => [z, z, dayTasks.filter((t) => t.zone === z && !t.done).length])
+    khuHienThi(dayTasks, ZONES, LEGACY_ZONES).map((z) => [z, z, dayTasks.filter((t) => t.zone === z && !t.done).length])
   );
   return (
     <nav aria-label="Khu vực làm việc" className={chips ? 'chips noscroll' : 'zone-col'}>
@@ -25,25 +24,117 @@ export function ZoneNav({ dayTasks, active, onPick, chips }) {
   );
 }
 
-function TaskRow({ t, chips }) {
+/** Bảng "Nhãn của việc": 5 nút bật/tắt, lưu ngay khi chạm. */
+function TagSheet({ t, wide, onClose }) {
   return (
-    <div className={'task-row' + (chips ? ' compact' : '')}>
-      <CheckBtn done={t.done} onClick={() => toggleTask(t)}
-        label={(t.done ? 'Bỏ đánh dấu hoàn thành: ' : 'Đánh dấu hoàn thành: ') + t.text} />
-      <span className={'task-text' + (t.done ? ' done' : '')}>{t.text}</span>
-      <button type="button" className="icon-btn" onClick={() => cycleUrgency(t)}
-        aria-label={`Mức ưu tiên ${t.urgency} (${PRI_NAME[t.urgency]}), bấm để đổi`}>
-        <PriDot n={t.urgency} faded={t.done} />
-      </button>
-      <button type="button" className="icon-btn muted" aria-label="Xoá việc" onClick={() => removeTask(t.id)}><XIcon /></button>
-    </div>
+    <Sheet label="Nhãn của việc" onClose={onClose} wide={wide}>
+      <SheetHead title="Nhãn của việc" onClose={onClose} closeLabel="Đóng nhãn" />
+      <div className="sheet-task">{t.text}</div>
+      <div className="stack8">
+        {TAGS.map((tag) => {
+          const on = (t.tags || []).includes(tag);
+          return (
+            <button key={tag} type="button" aria-pressed={on} onClick={() => setTaskTags(t, batTatNhan(t.tags, tag))}
+              className={'tag-opt' + (on ? ' on' : '')} style={{ '--tc': `var(--p${TAG_COLOR[tag]}e)`, '--tb': `var(--p${TAG_COLOR[tag]})` }}>
+              <TagDot tag={tag} className="big" />
+              <span className="grow tag-opt-name">{tag}</span>
+              {on && <span className="tag-opt-on">Đã chọn ✓</span>}
+            </button>
+          );
+        })}
+      </div>
+      <div className="muted xsmall">Nhãn là loại việc cần thực hiện. Chạm để bật/tắt, chọn được nhiều nhãn, có thể tắt hết.</div>
+      <button type="button" className="btn primary big" onClick={onClose}>Xong</button>
+    </Sheet>
+  );
+}
+
+/** Bảng "Ghi chú": gõ tới đâu lưu tới đó (0,4 giây), như chi tiết của bé. */
+function NoteSheet({ t, wide, onClose }) {
+  const [v, setV] = useState(t.note || '');
+  const pending = useRef(null);
+  const timer = useRef();
+  const flush = () => {
+    clearTimeout(timer.current);
+    if (pending.current !== null) { const x = pending.current; pending.current = null; setTaskNote(t.id, x); }
+  };
+  useEffect(() => () => flush(), []); // lưu nốt khi đóng
+  const change = (e) => {
+    const x = e.target.value;
+    setV(x);
+    pending.current = x;
+    clearTimeout(timer.current);
+    timer.current = setTimeout(flush, 400);
+  };
+  const close = () => { flush(); onClose(); };
+  const clear = () => { setV(''); pending.current = ''; flush(); };
+  return (
+    <Sheet label="Ghi chú" onClose={close} wide={wide}>
+      <SheetHead title="Ghi chú" onClose={close} closeLabel="Đóng ghi chú" />
+      <div className="muted small">Cho việc: <strong className="ink">{t.text}</strong></div>
+      <label className="field">
+        <span className="sr-only">Nội dung ghi chú</span>
+        <textarea rows={5} className="input textarea" value={v} onChange={change} onBlur={flush} autoFocus />
+      </label>
+      <div className="muted xsmall">Tự lưu khi gõ. Ghi chú hiện chữ nhỏ dưới tên việc.</div>
+      <div className="row8">
+        <button type="button" className="btn danger-outline grow" disabled={!v} onClick={clear}>Xoá ghi chú</button>
+        <button type="button" className="btn primary big grow2" onClick={close}>Xong</button>
+      </div>
+    </Sheet>
+  );
+}
+
+function TaskRow({ t, chips }) {
+  const [sheet, setSheet] = useState(null); // null | 'note' | 'tag'
+  const bodyTaps = useRef([]);
+  const tagTaps = useRef([]);
+  const moi = laViecMoi(t);
+  const wide = !chips;
+  // Chạm 2 lần (trong 1 giây) vào thân dòng → ghi chú. Ô tick và vùng nhãn là phần tử khác nên không tính.
+  const tapBody = () => {
+    bodyTaps.current = themCham(bodyTaps.current, Date.now());
+    if (boDemCham(bodyTaps.current, 2)) { bodyTaps.current = []; setSheet('note'); }
+  };
+  // Chạm 3 lần (trong 1 giây) vào cụm nhãn → bảng nhãn. Chạm 1–2 lần không làm gì.
+  const tapTag = () => {
+    tagTaps.current = themCham(tagTaps.current, Date.now());
+    if (boDemCham(tagTaps.current, 3)) { tagTaps.current = []; setSheet('tag'); }
+  };
+  const tags = moi ? t.tags : [];
+  const note = (t.note || '').trim();
+  return (
+    <>
+      <SwipeRow className={'task-row' + (chips ? ' compact' : '')} label={t.text} onDelete={() => removeTask(t.id)}>
+        <CheckBtn done={t.done} onClick={() => toggleTask(t)}
+          label={(t.done ? 'Bỏ đánh dấu hoàn thành: ' : 'Đánh dấu hoàn thành: ') + t.text} />
+        <div className="task-main" role="button" tabIndex={0} aria-label={'Mở ghi chú: ' + t.text}
+          onClick={tapBody} onKeyDown={(e) => { if (e.key === 'Enter' && e.target === e.currentTarget) setSheet('note'); }}>
+          <span className={'task-text' + (t.done ? ' done' : '')}>{t.text}</span>
+          {note && <span className="task-note">{note}</span>}
+        </div>
+        {moi ? (
+          <button type="button" className="tag-zone" onClick={tapTag}
+            aria-label={tags.length ? `Nhãn: ${tags.join(', ')}. Chạm 3 lần để đổi nhãn` : 'Chạm 3 lần để chọn nhãn'}>
+            {tags.length ? tags.map((x) => <TagDot key={x} tag={x} faded={t.done} />) : <span className="tag-empty" aria-hidden="true" />}
+          </button>
+        ) : (
+          <button type="button" className="icon-btn" onClick={() => cycleUrgency(t)}
+            aria-label={`Mức ưu tiên ${t.urgency} (${PRI_NAME[t.urgency]}), bấm để đổi`}>
+            <PriDot n={t.urgency} faded={t.done} />
+          </button>
+        )}
+      </SwipeRow>
+      {sheet === 'note' && <NoteSheet t={t} wide={wide} onClose={() => setSheet(null)} />}
+      {sheet === 'tag' && moi && <TagSheet t={t} wide={wide} onClose={() => setSheet(null)} />}
+    </>
   );
 }
 
 /** Danh sách việc chia theo khu, thu gọn/mở rộng được. */
 export function TaskGroups({ dayTasks, active, collapsed, onToggle, chips }) {
-  const groups = ZONES.filter((z) => active === 'all' || active === z)
-    .map((z) => ({ z, list: dayTasks.filter((t) => t.zone === z).sort(byPri) }))
+  const groups = khuHienThi(dayTasks, ZONES, LEGACY_ZONES).filter((z) => active === 'all' || active === z)
+    .map((z) => ({ z, list: sapViec(dayTasks.filter((t) => t.zone === z)) }))
     .filter((g) => g.list.length);
   if (!groups.length) return <div className="empty">Chưa có việc nào ở khu vực này.</div>;
   return groups.map(({ z, list }) => {
@@ -65,21 +156,25 @@ export function TaskGroups({ dayTasks, active, collapsed, onToggle, chips }) {
 }
 
 /** Form thêm việc. variant 'pc' = khung trên đầu; 'ph' = thanh dưới cùng iPhone. */
-export function TaskForm({ variant, date, zone, setZone, pri, setPri }) {
+export function TaskForm({ variant, date, zone, setZone, tags, setTags }) {
   const [draft, setDraft] = useState('');
   const submit = async (e) => {
     e.preventDefault();
     const text = draft.trim();
     if (!text) return;
     setDraft('');
-    await addTask({ date, zone, urgency: pri, text });
+    await addTask({ date, zone, text, tags });
   };
-  const priBtns = (
-    <div className="pri-pick">
-      {PRI_LEVELS.map((n) => (
-        <button key={n} type="button" aria-label={`Mức ưu tiên ${n} (${PRI_NAME[n]})`} aria-pressed={pri === n} onClick={() => setPri(n)}
-          className={'pri-btn' + (n === 5 ? ' nv' : '')} style={{ borderColor: `var(--p${n}e)`, ...(pri === n ? { background: `var(--p${n})`, color: `var(--p${n}i)` } : {}) }}>{priLabel(n)}</button>
-      ))}
+  const tagBtns = (
+    <div className="pri-pick" role="group" aria-label="Nhãn của việc mới">
+      {TAGS.map((tag) => {
+        const n = TAG_COLOR[tag];
+        const on = tags.includes(tag);
+        return (
+          <button key={tag} type="button" aria-label={`Nhãn ${tag}`} aria-pressed={on} onClick={() => setTags(batTatNhan(tags, tag))}
+            className="pri-btn tag-btn" style={{ borderColor: `var(--p${n}e)`, ...(on ? { background: `var(--p${n})`, color: `var(--p${n}i)` } : {}) }}>{tag}</button>
+        );
+      })}
     </div>
   );
   const zoneSel = (
@@ -103,7 +198,7 @@ export function TaskForm({ variant, date, zone, setZone, pri, setPri }) {
         {input}
         <div className="task-form-bar">
           {zoneSel}
-          <div className="row8"><span className="muted small">Ưu tiên</span>{priBtns}</div>
+          <div className="row8"><span className="muted small">Nhãn</span>{tagBtns}</div>
           <span className="grow" />
           <button type="submit" className="btn primary">Thêm việc</button>
         </div>
@@ -113,7 +208,8 @@ export function TaskForm({ variant, date, zone, setZone, pri, setPri }) {
   return (
     <form onSubmit={submit} className="task-form-ph">
       <div className="row8">{input}{zoneSel}</div>
-      <div className="row8">{priBtns}<button type="submit" className="btn primary grow">Thêm việc</button></div>
+      <div className="muted xsmall">Nhãn (chọn được nhiều):</div>
+      <div className="row8">{tagBtns}<button type="submit" className="btn primary grow">Thêm việc</button></div>
     </form>
   );
 }

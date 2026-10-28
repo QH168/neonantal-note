@@ -16,7 +16,9 @@ db.version(1).stores({
 // Khi thêm bảng/cột tìm kiếm sau này: thêm db.version(2).stores({...}) bên dưới, KHÔNG sửa version(1).
 
 export const DATA_TABLES = ['tasks', 'rooms', 'exam_patients', 'patient_todos'];
-export const ZONES = ['NICU', 'CT', 'KAN', 'PS-PM', 'BM', 'DV'];
+export const ZONES = ['NICU', 'CT', 'KAN', 'PS-PM', 'Ngoại Trú', 'DV', 'HP', 'HS'];
+// Khu cũ: chỉ hiện (chip + nhóm) khi còn việc chưa xoá mang khu này; không có trong ô chọn khu khi thêm việc.
+export const LEGACY_ZONES = ['BM'];
 
 // crypto.randomUUID chỉ có trên HTTPS/localhost; khi thử qua IP mạng nội bộ (http) thì dùng dự phòng.
 export function uuid() {

@@ -18,14 +18,18 @@
 - PC giữ cỡ chữ cũ.
 
 ## Việc
-- ⚙ Khu vực: NICU, CT, KAN, PS-PM, BM, DV.
-- ⚙ Mức ưu tiên: 1 đỏ, 2 vàng, 3 xanh lá, 4 xanh dương, 5 "NV" (tím, hình tròn). Chạm để đổi vòng 1→2→3→4→NV→1.
-- Việc chưa xong xếp trước, rồi theo mức.
+- ⚙ Khu vực (việc mới): NICU, CT, KAN, PS-PM, Ngoại Trú, DV, HP, HS (bác sĩ duyệt 28/10/2026). Khu cũ BM không còn trong ô chọn, chỉ hiện khi còn việc cũ mang khu BM. (luat.test.js luật 7, viec.test.js)
+- ⚙ Nhãn loại việc thay mức ưu tiên: NV, BM, CK, HC, XN; chọn nhiều, có thể không nhãn; màu dùng --p1…--p5 (bác sĩ duyệt 28/10/2026). Sửa nhãn bằng chạm nhanh 3 lần vào cụm nhãn. (viec.test.js)
+- ⚙ Việc xếp: chưa xong trước, rồi theo thứ tự thêm (cả việc cũ), không xếp theo nhãn/mức. (viec.test.js)
+- Ghi chú việc: chạm 2 lần (trong 1 giây) vào dòng việc, hiện chữ nhỏ dưới tên việc.
+- Xoá việc: bỏ dấu ×; vuốt trái hiện thùng rác rồi chạm để xoá; PC rê chuột hiện thùng rác.
+- Dữ liệu cũ giữ nguyên hiển thị kiểu cũ: việc cũ vẫn hiện số 1–4/NV (NV cũ tím) và chạm để đổi vòng như trước; không chuyển đổi.
 - Lịch tháng có số việc chưa xong mỗi ngày; nút "Xoá việc đã xong"; dòng "Khám: còn x việc" (bấm chuyển sang Khám).
 
 ## Khám
 - Phòng tự đặt tên, mặc định Phòng 1–3; phòng đã từng có bệnh nhân thì không xoá được.
 - Mỗi bé: mã/giường, ngày sinh, tuổi thai lúc sinh, cân nặng, ghi chú, việc cần làm; đánh dấu đã khám; xoá bé có hỏi xác nhận.
+  Việc cần làm của bé xoá bằng vuốt trái (không còn dấu ×) (bác sĩ duyệt 28/10/2026).
 - "Lấy danh sách hôm qua": chép bé + việc chưa xong từ ngày khám gần nhất trước hôm nay, không trùng phòng + mã. ⚙ (ảnh chụp thử tự động)
   Giữ đúng thứ tự bé như ngày nguồn; bé thêm tay nằm cuối phòng (bác sĩ duyệt 28/10/2026). ⚙ (tests/thu-tu.test.js)
 - "Tổng hợp y lệnh": văn bản sửa được, có nút Sao chép; bé không có việc mới ghi "Tiếp tục y lệnh cũ". ⚙

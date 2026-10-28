@@ -1,5 +1,6 @@
 // Biểu tượng và các phần giao diện dùng chung.
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { TAG_COLOR } from '../lib/viec.js';
 
 const S = { fill: 'none', stroke: 'currentColor', strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true };
 
@@ -22,6 +23,9 @@ export const Chevron = ({ dir = 'right', size = 16, style }) => {
 export const XIcon = ({ size = 18 }) => (
   <svg width={size} height={size} viewBox="0 0 18 18" strokeWidth="1.8" {...S}><path d="M4.5 4.5l9 9M13.5 4.5l-9 9" /></svg>
 );
+export const TrashIcon = ({ size = 22 }) => (
+  <svg width={size} height={size} viewBox="0 0 22 22" strokeWidth="1.8" {...S}><path d="M4 6h14M9 6V4h4v2M6 6l1 12h8l1-12M9.5 9.5v5.5M12.5 9.5v5.5" /></svg>
+);
 const Tick = ({ size = 16 }) => (
   <svg width={size} height={size} viewBox="0 0 16 16" strokeWidth="2.3" {...S}><path d="M3 8.5l3.2 3.2L13 4.8" /></svg>
 );
@@ -43,6 +47,85 @@ export const priLabel = (n) => (n === 5 ? 'NV' : String(n));
 /** Vòng tròn số mức khẩn cấp. */
 export function PriDot({ n, faded }) {
   return <span className={'pri' + (n === 5 ? ' nv' : '')} style={{ background: `var(--p${n})`, color: `var(--p${n}i)`, opacity: faded ? 0.45 : 1 }}>{priLabel(n)}</span>;
+}
+
+/** Chấm tròn chữ nhãn loại việc (NV/BM/CK/HC/XN). Màu lấy từ --p1…--p5 (có cả bản sáng/tối). */
+export function TagDot({ tag, faded, className = '' }) {
+  const n = TAG_COLOR[tag] || 1;
+  return <span className={'tag-dot ' + className} style={{ background: `var(--p${n})`, color: `var(--p${n}i)`, opacity: faded ? 0.45 : 1 }}>{tag}</span>;
+}
+
+// ----- Vuốt trái để xoá (dùng chung cho dòng việc và việc cần làm của bé) -----
+const MO_RONG = 84;   // bề rộng nút xoá khi mở
+const NGUONG = 40;    // vuốt quá ngần này mới mở / mới đóng
+let dangMo = null;    // hàm đóng của dòng đang mở: chỉ một dòng mở cùng lúc
+
+/**
+ * Dòng vuốt-để-xoá. Cảm ứng: vuốt trái ≥40px thì dòng trượt 84px lộ nút "Xoá"; vuốt phải hoặc chạm chỗ khác thì trả về.
+ * Chuột (PC): rê vào dòng thì hiện nút thùng rác ở cuối dòng. Nút luôn có trong thứ tự Tab.
+ * `label` là tên việc (để đọc "Xoá việc: <tên>"). `className` áp cho phần thân dòng.
+ */
+export function SwipeRow({ label, onDelete, className = '', children }) {
+  const ref = useRef(null);
+  const st = useRef(null);
+  const vuaVuot = useRef(false);
+  const [open, setOpen] = useState(false);
+  const [drag, setDrag] = useState(null);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const dong = () => setOpen(false);
+    if (dangMo && dangMo !== dong) dangMo();
+    dangMo = dong;
+    const ngoai = (e) => { if (ref.current && !ref.current.contains(e.target)) dong(); };
+    document.addEventListener('pointerdown', ngoai);
+    return () => { document.removeEventListener('pointerdown', ngoai); if (dangMo === dong) dangMo = null; };
+  }, [open]);
+
+  const down = (e) => {
+    if (e.pointerType === 'mouse' || !e.isPrimary) return; // PC dùng nút thùng rác, không rê-kéo
+    st.current = { x: e.clientX, y: e.clientY, base: open ? -MO_RONG : 0, on: false };
+  };
+  const move = (e) => {
+    const s = st.current;
+    if (!s) return;
+    const dx = e.clientX - s.x, dy = e.clientY - s.y;
+    if (!s.on) {
+      if (Math.abs(dx) < 8 || Math.abs(dx) < Math.abs(dy)) return; // chưa rõ là vuốt ngang
+      s.on = true;
+      try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* bỏ qua */ }
+    }
+    setDrag(Math.max(-MO_RONG, Math.min(0, s.base + dx)));
+  };
+  const up = (e) => {
+    const s = st.current;
+    st.current = null;
+    if (!s || !s.on) return;
+    const dx = e.clientX - s.x;
+    setOpen(s.base === 0 ? dx <= -NGUONG : !(dx >= NGUONG));
+    setDrag(null);
+    vuaVuot.current = true; // chặn cú "click" ngay sau khi vuốt
+    setTimeout(() => { vuaVuot.current = false; }, 400);
+  };
+  const huy = () => { st.current = null; setDrag(null); };
+  const bam = (e) => {
+    if (vuaVuot.current) { e.stopPropagation(); return; }
+    if (open) { e.stopPropagation(); setOpen(false); } // chạm vào dòng đang mở: chỉ trả về
+  };
+  const offset = drag !== null ? drag : open ? -MO_RONG : 0;
+
+  return (
+    <div ref={ref} className={'swipe' + (open || drag !== null ? ' reveal' : '')}>
+      <button type="button" className="swipe-del" aria-label={'Xoá việc: ' + label} onClick={() => { setOpen(false); onDelete(); }}>
+        <TrashIcon /><span className="swipe-del-t">Xoá</span>
+      </button>
+      <div className={'swipe-body ' + className + (drag !== null ? ' drag' : '')}
+        style={offset !== 0 ? { transform: `translateX(${offset}px)` } : undefined}
+        onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={huy} onClickCapture={bam}>
+        {children}
+      </div>
+    </div>
+  );
 }
 
 /** Bảng trượt lên (iPhone) / hộp giữa màn hình (PC). */

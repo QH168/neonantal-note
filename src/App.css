@@ -94,7 +94,9 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 /* dòng việc */
 .task-row{display:flex;align-items:center;gap:4px;min-height:56px;padding:0 8px 0 4px;background:var(--surface);border:1px solid var(--line);border-radius:12px}
 .task-row.compact{gap:0;padding:0 0 0 2px}
-.task-text{flex:1;min-width:0;padding:8px 4px;font-size:16px;line-height:1.4;font-weight:500;overflow-wrap:anywhere}
+.task-main{flex:1;min-width:0;align-self:stretch;display:flex;flex-direction:column;justify-content:center;gap:2px;padding:8px 4px;touch-action:manipulation;cursor:default}
+.task-main:focus-visible{outline-offset:-2px;border-radius:8px}
+.task-text{font-size:16px;line-height:1.4;font-weight:500;overflow-wrap:anywhere}
 .task-text.done,.todo-text.done,.done-text{color:var(--done);text-decoration:line-through}
 .chk{flex:none;width:44px;height:44px;padding:0;border:0;background:transparent;display:flex;align-items:center;justify-content:center}
 .chk .box{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;border:2px solid var(--box);background:var(--surface);color:var(--accentInk)}
@@ -190,7 +192,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .phone-app .group-btn .small{font-size:12px}
 .phone-app .empty{font-size:14px}
 .phone-app .task-row{min-height:50px}
-.phone-app .task-text{font-size:15px;line-height:1.35;padding:6px 4px}
+.phone-app .task-main{padding:6px 4px}
+.phone-app .task-text{font-size:15px;line-height:1.35}
 .phone-app .pri{width:24px;height:24px;font-size:13px}
 .phone-app .pri-btn{font-size:15px}
 .phone-app .btn{font-size:14px}
@@ -230,3 +233,42 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 /* iPhone: 5 nút ưu tiên + "Thêm việc" vừa một hàng */
 .phone-app .task-form-ph .pri-pick{gap:4px}
 .phone-app .task-form-ph .btn.primary{white-space:nowrap;padding:0 10px}
+
+/* ===== v8 đợt 1: nhãn loại việc, ghi chú, vuốt-để-xoá ===== */
+.ink{color:var(--ink)}
+.grow2{flex:2;min-width:0}
+/* ghi chú dưới tên việc: 12.5px, tối đa 2 dòng */
+.task-note{font-size:12.5px;line-height:1.4;color:var(--muted);white-space:pre-line;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.task-main .done+.task-note{color:var(--done)}
+/* cụm chấm nhãn ở cuối dòng (vùng chạm >= 44px, cả khi chưa có nhãn) */
+.tag-zone{flex:none;min-width:44px;min-height:44px;max-width:100px;align-self:center;padding:4px;border:0;background:transparent;display:flex;flex-wrap:wrap;align-content:center;align-items:center;justify-content:center;gap:4px;touch-action:manipulation}
+.tag-dot{flex:none;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;letter-spacing:-.02em}
+.tag-dot.big{width:32px;height:32px;font-size:12px}
+.tag-empty{width:22px;height:22px;border-radius:50%;border:1.5px dashed var(--box);opacity:.6}
+.phone-app .tag-dot{width:24px;height:24px;font-size:10px}
+.phone-app .tag-dot.big{width:32px;height:32px;font-size:12px}
+.tag-btn{font-size:13px;letter-spacing:-.02em}
+.phone-app .tag-btn{font-size:13px}
+/* bảng nhãn */
+.sheet-task{font-size:15px;padding:10px 12px;background:var(--surface2);border-radius:12px;overflow-wrap:anywhere}
+.tag-opt{height:52px;display:flex;align-items:center;gap:12px;padding:0 12px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);text-align:left;font-size:15px}
+.tag-opt.on{border:2px solid var(--tc);background:color-mix(in srgb,var(--tb) 16%,var(--surface))}
+.tag-opt-name{font-weight:600}
+.tag-opt-on{font-size:13px;font-weight:600}
+.btn.danger-outline{border-color:var(--p1e);color:var(--p1e);background:var(--surface)}
+/* vuốt trái để xoá */
+.swipe{position:relative;border-radius:12px;overflow:hidden}
+.swipe-body{position:relative;z-index:1;touch-action:pan-y;transition:transform .18s ease;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.swipe-body.drag{transition:none}
+.swipe-del{position:absolute;top:0;right:0;bottom:0;width:84px;padding:0;border:0;border-radius:0;background:var(--p1);color:var(--p1i);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:12px;font-weight:600;opacity:0;transition:opacity .12s}
+.swipe.reveal .swipe-del,.swipe-del:focus-visible{opacity:1}
+.swipe-del:focus-visible{outline-offset:-3px;outline-color:var(--p1i)}
+.swipe:has(.swipe-del:focus-visible) .swipe-body{transform:translateX(-84px)}
+/* PC (chuột): thùng rác hiện ở cuối dòng khi rê chuột hoặc Tab tới */
+@media (hover:hover) and (pointer:fine){
+  .swipe>.swipe-body{padding-right:54px}
+  .swipe:has(.swipe-del:focus-visible) .swipe-body{transform:none}
+  .swipe-del{z-index:2;top:50%;bottom:auto;right:6px;width:44px;height:44px;transform:translateY(-50%);border-radius:10px}
+  .swipe-del-t{display:none}
+  .swipe:hover .swipe-del{opacity:1}
+}

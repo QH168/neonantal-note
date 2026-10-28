@@ -6,7 +6,7 @@ import {
 } from '../lib/actions.js';
 import { calcAge, gaFmt, copyText } from '../lib/clinical.js';
 import { addDays, fmtDM } from '../lib/dates.js';
-import { CheckBtn, Chevron, XIcon, SheetHead } from './ui.jsx';
+import { CheckBtn, Chevron, XIcon, SheetHead, SwipeRow } from './ui.jsx';
 
 /** Nút "Lấy danh sách hôm qua" + "Quản lý phòng". */
 export function ExamActions({ prev, today, roomEdit, onToggleRoomEdit, compact }) {
@@ -208,12 +208,11 @@ export function PatientDetail({ p, todos, onClose }) {
       <div className="stack8">
         <div className="bold">Việc cần làm</div>
         {todos.map((t) => (
-          <div key={t.id} className="todo-row">
+          <SwipeRow key={t.id} className="todo-row" label={t.text} onDelete={() => removeTodo(t.id)}>
             <CheckBtn small done={t.done} onClick={() => toggleTodo(t)}
               label={(t.done ? 'Bỏ đánh dấu hoàn thành: ' : 'Đánh dấu hoàn thành: ') + t.text} />
             <span className={'todo-text' + (t.done ? ' done' : '')}>{t.text}</span>
-            <button type="button" className="icon-btn muted" aria-label="Xoá việc" onClick={() => removeTodo(t.id)}><XIcon size={16} /></button>
-          </div>
+          </SwipeRow>
         ))}
         <form onSubmit={submitTodo} className="row8">
           <label className="grow row0">

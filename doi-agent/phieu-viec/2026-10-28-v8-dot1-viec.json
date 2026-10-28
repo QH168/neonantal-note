@@ -1,0 +1,43 @@
+{
+  "ten": "v8 đợt 1 — tab Việc: nhãn loại việc NV/BM/CK/HC/XN (chọn nhiều), khu vực mới, ghi chú bằng chạm 2 lần, vuốt trái để xoá (Việc + việc của bé trong Khám)",
+  "ngay": "2026-10-28",
+  "khuVuc": "Việc, Khám (việc cần làm của bé), Khung chung",
+  "loai": "lon",
+  "canBacSiDuyet": true,
+  "daDuyet": "Bác sĩ duyệt bản thiết kế 'Ghi chú Sơ sinh v8 — thiết kế' (canvas, 6 màn hình) ngày 28/10/2026 23:42",
+  "agent": ["thuat-toan", "giao-dien", "kiem-thu", "ghi-chep"],
+  "dacTa": {
+    "nhan": "5 nhãn LOẠI VIỆC (không phải mức ưu tiên): NV, BM, CK, HC, XN — màu lần lượt dùng lại --p1..--p5 (đỏ, vàng, xanh lá, xanh dương, tím). Việc mới lưu trường `tags` (mảng chuỗi, thứ tự theo NV,BM,CK,HC,XN, không trùng; được phép rỗng). Không bắt buộc có nhãn. Không có chữ 'mức', 'ưu tiên', 'đỏ/vàng…' trên màn hình cho nhãn mới.",
+    "duLieuCu": "Việc cũ (không có `tags`, có `urgency` 1–5) GIỮ NGUYÊN: vẫn hiện chấm số 1–4/NV kiểu cũ và chạm để đổi vòng như trước (cycleUrgency giữ nguyên). Không chuyển đổi dữ liệu cũ. Việc cũ ở khu 'BM' vẫn nằm trong nhóm 'BM'.",
+    "khuVuc": "ZONES (dùng cho việc mới, form, chip) = ['NICU', 'CT', 'KAN', 'PS-PM', 'Ngoại Trú', 'DV', 'HP', 'HS']. Khu cũ 'BM' chỉ hiện (chip + nhóm) khi còn việc chưa bị xoá mang zone 'BM'; không có trong ô chọn khu khi thêm việc.",
+    "sapXep": "Danh sách việc: chưa xong trước, rồi theo thời điểm thêm (createdAt), rồi id — không xếp theo nhãn/mức nữa (áp dụng cho cả việc cũ). Hàm thuần trong src/lib/ + bài kiểm tra.",
+    "chonNhanKhiThem": "Thanh thêm việc: 5 nút NV BM CK HC XN bật/tắt độc lập (aria-pressed), mặc định không chọn nút nào; sau khi thêm việc giữ nguyên lựa chọn như cách cũ giữ mức.",
+    "suaNhan": "Chạm nhanh 3 lần (3 lần chạm trong vòng 1 giây) vào cụm nhãn của việc mới → mở bảng 'Nhãn của việc' (Sheet) với 5 nút bật/tắt, lưu ngay khi chạm, nút 'Xong'. Chạm 1–2 lần vào cụm nhãn không làm gì. Việc mới chưa có nhãn: vẫn có vùng nhãn trống (vùng chạm ≥44px, aria-label 'Chạm 3 lần để chọn nhãn') để mở bảng.",
+    "ghiChu": "Chạm 2 lần trong vòng 1 giây vào thân dòng việc (không tính ô tick và vùng nhãn) → mở bảng 'Ghi chú' (Sheet) với textarea 16px, tự lưu khi gõ (như PatientDetail, 0,4 giây), nút 'Xoá ghi chú' và 'Xong'. Lưu vào trường `note` của việc. Ghi chú hiện chữ nhỏ 12.5px màu --muted dưới tên việc (tối đa 2 dòng, cắt bằng dấu …). Áp dụng cho cả việc cũ và mới. Chặn phóng to khi chạm 2 lần trên iPhone (touch-action: manipulation trên dòng).",
+    "vuotXoa": "Bỏ nút × trên dòng việc (tab Việc) và dòng việc cần làm của bé (PatientDetail, Khám). Vuốt dòng sang trái ≥ ~40px → dòng trượt sang trái 84px, lộ nút thùng rác đỏ 'Xoá' (aria-label 'Xoá việc: <tên>'); chạm nút mới xoá (removeTask/removeTodo như cũ). Vuốt sang phải hoặc chạm chỗ khác → trả về. Chỉ một dòng mở cùng lúc. Không làm hỏng cuộn dọc (touch-action: pan-y). Trên PC (chuột): rê chuột vào dòng hiện nút thùng rác ở cuối dòng; nút cũng có trong thứ tự Tab (bàn phím). Một thành phần dùng chung (vd. SwipeRow trong src/components/ui.jsx).",
+    "khongLam": "Đợt này KHÔNG làm viết tắt (đợt 2). Không đổi db.js ngoài hằng ZONES/LEGACY_ZONES, không db.version(2), không đổi định dạng sao lưu (tags, note là trường thường)."
+  },
+  "fileDuocSua": [
+    "src/db.js",
+    "src/lib/*.js",
+    "src/components/Tasks.jsx",
+    "src/components/Exam.jsx",
+    "src/components/ui.jsx",
+    "src/App.jsx",
+    "src/App.css",
+    "src/hooks.js",
+    "tests/*.test.js",
+    "package.json",
+    "scripts/chup-giao-dien.mjs"
+  ],
+  "tieuChiDat": [
+    "Thêm việc mới với 0, 1 hoặc nhiều nhãn; nhãn hiện thành chấm tròn chữ NV/BM/CK/HC/XN ở cuối dòng",
+    "Chạm 3 lần vào cụm nhãn mở bảng nhãn; chạm 1–2 lần không mở",
+    "Chạm 2 lần vào dòng việc mở khung ghi chú; ghi chú hiện chữ nhỏ dưới tên việc",
+    "Không còn dấu × ở dòng việc (Việc) và việc cần làm của bé (Khám); vuốt trái hiện thùng rác, chạm mới xoá; PC rê chuột hiện thùng rác",
+    "Ô chọn khu: NICU, CT, KAN, PS-PM, Ngoại Trú, DV, HP, HS; việc cũ ở BM vẫn hiện trong nhóm BM",
+    "Việc cũ vẫn hiện chấm số/NV như trước, dữ liệu cũ không bị sửa",
+    "npm test đạt (luật 7 cập nhật theo quyết định mới); ô nhập ≥16px; vùng chạm ≥44px; sáng/tối đều đủ màu"
+  ],
+  "ghiChu": "Mọi phiếu được phép sửa doi-agent/** (hồ sơ)."
+}
