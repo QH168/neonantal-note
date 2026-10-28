@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from './db.js';
 import { todayIso } from './lib/dates.js';
+import { sapBe } from './lib/thu-tu.js';
 
 const alive = (r) => !r.deleted;
 
@@ -35,7 +36,7 @@ export function useAppData(today) {
   const tasks = useLiveQuery(() => db.tasks.filter(alive).toArray(), []);
   const rooms = useLiveQuery(() => db.rooms.orderBy('order').filter(alive).toArray(), []);
   const patients = useLiveQuery(
-    () => db.exam_patients.where('examDate').equals(today).filter(alive).sortBy('createdAt'),
+    () => db.exam_patients.where('examDate').equals(today).filter(alive).toArray().then(sapBe),
     [today]
   );
   const todos = useLiveQuery(async () => {

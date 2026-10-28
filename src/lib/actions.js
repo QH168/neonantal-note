@@ -1,4 +1,5 @@
 // Mọi thao tác ghi dữ liệu của app. Luôn đi qua addRow/updateRow/softDelete để có updatedAt.
+import { sapBe, orderTiepTheo } from './thu-tu.js';
 import { db, addRow, updateRow, softDelete, getDeviceId, getMeta, setMeta } from '../db.js';
 
 const alive = (r) => !r.deleted;
@@ -43,8 +44,13 @@ export async function removeRoom(id) {
 }
 
 // ---------- Bệnh nhân ----------
-export const addPatient = (roomId, examDate) =>
-  addRow('exam_patients', { roomId, examDate, code: '', dob: '', ga: '', wt: '', note: '', done: false });
+export async function addPatient(roomId, examDate) {
+  // `order` chỉ là trường thường (không phải chỉ mục): bé thêm tay nằm cuối ngày khám.
+  const cur = await db.exam_patients.where('examDate').equals(examDate).filter(alive).toArray();
+  return addRow('exam_patients', {
+    roomId, examDate, code: '', dob: '', ga: '', wt: '', note: '', done: false, order: orderTiepTheo(cur)
+  });
+}
 export const updatePatient = (id, changes) => updateRow('exam_patients', id, changes);
 export async function removePatient(id) {
   await getDeviceId();
@@ -73,13 +79,14 @@ export async function copyPatientsFrom(srcDate, today) {
   await db.transaction('rw', db.exam_patients, db.patient_todos, db.rooms, db.meta, async () => {
     const roomIds = new Set((await db.rooms.filter(alive).toArray()).map((r) => r.id));
     const cur = await db.exam_patients.where('examDate').equals(today).filter(alive).toArray();
-    const src = await db.exam_patients.where('examDate').equals(srcDate).filter(alive).toArray();
+    const src = sapBe(await db.exam_patients.where('examDate').equals(srcDate).filter(alive).toArray());
+    let nextOrder = orderTiepTheo(cur);
     for (const p of src) {
       if (!roomIds.has(p.roomId)) continue;
       if (cur.some((c) => c.roomId === p.roomId && c.code === p.code)) continue;
       const np = await addRow('exam_patients', {
         roomId: p.roomId, examDate: today, code: p.code, dob: p.dob, ga: p.ga, wt: p.wt,
-        note: '', done: false, copiedFrom: p.id
+        note: '', done: false, copiedFrom: p.id, order: nextOrder++
       });
       const todos = await db.patient_todos.where('patientId').equals(p.id).filter((t) => alive(t) && !t.done).toArray();
       todos.sort((a, b) => (a.order || 0) - (b.order || 0));

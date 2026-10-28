@@ -6,11 +6,18 @@
 
 | # | Phát hiện | Mức | Đề xuất | Agent |
 |---|---|---|---|---|
-| 1 | "Lấy danh sách hôm qua" có thể **xáo thứ tự bé** trong phòng (lần thử: hôm qua G01, G03 → hôm nay G03, G01; lần khác lại đúng — tức là ngẫu nhiên). Nguyên nhân: `copyPatientsFrom` chép theo thứ tự mã id ngẫu nhiên, và các bé chép cùng lúc có cùng giờ tạo nên màn hình không phân biệt được thứ tự. | Vừa | Chép theo thứ tự nhập của hôm qua và lưu số thứ tự rõ ràng; thêm kiểm tra. Cho tới khi sửa, ảnh chụp mục Khám có thể báo "CẦN XEM" vì thứ tự đổi giữa các lần chạy. | Thuật toán |
-| 2 | Khung "Tổng hợp y lệnh" chữ 15px → trên iPhone, chạm vào để sửa thì Safari **tự phóng to**. | Nhỏ | Đặt 16px cho khung này. Sửa xong bỏ `.mono` khỏi danh sách "ĐÃ BIẾT" trong `tests/luat.test.js`. | Giao diện |
-| 3 | `src/components/TaskDemo.jsx` là file minh hoạ cũ, app không dùng, lại ghi thẳng vào CSDL. | Nhỏ | Xoá file (trên GitHub: mở file → thùng rác → Commit), bỏ khỏi bản đồ và danh sách "ĐÃ BIẾT". | Ghi chép |
-| 4 | Nút "Khám: còn x việc" cao 40px (dưới 44px). | Lưu ý | Tăng lên 44px nếu bác sĩ thấy khó bấm. | Giao diện |
-| 5 | Luật sắp xếp việc (`byPri`) nằm trong file giao diện nên chưa có kiểm tra tự động. | Lưu ý | Chuyển sang `src/lib/` + thêm kiểm tra khi có lần sửa liên quan. | Thuật toán |
+| 1 | Luật sắp xếp việc (`byPri`) nằm trong file giao diện nên chưa có kiểm tra tự động. | Lưu ý | Chuyển sang `src/lib/` + thêm kiểm tra khi có lần sửa liên quan. | Thuật toán |
+
+## 28/10/2026 — v7.2 — Sửa 4 mục chờ duyệt
+- Phiếu: `doi-agent/phieu-viec/2026-10-28-sua-cho-duyet-1-4.json` (bác sĩ yêu cầu sửa mục 1–4 bảng "Chờ duyệt").
+- Đã đổi (lời thường):
+  1. "Lấy danh sách hôm qua" giờ giữ đúng thứ tự bé như hôm qua; bé thêm tay nằm cuối phòng. Thêm file `src/lib/thu-tu.js` và bài kiểm `tests/thu-tu.test.js` (7 bài). Bé của các ngày cũ vẫn xếp theo giờ tạo như trước; không đổi cơ sở dữ liệu hay định dạng sao lưu.
+  2. Khung "Tổng hợp y lệnh" chữ 15px → 16px (Safari không còn tự phóng to khi chạm sửa).
+  3. Xoá file minh hoạ cũ `src/components/TaskDemo.jsx`.
+  4. Nút "Khám: còn x việc" cao 40px → 44px.
+- Kết quả kiểm: Kiểm thử độc lập ĐẠT; npm test 47/47; dựng thử thành công; thứ tự bé đúng 6/6 lần chạy; lấy danh sách 2 lần không trùng; bảo mật đạt. `npm run build` chưa chạy được ở đây (mạng chặn npm) — sẽ chạy trên GitHub Actions.
+- Trên GitHub cần xoá tay `src/components/TaskDemo.jsx` (tải lên không tự xoá file cũ).
+- Ảnh chuẩn chưa cập nhật, chờ bác sĩ xem giao diện (nút cao hơn, chữ khung Tổng hợp lớn hơn).
 
 ## 28/10/2026 — v7.1 — Dựng đội agent và harness
 - Phiếu: `doi-agent/phieu-viec/2026-10-28-dung-doi-agent.json` (bác sĩ đã duyệt kế hoạch).

@@ -56,7 +56,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 /* ô nhập */
 .input{min-height:44px;padding:0 12px;border:1px solid var(--edge);border-radius:12px;background:var(--surface2);font-size:16px;color:var(--ink);width:100%}
 .textarea{padding:10px 12px;line-height:1.45;resize:vertical;min-height:auto}
-.mono{font-size:15px;line-height:1.5}
+.mono{font-size:16px;line-height:1.5}
 .bare-input{min-height:48px;padding:0 12px;border:0;background:transparent;font-size:16px;color:var(--ink);width:100%}
 .bare-input:focus-visible{outline-offset:-2px}
 .select{min-height:44px;padding:0 10px;border:1px solid var(--edge);border-radius:12px;background:var(--surface2);font-size:16px;font-weight:600;color:var(--ink)}
@@ -81,7 +81,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .chip .zone-count{color:var(--muted);min-width:0}
 .chip.on{background:var(--accent);border-color:var(--accent);color:var(--accentInk);font-weight:600}
 .chip.on .zone-count{color:var(--accentInk)}
-.exam-hint{align-self:flex-start;min-height:40px;padding:0 14px;border:0;border-radius:20px;background:var(--tint);color:var(--tintInk);font-size:14px;font-weight:600}
+.exam-hint{align-self:flex-start;min-height:44px;padding:0 14px;border:0;border-radius:20px;background:var(--tint);color:var(--tintInk);font-size:14px;font-weight:600}
 
 /* nhóm việc / phòng */
 .group{display:flex;flex-direction:column;gap:8px}

@@ -16,8 +16,8 @@ const SRC = list('src');
 // Những chỗ đã biết đang lệch luật, chờ bác sĩ duyệt sửa (xem doi-agent/NHAT_KY.md mục "Chờ duyệt").
 // Không thêm vào danh sách này nếu bác sĩ chưa đồng ý.
 const DA_BIET = {
-  ghiThang: ['src/components/TaskDemo.jsx'],   // file minh hoạ cũ, App không dùng
-  oNhapNho: ['.mono']                           // khung Tổng hợp y lệnh đang 15px
+  ghiThang: [],   // 28/10/2026: đã xoá TaskDemo.jsx
+  oNhapNho: []    // 28/10/2026: khung Tổng hợp y lệnh (.mono) đã lên 16px
 };
 
 test('luật 1: không có ô họ tên bệnh nhân', () => {

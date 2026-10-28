@@ -11,11 +11,12 @@
   - `SummaryPanel` — khung tổng hợp sửa được + Sao chép.
 - `src/lib/actions.js` — `ensureSeed` (tạo Phòng 1–3), `addRoom`, `renameRoom`, `removeRoom`, `addPatient`, `updatePatient`,
   `removePatient`, `addTodo`, `toggleTodo`, `removeTodo`, `copyPatientsFrom`.
-- `src/hooks.js` — `useAppData`: `prev` (ngày khám gần nhất trước hôm nay), `roomUse` (đếm bé theo phòng).
+- `src/lib/thu-tu.js` — hàm thuần `soSanhBe`, `sapBe`, `orderTiepTheo`: thứ tự bé trong phòng (theo `order`, rồi giờ tạo, rồi id).
+- `src/hooks.js` — `useAppData`: `prev` (ngày khám gần nhất trước hôm nay), `roomUse` (đếm bé theo phòng); danh sách bé sắp bằng `sapBe`.
 
 ## Dữ liệu
 - `rooms`: `id, name, order, …`
-- `exam_patients`: `id, examDate, roomId, code, dob, ga, wt, note, done, copiedFrom?, …`
+- `exam_patients`: `id, examDate, roomId, code, dob, ga, wt, note, done, order, copiedFrom?, …` (`order` là trường thường, không phải chỉ mục)
 - `patient_todos`: `id, patientId, text, done, order, …`
 
 ## Quyết định đã chốt
@@ -23,6 +24,7 @@ Xem mục "Khám" trong `doi-agent/QUYET_DINH_DA_CHOT.md`.
 
 ## Điểm dễ hỏng
 - `copyPatientsFrom` chống trùng theo **phòng + mã**; bé chưa có mã ("") sẽ bị coi là trùng với bé chưa có mã khác cùng phòng.
+- Thứ tự bé: `copyPatientsFrom` sắp bé nguồn rồi gán `order`; `addPatient` gán `order` để bé thêm tay nằm cuối. Bé cũ không có `order` vẫn xếp theo giờ tạo. Đừng bỏ `sapBe` khi đổi cách hiển thị (kiểm bằng `tests/thu-tu.test.js`).
 - `roomUse` đếm bằng một truy vấn cho mỗi phòng — ổn với vài phòng; nếu nhiều phòng, agent Thuật toán có thể gộp lại.
 - Tổng hợp y lệnh dùng `buildSummary` trong `src/lib/clinical.js` (xem thẻ tuần tuổi).
 - Ảnh chụp tự động thử "Lấy danh sách hôm qua" 2 lần để chắc không chép trùng.

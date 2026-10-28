@@ -1,0 +1,33 @@
+{
+  "ten": "Sửa mục 1, 2, 3, 4 trong Chờ duyệt (NHAT_KY.md): giữ thứ tự bé khi lấy danh sách hôm qua; khung Tổng hợp 16px; xoá TaskDemo.jsx; nút 'Khám: còn x việc' cao 44px",
+  "ngay": "2026-10-28",
+  "khuVuc": "Khám (mục 1), Khung chung (mục 2, 4), Việc (mục 3 — file minh hoạ cũ)",
+  "loai": "vua",
+  "canBacSiDuyet": false,
+  "daDuyet": "Bác sĩ yêu cầu sửa mục 1–4 trong Chờ duyệt ngày 28/10/2026",
+  "agent": ["thuat-toan", "dieu-phoi", "kiem-thu", "ghi-chep"],
+  "phanViec": {
+    "1": "Thuật toán (việc vừa): copyPatientsFrom chép theo thứ tự nhập của ngày nguồn và lưu số thứ tự rõ ràng (trường 'order' trên exam_patients, KHÔNG phải cột chỉ mục, không đổi db.js); danh sách bé sắp theo order rồi createdAt (bé cũ chưa có order vẫn đúng thứ tự cũ). Logic sắp xếp là hàm thuần trong src/lib/ + bài kiểm tra.",
+    "2": "Điều phối tự sửa (việc nhỏ): .mono trong src/App.css từ 15px lên 16px; bỏ '.mono' khỏi DA_BIET.oNhapNho trong tests/luat.test.js.",
+    "3": "Điều phối tự sửa (việc nhỏ): xoá src/components/TaskDemo.jsx; bỏ khỏi bản đồ và khỏi DA_BIET.ghiThang trong tests/luat.test.js; nhắc bác sĩ xoá file trên GitHub.",
+    "4": "Điều phối tự sửa (việc nhỏ): .exam-hint min-height 40px → 44px trong src/App.css."
+  },
+  "fileDuocSua": [
+    "src/lib/actions.js",
+    "src/lib/*.js",
+    "src/hooks.js",
+    "src/App.css",
+    "src/components/TaskDemo.jsx",
+    "tests/*.test.js",
+    "package.json"
+  ],
+  "tieuChiDat": [
+    "Bấm 'Lấy danh sách hôm qua' nhiều lần: thứ tự bé trong mỗi phòng luôn giống hôm qua (G01 trước G03)",
+    "Bé thêm bằng tay sau khi lấy danh sách nằm cuối phòng; bé của các ngày cũ (chưa có số thứ tự) vẫn hiện đúng thứ tự như trước",
+    "Chạm vào khung Tổng hợp y lệnh trên iPhone không bị phóng to (chữ 16px)",
+    "Không còn file TaskDemo.jsx; danh sách DA_BIET trong tests/luat.test.js rỗng",
+    "Nút 'Khám: còn x việc' cao ≥44px trên ảnh chụp iPhone",
+    "npm test đạt; không đổi db.js, không đổi định dạng sao lưu; ảnh iPhone không lệch ở chỗ khác"
+  ],
+  "ghiChu": "Mọi phiếu được phép sửa doi-agent/** (hồ sơ)."
+}
