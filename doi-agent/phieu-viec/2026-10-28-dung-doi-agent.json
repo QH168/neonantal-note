@@ -1,0 +1,22 @@
+{
+  "ten": "Dựng đội agent và harness (bộ hồ sơ, luật kiểm bằng máy, ca chuẩn, chụp giao diện)",
+  "ngay": "2026-10-28",
+  "khuVuc": "Toàn dự án (chỉ thêm hồ sơ và kiểm tra, không đổi app)",
+  "loai": "lon",
+  "canBacSiDuyet": true,
+  "daDuyet": "Bác sĩ duyệt kế hoạch ngày 28/10/2026",
+  "agent": ["dieu-phoi", "kiem-thu", "ghi-chep"],
+  "fileDuocSua": [
+    "scripts/*.mjs",
+    "tests/luat.test.js",
+    "tests/ban-do.test.js",
+    "tests/ca-chuan.test.js",
+    "package.json",
+    "README.md"
+  ],
+  "tieuChiDat": [
+    "Không file nào trong src/ bị đổi",
+    "npm test đạt",
+    "Bản dựng thử mở được trên khung iPhone 15 và PC, ảnh chụp đủ"
+  ]
+}

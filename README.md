@@ -25,7 +25,13 @@ src/lib/actions.js       Thêm/sửa/xoá dữ liệu
 src/lib/backup.js, merge.js  Xuất/nhập file, gộp dữ liệu
 src/db.js                Cơ sở dữ liệu trên máy
 tests/                   Kiểm thử tự động (chạy trên GitHub mỗi lần cập nhật)
+scripts/                 Công cụ cho agent: kiểm phạm vi, dựng thử, chụp giao diện
+doi-agent/               Hồ sơ đội agent: bản đồ dự án, thẻ tính năng, 6 agent, ca chuẩn lâm sàng
 ```
+
+## Nâng cấp bằng đội agent
+Xem `doi-agent/README.md`. Mỗi lần nâng cấp, mở trò chuyện mới với Claude:
+"Đọc `doi-agent/BAN_DO.md` trong kho QH168/neonantal-note và làm theo `doi-agent/agents/dieu-phoi.md`. Yêu cầu: …"
 
 ## Đưa lên mạng (GitHub Pages)
 Tải các file lên kho GitHub → GitHub tự kiểm thử, đóng gói và đăng tại

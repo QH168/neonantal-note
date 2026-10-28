@@ -1,0 +1,17 @@
+{
+  "ten": "Mô tả ngắn yêu cầu, bằng lời của bác sĩ",
+  "ngay": "2026-10-28",
+  "khuVuc": "Việc | Khám | Tính tuần tuổi | Sao lưu | Khung chung",
+  "loai": "nho | vua | lon",
+  "canBacSiDuyet": false,
+  "agent": ["giao-dien"],
+  "fileDuocSua": [
+    "src/components/Tasks.jsx",
+    "tests/*.test.js"
+  ],
+  "tieuChiDat": [
+    "Điều bác sĩ thấy được khi xong, ví dụ: nút X hiện ở Y",
+    "npm test đạt; ảnh iPhone không lệch ở chỗ khác"
+  ],
+  "ghiChu": "Mọi phiếu được phép sửa doi-agent/** (hồ sơ). Dấu * khớp mọi tên file trong một thư mục, ** khớp cả thư mục con."
+}
