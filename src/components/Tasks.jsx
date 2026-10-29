@@ -5,7 +5,7 @@ import { addTask, toggleTask, cycleUrgency, removeTask, setTaskTags, setTaskNote
 import { isoOf, parseIso } from '../lib/dates.js';
 import { TAGS, TAG_COLOR, laViecMoi, batTatNhan, sapViec, khuHienThi, khuDeChon, boDemCham, themCham } from '../lib/viec.js';
 import { useVietTat } from './VietTat.jsx';
-import { CheckBtn, PriDot, PRI_NAME, Chevron, XIcon, SwipeRow, TagDot, Sheet, TrashIcon } from './ui.jsx';
+import { CheckBtn, PriDot, PRI_NAME, Chevron, XIcon, SwipeRow, TagDot, Sheet, TrashIcon, DongBtn, useDongSheet } from './ui.jsx';
 
 /** Thanh khu vực: dạng cột (PC) hoặc chip vuốt ngang (iPhone). */
 export function ZoneNav({ dayTasks, active, onPick, chips }) {
@@ -82,7 +82,7 @@ function TaskDetail({ t, wide, onClose }) {
         <label htmlFor="ten-viec" className="sr-only">Nội dung việc</label>
         <textarea id="ten-viec" className="sheet-name" rows={ten.length > 52 ? 3 : ten.length > 26 ? 2 : 1} autoComplete="off" {...vtTen.props}
           onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } }} />
-        <button type="button" className="icon-btn" aria-label="Đóng" onClick={onClose}><XIcon /></button>
+        <DongBtn className="icon-btn" aria-label="Đóng" onClose={onClose}><XIcon /></DongBtn>
       </div>
       {vtTen.strip}
       <div className="row8 sheet-r2">
@@ -99,7 +99,7 @@ function TaskDetail({ t, wide, onClose }) {
       <div className="row8 sheet-r4">
         <button type="button" className="sheet-del-task" onClick={xoaViec}><TrashIcon size={18} />Xoá việc</button>
         <span className="grow" />
-        <button type="button" className="btn primary big sheet-done" onClick={onClose}>Xong</button>
+        <DongBtn className="btn primary big sheet-done" onClose={onClose}>Xong</DongBtn>
       </div>
     </Sheet>
   );
@@ -107,16 +107,22 @@ function TaskDetail({ t, wide, onClose }) {
 
 function TaskRow({ t, chips, onOpen }) {
   const bodyTaps = useRef([]);
+  const [sang, setSang] = useState(false); // dòng sáng lên một nhịp (~140ms) mỗi lần chạm
+  const hetSang = useRef(null);
+  useEffect(() => () => clearTimeout(hetSang.current), []);
   const moi = laViecMoi(t);
   // Chạm 2 lần (trong 1 giây) vào thân dòng hoặc vùng nhãn → chi tiết việc. Ô tick là phần tử khác nên không tính.
   const tapBody = () => {
+    setSang(true);
+    clearTimeout(hetSang.current);
+    hetSang.current = setTimeout(() => setSang(false), 140);
     bodyTaps.current = themCham(bodyTaps.current, Date.now());
     if (boDemCham(bodyTaps.current, 2)) { bodyTaps.current = []; onOpen(t.id); }
   };
   const tags = moi ? t.tags : [];
   const note = (t.note || '').trim();
   return (
-    <SwipeRow className={'task-row' + (chips ? ' compact' : '')} label={t.text} onDelete={() => removeTask(t.id)}>
+    <SwipeRow className={'task-row' + (chips ? ' compact' : '') + (sang ? ' flash' : '')} label={t.text} onDelete={() => removeTask(t.id)}>
       <CheckBtn done={t.done} onClick={() => toggleTask(t)}
         label={(t.done ? 'Bỏ đánh dấu hoàn thành: ' : 'Đánh dấu hoàn thành: ') + t.text} />
       <div className="task-main" role="button" tabIndex={0} aria-label={'Mở chi tiết việc: ' + t.text}
@@ -226,6 +232,8 @@ export function TaskForm({ variant, date, zone, setZone, tags, setTags }) {
 
 /** Lịch tháng: số dưới mỗi ngày là số việc chưa xong. */
 export function Calendar({ tasks, viewDate, today, month, setMonth, onPick, onClose }) {
+  const dongSheet = useDongSheet(); // trong bảng: đóng có chuyển động
+  const dong = onClose && (dongSheet ? () => dongSheet(onClose) : onClose);
   const { y, m } = month;
   const lead = (new Date(y, m, 1).getDay() + 6) % 7;
   const dim = new Date(y, m + 1, 0).getDate();
@@ -240,7 +248,7 @@ export function Calendar({ tasks, viewDate, today, month, setMonth, onPick, onCl
     const sel = iso === viewDate;
     const isT = iso === today;
     cells.push(
-      <button key={iso} type="button" onClick={() => onPick(iso)}
+      <button key={iso} type="button" onClick={() => { onPick(iso); dong?.(); }}
         className={'cal-cell' + (sel ? ' sel' : '') + (isT && !sel ? ' today' : '')}
         aria-label={`Ngày ${d} tháng ${m + 1}` + (left ? `, còn ${left} việc chưa xong` : ', không có việc chưa xong') + (isT ? ', hôm nay' : '')}>
         <span className="cal-day">{d}</span>
@@ -259,7 +267,7 @@ export function Calendar({ tasks, viewDate, today, month, setMonth, onPick, onCl
         <div className="cal-title">Tháng {m + 1}/{y}</div>
         <div className="row0">
           <button type="button" className="icon-btn" aria-label="Tháng sau" onClick={() => go(1)}><Chevron size={18} /></button>
-          {onClose && <button type="button" className="icon-btn" aria-label="Đóng lịch" onClick={onClose}><XIcon /></button>}
+          {dong && <button type="button" className="icon-btn" aria-label="Đóng lịch" onClick={dong}><XIcon /></button>}
         </div>
       </div>
       <div className="cal-grid cal-wd">{['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].map((w) => <span key={w}>{w}</span>)}</div>

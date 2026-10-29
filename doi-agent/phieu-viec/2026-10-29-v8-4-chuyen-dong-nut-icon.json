@@ -1,0 +1,24 @@
+{
+  "ten": "v8.4 — Chuyển động mượt (vuốt xoá theo ngón tay; mở chi tiết: nền mờ dần rồi bảng trượt lên) và nút xoá chỉ còn biểu tượng viền đỏ",
+  "ngay": "2026-10-29",
+  "khuVuc": "Khung chung (SwipeRow, Sheet), Việc, Khám (việc của bé), Viết tắt (thư viện)",
+  "loai": "vua",
+  "canBacSiDuyet": true,
+  "daDuyet": "Bác sĩ duyệt canvas bảng 10 (ChuyenDong, mô phỏng chuyển động) và bảng 11 (NutIcon) ngày 29/10/2026 21:08",
+  "agent": ["giao-dien", "kiem-thu", "ghi-chep"],
+  "dacTa": {
+    "nutXoa": "Nút xoá của SwipeRow (Việc, việc của bé, thư viện viết tắt, PC rê chuột): CHỈ biểu tượng thùng rác, không chữ, không nền. Ô vuông 44×44, bo góc 12px, viền 1.5px và biểu tượng cùng màu --p1 (sáng #C62828, tối #EF5350), stroke 1.8, cỡ 20px. Đang nhấn (:active): nền đỏ rất nhạt (sáng ~10%, tối ~14% alpha của --p1) và scale(0.94). Giữ aria-label 'Xoá việc: <tên>' / 'Xoá viết tắt: /key' và title tương ứng. Thẻ khi đang xoá vẫn viền đỏ 1.5px như v8.2.",
+    "vuot": "Chuyển động theo ngón tay (như ChuyenDong.dc.html, mô phỏng 1): trong lúc kéo, tiến độ p = clamp(độ kéo / 56px, 0, 1) cập nhật liên tục (không chuyển động trễ khi đang kéo): nút lộ dần từ phải sang trái bằng clip-path inset(0 0 0 (1-p)*100% round 12px), opacity 0.25+0.75p, màu viền/biểu tượng alpha 0.3+0.7p; nhãn (cụm nhãn/PriDot) mờ dần opacity 1-p, dịch trái 12p px, scale 1-0.25p; viền thẻ đỏ theo alpha p (box-shadow inset); chữ việc chừa chỗ bên phải tăng dần để không đè nút. Thả tay: p>0.5 → mở hẳn, ngược lại trả về; chuyển tiếp 220ms cubic-bezier(.2,.8,.2,1). Nút chỉ bấm được khi đã mở hẳn (p≈1). Kéo tối đa 72px. Bấm xoá: dòng thu chiều cao về 0 và mờ đi (~260ms) rồi mới xoá mềm khỏi danh sách. Giữ ngưỡng phân biệt vuốt ngang/cuộn dọc, pan-y, chỉ một dòng mở, chạm chỗ khác đóng. Tôn trọng prefers-reduced-motion (tắt chuyển tiếp). Cập nhật bằng biến CSS/ref (style trực tiếp hoặc requestAnimationFrame), tránh render lại cả danh sách mỗi lần pointermove.",
+    "moChiTiet": "Chạm 2 lần mở bảng chi tiết việc (như mô phỏng 2): dòng vừa chạm sáng lên một nhịp (~140ms); lớp nền mờ (rgba đen ~0.6) hiện dần opacity 0→1 trong 260ms; bảng trượt từ dưới lên translateY(105%)→0 trong 340ms cubic-bezier(.2,.8,.2,1), trễ 140ms. Đóng (Xong, ×, chạm nền, Esc): bảng trượt xuống 220ms cubic-bezier(.4,0,1,1), nền mờ tắt dần 220ms trễ 120ms; bảng chỉ gỡ khỏi trang sau khi chuyển động xong. Áp dụng cho Sheet dạng bảng dưới (sheet-ph) nói chung — mọi bảng trượt lên trên iPhone dùng cùng chuyển động; bảng hộp giữa trên PC: nền mờ dần + hộp hiện dần/phóng nhẹ (opacity + scale .96→1, 200ms). Tôn trọng prefers-reduced-motion. Giữ createPortal tới body (luật 10) và xử lý bàn phím visualViewport.",
+    "khongLam": "Không đổi chức năng, dữ liệu, CSDL, sao lưu. Không thêm thư viện."
+  },
+  "fileDuocSua": ["src/components/*.jsx", "src/App.jsx", "src/App.css", "src/lib/*.js", "tests/*.test.js", "scripts/chup-giao-dien.mjs"],
+  "tieuChiDat": [
+    "Kéo trái: nút thùng rác viền đỏ hiện dần từ phải sang trái theo ngón tay; thả quá nửa thì mở, chưa tới thì trả về mượt",
+    "Nút xoá chỉ biểu tượng, viền đỏ, không nền, đúng ở sáng và tối; bấm mới xoá; dòng thu gọn mượt trước khi biến mất",
+    "Chạm 2 lần: nền mờ dần rồi bảng trượt lên; đóng: bảng trượt xuống rồi nền tắt",
+    "Không giật khi kéo trên danh sách dài; cuộn dọc vẫn mượt",
+    "npm test đạt; vùng chạm ≥44px; ô nhập ≥16px"
+  ],
+  "ghiChu": "Bản thiết kế/mô phỏng: canvas bảng 10 ChuyenDong.dc.html và bảng 11 NutIcon.dc.html (bản sao trong scratchpad v8-4)."
+}

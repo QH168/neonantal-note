@@ -1,6 +1,6 @@
 /* Màu sắc theo prototype: xanh da trời, sáng/tối */
-.th{color-scheme:light;--bg:#F2F7FB;--surface:#FFFFFF;--surface2:#EAF1F7;--line:#D6E2EC;--edge:#B4C6D6;--ink:#12202B;--muted:#4A5D6E;--box:#6B7F91;--done:#5A6E7F;--track:#DDE8F1;--accent:#0B79B8;--accentInk:#FFFFFF;--tint:#DCEFFB;--tint2:#E6F2FB;--tintInk:#075985;--badge:#12202B;--badgeInk:#FFFFFF;--errBg:#FBEAE8;--errInk:#8E1B13;--warn:#9A5B00;--shadow:rgba(18,32,43,.18);--overlay:rgba(18,32,43,.45);--p1:#C62828;--p1i:#FFFFFF;--p1e:#C62828;--p2:#F2B90F;--p2i:#12202B;--p2e:#A67800;--p3:#2E7D32;--p3i:#FFFFFF;--p3e:#2E7D32;--p4:#1A3FA6;--p4i:#FFFFFF;--p4e:#1A3FA6;--p5:#7B3FA0;--p5i:#FFFFFF;--p5e:#7B3FA0;--vtAct:#9AD3F5}
-.th.dark{color-scheme:dark;--bg:#0E151C;--surface:#17212B;--surface2:#1F2C38;--line:#2A3948;--edge:#3B4E60;--ink:#E8EFF5;--muted:#9FB1C1;--box:#7F93A5;--done:#8DA0B2;--track:#263747;--accent:#5BB8EE;--accentInk:#06202F;--tint:#123248;--tint2:#14304A;--tintInk:#9AD3F5;--badge:#E8EFF5;--badgeInk:#0E151C;--errBg:#3A1B18;--errInk:#FFB4AB;--warn:#F5C26B;--shadow:rgba(0,0,0,.5);--overlay:rgba(0,0,0,.6);--p1:#EF5350;--p1i:#1A0A0A;--p1e:#EF5350;--p2:#F2B90F;--p2i:#12202B;--p2e:#F2B90F;--p3:#4CAF50;--p3i:#0B1F0C;--p3e:#4CAF50;--p4:#7C93FF;--p4i:#0A1240;--p4e:#7C93FF;--p5:#C9A0E8;--p5i:#22102F;--p5e:#C9A0E8;--vtAct:#0B79B8}
+.th{color-scheme:light;--bg:#F2F7FB;--surface:#FFFFFF;--surface2:#EAF1F7;--line:#D6E2EC;--edge:#B4C6D6;--ink:#12202B;--muted:#4A5D6E;--box:#6B7F91;--done:#5A6E7F;--track:#DDE8F1;--accent:#0B79B8;--accentInk:#FFFFFF;--tint:#DCEFFB;--tint2:#E6F2FB;--tintInk:#075985;--badge:#12202B;--badgeInk:#FFFFFF;--errBg:#FBEAE8;--errInk:#8E1B13;--warn:#9A5B00;--shadow:rgba(18,32,43,.18);--overlay:rgba(18,32,43,.45);--p1:#C62828;--p1i:#FFFFFF;--p1e:#C62828;--p2:#F2B90F;--p2i:#12202B;--p2e:#A67800;--p3:#2E7D32;--p3i:#FFFFFF;--p3e:#2E7D32;--p4:#1A3FA6;--p4i:#FFFFFF;--p4e:#1A3FA6;--p5:#7B3FA0;--p5i:#FFFFFF;--p5e:#7B3FA0;--vtAct:#9AD3F5;--p1rgb:198,40,40}
+.th.dark{color-scheme:dark;--bg:#0E151C;--surface:#17212B;--surface2:#1F2C38;--line:#2A3948;--edge:#3B4E60;--ink:#E8EFF5;--muted:#9FB1C1;--box:#7F93A5;--done:#8DA0B2;--track:#263747;--accent:#5BB8EE;--accentInk:#06202F;--tint:#123248;--tint2:#14304A;--tintInk:#9AD3F5;--badge:#E8EFF5;--badgeInk:#0E151C;--errBg:#3A1B18;--errInk:#FFB4AB;--warn:#F5C26B;--shadow:rgba(0,0,0,.5);--overlay:rgba(0,0,0,.6);--p1:#EF5350;--p1i:#1A0A0A;--p1e:#EF5350;--p2:#F2B90F;--p2i:#12202B;--p2e:#F2B90F;--p3:#4CAF50;--p3i:#0B1F0C;--p3e:#4CAF50;--p4:#7C93FF;--p4i:#0A1240;--p4e:#7C93FF;--p5:#C9A0E8;--p5i:#22102F;--p5e:#C9A0E8;--vtAct:#0B79B8;--p1rgb:239,83,80}
 
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg,#F2F7FB);color:var(--ink);font-family:'Be Vietnam Pro',system-ui,-apple-system,sans-serif;-webkit-text-size-adjust:100%}
@@ -249,25 +249,66 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .tag-btn{font-size:13px;letter-spacing:-.02em}
 :is(.phone-app,.sheet-ph) .tag-btn{font-size:13px}
 
-/* ===== v8.2: nút xoá kiểu C (nằm trong dòng, thẻ không trượt) ===== */
-.swipe{position:relative}
-.swipe-body{position:relative;touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-/* nút xoá khi chưa hiện: vẫn có trong thứ tự Tab và cho trình đọc màn hình, nhưng không chiếm chỗ */
-.swipe-del{position:absolute;right:0;bottom:0;width:0;height:0;margin:0;padding:0;border:0;background:transparent;overflow:hidden;opacity:0;pointer-events:none;flex:none}
-.swipe-del-face{display:flex;align-items:center;gap:6px;height:44px;padding:0 12px;border-radius:10px;background:var(--p1);color:var(--p1i);font-size:13.5px;font-weight:700;white-space:nowrap}
-/* đang xoá (vuốt trái) hoặc Tab tới: nút hiện ngay trong dòng */
-.swipe.armed .swipe-del,.swipe-del:focus-visible{position:static;width:auto;height:44px;margin-left:2px;display:flex;align-items:center;overflow:visible;opacity:1;pointer-events:auto}
-.swipe-del:focus-visible{outline:none}
-.swipe-del:focus-visible .swipe-del-face{outline:2px solid var(--accent);outline-offset:2px}
-.swipe.armed>.swipe-body{border-color:var(--p1);outline:1.5px solid var(--p1);outline-offset:-1.5px}
-.swipe.armed .swipe-tail{display:none}
+/* ===== v8.4: vuốt xoá theo ngón tay + nút chỉ biểu tượng =====
+   --p (0..1) do SwipeRow ghi thẳng lên .swipe khi kéo; mọi thứ dưới đây chỉ là công thức theo --p. */
+.swipe{position:relative;--p:0;--pb:var(--p);--pd:calc(var(--p)*49px)}
+.swipe-body{position:relative;touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;transition:padding-right 220ms cubic-bezier(.2,.8,.2,1)}
+/* viền thẻ đỏ dần theo p (lớp phủ, không đổi kích thước) */
+.swipe-body::after{content:"";position:absolute;inset:0;border:1.5px solid rgba(var(--p1rgb),var(--p));border-radius:inherit;pointer-events:none;transition:border-color 220ms cubic-bezier(.2,.8,.2,1)}
+.swipe-body.task-row::after{inset:-1px}
+/* chừa chỗ bên phải cho nút, tăng dần theo p */
+.swipe-body.task-row{padding-right:calc(8px + var(--pd))}
+.swipe-body.task-row.compact{padding-right:var(--pd)}
+.swipe-body.todo-row{padding-right:calc(4px + var(--pd))}
+.swipe-body.vt-item{padding-right:calc(4px + var(--pd))}
+/* nhãn mờ dần, dịch trái, thu nhỏ */
+.swipe .swipe-tail{opacity:calc(1 - var(--p));transform:translateX(calc(var(--p)*-12px)) scale(calc(1 - .25*var(--p)));transition:opacity 220ms cubic-bezier(.2,.8,.2,1),transform 220ms cubic-bezier(.2,.8,.2,1)}
+.swipe.armed .swipe-tail{pointer-events:none}
+/* nút xoá: chỉ biểu tượng thùng rác, viền + biểu tượng --p1, không nền; lộ dần từ phải sang trái */
+.swipe-del{position:absolute;right:5px;top:50%;margin:-22px 0 0;width:44px;height:44px;box-sizing:border-box;padding:0;display:flex;align-items:center;justify-content:center;flex:none;
+  border:1.5px solid var(--p1);border-radius:12px;background:transparent;color:var(--p1);
+  border-color:rgba(var(--p1rgb),calc(.3 + .7*var(--pb)));color:rgba(var(--p1rgb),calc(.3 + .7*var(--pb)));
+  clip-path:inset(0 0 0 calc((1 - var(--pb))*100%) round 12px);opacity:calc(.25 + .75*var(--pb));pointer-events:none;
+  transition:clip-path 220ms cubic-bezier(.2,.8,.2,1),opacity 220ms cubic-bezier(.2,.8,.2,1),border-color 220ms,color 220ms,background-color 120ms,transform 120ms}
+.swipe-del svg{display:block;stroke-width:1.8}
+.swipe.armed .swipe-del{pointer-events:auto}
+.swipe-del:active{background:rgba(198,40,40,.10);transform:scale(.94)}
+.th.dark .swipe-del:active{background:rgba(239,83,80,.14)}
+/* Tab tới nút: hiện đủ ngay, chừa chỗ */
+.swipe:has(.swipe-del:focus-visible){--pb:1 !important;--pd:49px !important}
+.swipe-del:focus-visible{outline:2px solid var(--accent);outline-offset:2px;clip-path:none}
+/* đang kéo hoặc đã mở: chữ việc một dòng, cắt bằng "…" để dòng không đổi chiều cao */
+.swipe.drag .task-text,.swipe.drag .todo-text,.swipe.drag .vt-v,
 .swipe.armed .task-text,.swipe.armed .todo-text,.swipe.armed .vt-v{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-/* PC (chuột): rê chuột vào dòng thì hiện nút "Xoá" viền đỏ cạnh nhãn */
+/* đang kéo: không chuyển tiếp trễ, bám ngón tay */
+.swipe.drag .swipe-body,.swipe.drag .swipe-body::after,.swipe.drag .swipe-tail,.swipe.drag .swipe-del{transition:none}
+/* PC (chuột): rê chuột vào dòng thì nút hiện đầy đủ */
 @media (hover:hover) and (pointer:fine){
-  .swipe:hover .swipe-del{position:static;width:auto;height:44px;margin-left:2px;display:flex;align-items:center;overflow:visible;opacity:1;pointer-events:auto}
-  .swipe-del-face{height:40px;padding:0 10px;border:1.5px solid var(--p1);background:var(--surface);color:var(--p1e);font-size:13px}
-  .swipe:hover>.swipe-body{border-color:var(--edge)}
+  .swipe:hover{--pb:1;--pd:49px}
+  .swipe:hover .swipe-del{pointer-events:auto}
 }
+/* dòng vừa chạm sáng lên một nhịp */
+.task-row{transition:background-color 160ms ease}
+.task-row.flash{background:color-mix(in srgb,var(--accent) 14%,var(--surface))}
+@media (prefers-reduced-motion:reduce){
+  .swipe-body,.swipe-body::after,.swipe .swipe-tail,.swipe-del,.task-row{transition:none !important}
+  .sheet-backdrop,.sheet{animation:none !important}
+}
+
+/* ===== v8.4: mở/đóng bảng ===== */
+@keyframes bdIn{from{opacity:0}to{opacity:1}}
+@keyframes bdOut{to{opacity:0}}
+@keyframes shIn{from{transform:translateY(105%)}to{transform:none}}
+@keyframes shOut{to{transform:translateY(105%)}}
+@keyframes boxIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+@keyframes boxOut{to{opacity:0;transform:scale(.96)}}
+.sheet-backdrop{animation:bdIn 260ms ease backwards}
+.sheet{animation:shIn 340ms cubic-bezier(.2,.8,.2,1) 140ms backwards}
+.sheet-wrap.center .sheet{animation:boxIn 200ms ease backwards}
+.sheet-wrap.out{pointer-events:none}
+.sheet-wrap.out .sheet-backdrop{animation:bdOut 220ms ease 120ms forwards}
+.sheet-wrap.out .sheet{animation:shOut 220ms cubic-bezier(.4,0,1,1) forwards}
+.sheet-wrap.center.out .sheet{animation:boxOut 200ms ease forwards}
 
 /* ===== v8.2: bảng chi tiết việc (cao ~50% màn hình) ===== */
 .sheet.sheet-half{height:clamp(380px,53%,480px);max-height:90%;overflow:hidden;gap:10px;padding:10px 16px calc(24px + env(safe-area-inset-bottom));border-radius:22px 22px 0 0;border-top:1px solid var(--line)}
@@ -320,4 +361,3 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .vt-v{flex:1;min-width:0;font-size:14px;line-height:1.35;overflow-wrap:anywhere}
 .vt-empty{padding:24px 16px}
 @media (hover:hover) and (pointer:fine){.vt-key{width:140px}}
-.swipe.armed .task-row.compact{padding-right:5px}

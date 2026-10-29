@@ -48,3 +48,8 @@
 - Ngày sinh nhận: 0810, 08/10, 8/10, 8-10, 8.10, 08/10/2026, 081026. Không ghi năm: lấy năm nay; nếu thành ngày tương lai thì lùi về năm trước. ⚙
 - Tuổi thai nhận: 346, 34w6d, 34+6, 34 6, 34.6, 3406, 34 (= 34w0d); giới hạn 20–45 tuần, ngày lẻ 0–6. ⚙
 - Ví dụ đã kiểm (tính ngày 21/10/2026): 05/08 + 25 tuần → 77 ngày, 36w0d; 20/09 + 32w0d → 31 ngày, 36w3d; 04/10 + 39w0d → 17 ngày, 41w3d. ⚙
+
+## Chuyển động và nút xoá (bác sĩ duyệt 29/10/2026)
+- Nút xoá khi vuốt: chỉ biểu tượng thùng rác, viền đỏ, không nền, 44×44 (sáng #C62828, tối #EF5350).
+- Vuốt xoá bám theo ngón tay: nút hiện dần từ phải sang trái, nhãn mờ dần; thả quá nửa thì mở.
+- Chạm 2 lần: nền mờ dần rồi bảng chi tiết trượt lên; đóng: bảng trượt xuống rồi nền tắt.

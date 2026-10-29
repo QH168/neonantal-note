@@ -14,6 +14,15 @@
 | 6 | Thiết kế có dòng chữ "MỚI" dưới nút "/a" nhưng chưa làm vì đè thanh tiến độ. | Lưu ý | Hỏi bác sĩ có cần dòng "MỚI" không; nếu cần thì chọn chỗ đặt khác. | Giao diện |
 | 7 | Chạm nút Xoá trong vòng ~0,5 giây sau khi vuốt có thể không ăn (trình duyệt giả lập không sinh click; trang trống cũng vậy). | Lưu ý | Bác sĩ thử trên iPhone; nếu bị thì đổi nút Xoá sang xử lý pointerup (SwipeRow, ui.jsx). | Giao diện |
 
+## 29/10/2026 — v8.4 — Chuyển động mượt, nút xoá chỉ biểu tượng
+- Phiếu: `doi-agent/phieu-viec/2026-10-29-v8-4-chuyen-dong-nut-icon.json` (bác sĩ duyệt mô phỏng canvas bảng 10 và bảng 11).
+- Đã đổi (lời thường):
+  1. Vuốt trái để xoá bám theo ngón tay: nút thùng rác hiện dần từ phải sang trái, nhãn mờ dần; thả quá nửa thì mở, chưa tới thì trả về. Bấm xoá: dòng thu gọn mượt rồi mới biến mất.
+  2. Nút xoá chỉ còn biểu tượng thùng rác, viền đỏ, không nền (sáng/tối); chạm nhanh ngay sau khi vuốt vẫn xoá được.
+  3. Mọi bảng trượt lên: nền mờ dần rồi bảng trượt lên; đóng thì bảng trượt xuống rồi nền sáng lại. Máy tính: hộp hiện dần.
+  4. Thiết bị bật "giảm chuyển động" thì tắt hiệu ứng.
+- Kết quả kiểm: kiểm thử độc lập ĐẠT; npm test 76/76; đo từng bước kéo tăng đơn điệu, các dòng khác không vẽ lại khi kéo; chạm nút ở 100/300/600ms đều xoá đúng một lần; mọi bảng mở/đóng có chuyển động và gỡ sau khi đóng. Ghi chú: "Xoá việc" trong chi tiết việc đóng bảng ngay (không hoạt ảnh); trong lúc bảng đang đóng (~0,36 giây) cú chạm rơi xuống dòng phía sau. Chưa kiểm cảm giác ngón tay thật trên iPhone.
+
 ## 29/10/2026 — v8.3 — Sửa lỗi bảng dưới bị che trên iPhone
 - Phiếu: `doi-agent/phieu-viec/2026-10-29-v8-3-sua-loi-bang-duoi.json` (bác sĩ gửi ảnh iPhone báo lỗi).
 - Đã đổi (lời thường):

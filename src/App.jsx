@@ -229,7 +229,7 @@ function AppChinh() {
       {calSheet && isTask && (
         <Sheet label="Lịch" onClose={() => setCalSheet(false)}>
           <Calendar tasks={tasks} viewDate={viewDate} today={today} month={calMonth} setMonth={setCalMonth}
-            onPick={(d) => { setViewDate(d); setCalSheet(false); }} onClose={() => setCalSheet(false)} />
+            onPick={(d) => setViewDate(d)} onClose={() => setCalSheet(false)} />
         </Sheet>
       )}
       {sel && !isTask && (
