@@ -1,4 +1,4 @@
-// Bảng "Thư viện viết tắt": thêm, tìm, sửa (bút chì), xoá (vuốt trái / thùng rác).
+// Bảng "Thư viện viết tắt": thêm, tìm, sửa (bút chì), xoá (vuốt trái / rê chuột rồi chạm nút Xoá).
 import { useRef, useState } from 'react';
 import { useAbbrevs } from '../hooks.js';
 import { addAbbrev, updateAbbrev, removeAbbrev } from '../lib/actions.js';
@@ -113,7 +113,7 @@ export default function ThuVien({ wide, onClose }) {
           </div>
         ))}
       </div>
-      <div className="muted xsmall">Xoá một mục: vuốt dòng sang trái rồi chạm thùng rác (máy tính: rê chuột vào dòng).</div>
+      <div className="muted xsmall">Xoá một mục: vuốt dòng sang trái rồi chạm nút Xoá (máy tính: rê chuột vào dòng).</div>
     </Sheet>
   );
 }

@@ -6,12 +6,26 @@
 
 | # | Phát hiện | Mức | Đề xuất | Agent |
 |---|---|---|---|---|
-| 1 | Cuộn dọc danh sách bằng ngón tay khi có SwipeRow chưa kiểm được bằng máy (Chromium headless) — bác sĩ thử trên iPhone. | Lưu ý | Bác sĩ thử vuốt dọc/trái trên iPhone; nếu vướng thì giao phiếu chỉnh. | Giao diện |
+| 1 | Cuộn dọc danh sách và vuốt trái (SwipeRow kiểu C) bằng ngón tay thật, cùng bàn phím iPhone thật với bảng chi tiết việc, chưa kiểm được bằng máy (Chromium headless) — bác sĩ thử trên iPhone. | Lưu ý | Bác sĩ thử vuốt dọc/trái và gõ trong chi tiết việc trên iPhone; nếu vướng thì giao phiếu chỉnh. | Giao diện |
 | 2 | Ảnh chuẩn `doi-agent/anh-chuan/` chưa cập nhật cho v8. | Lưu ý | Cập nhật sau khi bác sĩ xem giao diện v8 trên máy thật. | Kiểm thử |
 | 3 | Ô thêm việc một dòng: gõ "/ctm" rồi Enter thì gửi luôn, không thay chữ (phiếu chỉ yêu cầu dấu cách). | Lưu ý | Hỏi bác sĩ có muốn Enter cũng thay chữ trước khi gửi không. | Giao diện |
 | 4 | Bản tối: hộp thông báo "Đã thay" nền sáng, đọc rõ nhưng sáng hơn phần còn lại. | Lưu ý | Bác sĩ xem trên máy thật; nếu chói thì chỉnh màu `--vtAct` và nền hộp. | Giao diện |
 | 5 | PC: ô lịch tháng 39×48px (có từ trước, không phải do v8.1). | Lưu ý | Phóng to ô nếu bác sĩ dùng chuột/chạm trên PC. | Giao diện |
 | 6 | Thiết kế có dòng chữ "MỚI" dưới nút "/a" nhưng chưa làm vì đè thanh tiến độ. | Lưu ý | Hỏi bác sĩ có cần dòng "MỚI" không; nếu cần thì chọn chỗ đặt khác. | Giao diện |
+| 7 | Chạm nút Xoá trong vòng ~0,5 giây sau khi vuốt có thể không ăn (trình duyệt giả lập không sinh click; trang trống cũng vậy). | Lưu ý | Bác sĩ thử trên iPhone; nếu bị thì đổi nút Xoá sang xử lý pointerup (SwipeRow, ui.jsx). | Giao diện |
+
+## 29/10/2026 — v8.2 — Nút xoá kiểu C, chi tiết việc
+- Phiếu: `doi-agent/phieu-viec/2026-10-29-v8-2-xoa-c-chi-tiet-viec.json` (bác sĩ duyệt canvas "Ghi chú Sơ sinh v8 — thiết kế" bảng 8 và 9 ngày 29/10/2026).
+- Đã đổi (lời thường):
+  1. Nút xoá kiểu C: vuốt trái thì thẻ đứng yên, viền đỏ, nhãn cuối dòng đổi thành nút "Xoá" đỏ trong dòng (tab Việc, việc của bé ở Khám, thư viện viết tắt); PC rê chuột hiện nút "Xoá" viền đỏ cạnh nhãn.
+  2. Chạm 2 lần vào việc mở bảng "chi tiết việc" cao ~50% màn hình (không tiêu đề): sửa tên, khu, nhãn, ghi chú rộng (lớn nhất), nút "Xoá việc" và "Xong"; tự lưu (tên rỗng không lưu).
+  3. Bỏ chạm 3 lần, bảng nhãn riêng, bảng ghi chú cũ, vòng tròn nét đứt.
+  4. Việc cũ: gắn nhãn mới trong bảng chi tiết thì chuyển sang kiểu mới (urgency vẫn giữ trong dữ liệu); không gắn thì giữ số cũ.
+  5. Bảng dưới tự co trên bàn phím iPhone (visualViewport). Gợi ý trên tab Việc: "Chạm 2 lần: chi tiết · Vuốt trái: xoá".
+  - Kỹ thuật: `ui.jsx` (SwipeRow kiểu C, Sheet cao ~50% + visualViewport); `Tasks.jsx` (TaskDetail đặt ở TaskGroups); `ThuVien.jsx`; `App.jsx`; `App.css`; `actions.js` (setTaskText, setTaskZone); `viec.js` (chuanTenViec, khuDeChon) + `tests/viec.test.js`.
+- Kết quả kiểm: Kiểm thử độc lập ĐẠT; npm test 75/75; dựng thử thành công; bộ chụp tự động 0 lỗi; vùng chạm ≥44px, ô nhập ≥16px; thẻ không dịch khi vuốt, xoá = deleted ở 4 loại dòng sáng/tối; bảng 452px (53% màn hình); sửa tên/khu/nhãn/ghi chú/xoá đều đúng; việc cũ đúng; bàn phím giả lập đúng. Chưa kiểm được trên máy thật: bàn phím iPhone thật, vuốt cảm ứng thật.
+- Quan sát: ghi vào Chờ duyệt mục 7 (mức Lưu ý); mục 1 cập nhật cho SwipeRow kiểu C và bàn phím iPhone.
+- Ảnh chuẩn chưa cập nhật (xem Chờ duyệt mục 2).
 
 ## 29/10/2026 — v8.1 — Đợt 2: viết tắt
 - Phiếu: `doi-agent/phieu-viec/2026-10-28-v8-dot2-viet-tat.json` (bác sĩ duyệt bản thiết kế v8 ngày 28/10/2026).

@@ -7,9 +7,9 @@
 - `src/lib/actions.js` — `addAbbrev` (key trùng thì báo để hỏi ghi đè), `updateAbbrev`, `removeAbbrev`, `seedAbbrevs` (gọi trong `ensureSeed`).
 - `src/hooks.js` — `useAbbrevs`.
 - `src/components/VietTat.jsx` — `VietTatProvider` (bọc App, đọc thư viện một lần), `useVietTat(value, setValue, {onBlur})` → `{ props, strip }`: rải `props` vào ô, đặt `strip` (dải gợi ý + hộp "Đã thay /key" + Hoàn tác ~4 giây).
-- `src/components/ThuVien.jsx` — bảng "Thư viện viết tắt": thêm, sửa (bút chì), tìm (gõ không dấu cũng ra), vuốt trái để xoá.
-- `src/App.jsx` — nút "/a" mở thư viện; `src/components/ui.jsx` — `PencilIcon`, `SwipeRow` (`kind`), `Sheet` (`className`).
-- Đã gắn `useVietTat` ở 5 loại ô: thêm việc, ghi chú việc, việc cần làm của bé, ghi chú của bé, khung Tổng hợp y lệnh.
+- `src/components/ThuVien.jsx` — bảng "Thư viện viết tắt": thêm, sửa (bút chì), tìm (gõ không dấu cũng ra), xoá kiểu C (vuốt trái: thẻ đứng yên, viền đỏ, nút "Xoá" đỏ ở cuối dòng; PC rê chuột hiện nút).
+- `src/App.jsx` — nút "/a" mở thư viện; `src/components/ui.jsx` — `PencilIcon`, `SwipeRow` (`kind`, xoá kiểu C), `Sheet` (`className`, co theo bàn phím iPhone qua visualViewport). Ô tên và ghi chú trong bảng chi tiết việc (`TaskDetail`) cũng dùng `useVietTat`.
+- Đã gắn `useVietTat` ở các ô: thêm việc, tên việc và ghi chú việc (bảng chi tiết việc), việc cần làm của bé, ghi chú của bé, khung Tổng hợp y lệnh.
 
 ## Dữ liệu
 - Bảng `abbrevs` (id, key, text, updatedAt, deleted) ở `db.version(2)`; có trong `DATA_TABLES` → được sao lưu/gộp. Chi tiết: `doi-agent/the-tinh-nang/sao-luu.md`.
@@ -24,4 +24,6 @@
 - Sau khi thay chữ, con trỏ đặt lại bằng `setSelectionRange` trong `useLayoutEffect`; bỏ hoặc đổi thứ tự là con trỏ nhảy về cuối.
 - iPhone: nút gợi ý/Hoàn tác dùng `preventDefault` ở `onPointerDown`/`onMouseDown` để không mất bàn phím; chỉ thay khi `inputType` là kiểu chèn (không thay khi xoá/hoàn tác của hệ thống).
 - Ô một dòng (thêm việc): gõ "/ctm" rồi Enter thì gửi luôn mà không thay chữ (chỉ dấu cách thay) — đang chờ bác sĩ quyết (NHAT_KY, Chờ duyệt).
+- Thư viện: `SwipeRow` chặn click ngay sau khi vuốt (~0,4 giây); chạm nút Xoá sát sau khi vuốt có thể không ăn (xem "Chờ duyệt" trong `NHAT_KY.md`).
+- Bảng chi tiết việc dùng `Sheet` co theo bàn phím (visualViewport); `strip` của viết tắt vẫn phải nằm ngoài `label`.
 - Thêm ô gõ chữ mới mà không dùng `useVietTat` thì ô đó không có viết tắt.

@@ -210,7 +210,7 @@ function AppChinh() {
           <ZoneNav chips dayTasks={dayTasks} active={active} onPick={pickZone} />
           <main className="ph-main">
             {examHint}
-            {dayTasks.length > 0 && <div className="muted xsmall">Chạm 2 lần: ghi chú · Vuốt trái: xoá</div>}
+            {dayTasks.length > 0 && <div className="muted xsmall">Chạm 2 lần: chi tiết · Vuốt trái: xoá</div>}
             <TaskGroups chips dayTasks={dayTasks} active={active} collapsed={collapsed} onToggle={toggleIn(setCollapsed)} />
             {clearDoneBtn}
           </main>

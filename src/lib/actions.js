@@ -1,5 +1,5 @@
 // Mọi thao tác ghi dữ liệu của app. Luôn đi qua addRow/updateRow/softDelete để có updatedAt.
-import { chuanHoaTags } from './viec.js';
+import { chuanHoaTags, chuanTenViec } from './viec.js';
 import { sapBe, orderTiepTheo } from './thu-tu.js';
 import { chuanKey, BO_MAU } from './viet-tat.js';
 import { db, addRow, updateRow, softDelete, getDeviceId, getMeta, setMeta } from '../db.js';
@@ -47,6 +47,14 @@ export const addTask = (t) => addRow('tasks', {
 });
 export const setTaskTags = (t, tags) => updateRow('tasks', t.id, { tags: chuanHoaTags(tags) });
 export const setTaskNote = (id, note) => updateRow('tasks', id, { note });
+// Sửa tên việc: bỏ khoảng trắng 2 đầu; rỗng thì không ghi (trả false).
+export async function setTaskText(id, text) {
+  const s = chuanTenViec(text);
+  if (!s) return false;
+  await updateRow('tasks', id, { text: s });
+  return true;
+}
+export const setTaskZone = (id, zone) => updateRow('tasks', id, { zone });
 export const toggleTask = (t) => updateRow('tasks', t.id, { done: !t.done });
 // Chạm vào số để đổi mức: 1→2→3→4→5 (NV)→1
 export const cycleUrgency = (t) => updateRow('tasks', t.id, { urgency: (t.urgency % 5) + 1 });

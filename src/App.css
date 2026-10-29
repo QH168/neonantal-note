@@ -240,38 +240,52 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 /* ghi chú dưới tên việc: 12.5px, tối đa 2 dòng */
 .task-note{font-size:12.5px;line-height:1.4;color:var(--muted);white-space:pre-line;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .task-main .done+.task-note{color:var(--done)}
-/* cụm chấm nhãn ở cuối dòng (vùng chạm >= 44px, cả khi chưa có nhãn) */
-.tag-zone{flex:none;min-width:44px;min-height:44px;max-width:100px;align-self:center;padding:4px;border:0;background:transparent;display:flex;flex-wrap:wrap;align-content:center;align-items:center;justify-content:center;gap:4px;touch-action:manipulation}
+/* cụm chấm nhãn ở cuối dòng: chỉ để xem (chạm vào tính như chạm thân dòng) */
+.tag-zone{flex:none;max-width:100px;align-self:stretch;padding:0 4px;display:flex;flex-wrap:wrap;align-content:center;align-items:center;justify-content:center;gap:4px;touch-action:manipulation}
 .tag-dot{flex:none;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;letter-spacing:-.02em}
 .tag-dot.big{width:32px;height:32px;font-size:12px}
-.tag-empty{width:22px;height:22px;border-radius:50%;border:1.5px dashed var(--box);opacity:.6}
 .phone-app .tag-dot{width:24px;height:24px;font-size:10px}
 .phone-app .tag-dot.big{width:32px;height:32px;font-size:12px}
 .tag-btn{font-size:13px;letter-spacing:-.02em}
 .phone-app .tag-btn{font-size:13px}
-/* bảng nhãn */
-.sheet-task{font-size:15px;padding:10px 12px;background:var(--surface2);border-radius:12px;overflow-wrap:anywhere}
-.tag-opt{height:52px;display:flex;align-items:center;gap:12px;padding:0 12px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);text-align:left;font-size:15px}
-.tag-opt.on{border:2px solid var(--tc);background:color-mix(in srgb,var(--tb) 16%,var(--surface))}
-.tag-opt-name{font-weight:600}
-.tag-opt-on{font-size:13px;font-weight:600}
-.btn.danger-outline{border-color:var(--p1e);color:var(--p1e);background:var(--surface)}
-/* vuốt trái để xoá */
-.swipe{position:relative;border-radius:12px;overflow:hidden}
-.swipe-body{position:relative;z-index:1;touch-action:pan-y;transition:transform .18s ease;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-.swipe-body.drag{transition:none}
-.swipe-del{position:absolute;top:0;right:0;bottom:0;width:84px;padding:0;border:0;border-radius:0;background:var(--p1);color:var(--p1i);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:12px;font-weight:600;opacity:0;transition:opacity .12s}
-.swipe.reveal .swipe-del,.swipe-del:focus-visible{opacity:1}
-.swipe-del:focus-visible{outline-offset:-3px;outline-color:var(--p1i)}
-.swipe:has(.swipe-del:focus-visible) .swipe-body{transform:translateX(-84px)}
-/* PC (chuột): thùng rác hiện ở cuối dòng khi rê chuột hoặc Tab tới */
+
+/* ===== v8.2: nút xoá kiểu C (nằm trong dòng, thẻ không trượt) ===== */
+.swipe{position:relative}
+.swipe-body{position:relative;touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+/* nút xoá khi chưa hiện: vẫn có trong thứ tự Tab và cho trình đọc màn hình, nhưng không chiếm chỗ */
+.swipe-del{position:absolute;right:0;bottom:0;width:0;height:0;margin:0;padding:0;border:0;background:transparent;overflow:hidden;opacity:0;pointer-events:none;flex:none}
+.swipe-del-face{display:flex;align-items:center;gap:6px;height:44px;padding:0 12px;border-radius:10px;background:var(--p1);color:var(--p1i);font-size:13.5px;font-weight:700;white-space:nowrap}
+/* đang xoá (vuốt trái) hoặc Tab tới: nút hiện ngay trong dòng */
+.swipe.armed .swipe-del,.swipe-del:focus-visible{position:static;width:auto;height:44px;margin-left:2px;display:flex;align-items:center;overflow:visible;opacity:1;pointer-events:auto}
+.swipe-del:focus-visible{outline:none}
+.swipe-del:focus-visible .swipe-del-face{outline:2px solid var(--accent);outline-offset:2px}
+.swipe.armed>.swipe-body{border-color:var(--p1);outline:1.5px solid var(--p1);outline-offset:-1.5px}
+.swipe.armed .swipe-tail{display:none}
+.swipe.armed .task-text,.swipe.armed .todo-text,.swipe.armed .vt-v{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* PC (chuột): rê chuột vào dòng thì hiện nút "Xoá" viền đỏ cạnh nhãn */
 @media (hover:hover) and (pointer:fine){
-  .swipe>.swipe-body{padding-right:54px}
-  .swipe:has(.swipe-del:focus-visible) .swipe-body{transform:none}
-  .swipe-del{z-index:2;top:50%;bottom:auto;right:6px;width:44px;height:44px;transform:translateY(-50%);border-radius:10px}
-  .swipe-del-t{display:none}
-  .swipe:hover .swipe-del{opacity:1}
+  .swipe:hover .swipe-del{position:static;width:auto;height:44px;margin-left:2px;display:flex;align-items:center;overflow:visible;opacity:1;pointer-events:auto}
+  .swipe-del-face{height:40px;padding:0 10px;border:1.5px solid var(--p1);background:var(--surface);color:var(--p1e);font-size:13px}
+  .swipe:hover>.swipe-body{border-color:var(--edge)}
 }
+
+/* ===== v8.2: bảng chi tiết việc (cao ~50% màn hình) ===== */
+.sheet.sheet-half{height:clamp(380px,53%,480px);max-height:90%;overflow:hidden;gap:10px;padding:10px 16px calc(24px + env(safe-area-inset-bottom));border-radius:22px 22px 0 0;border-top:1px solid var(--line)}
+.sheet-wrap.center .sheet.sheet-half{height:min(450px,100%);border-radius:16px;border:1px solid var(--line);padding:12px 16px 16px}
+.sheet-wrap.kb .sheet.sheet-half{height:auto;max-height:100%;flex:0 1 450px;min-height:0}
+.sheet-grip{flex:none;align-self:center;width:40px;height:5px;border-radius:3px;background:var(--edge)}
+.sheet-r1,.sheet-r2,.sheet-r4{flex:none}
+.sheet-r1{gap:6px}
+.sheet-name{flex:1;min-width:0;height:48px;padding:0 10px;border:1px solid transparent;border-bottom:2px solid var(--edge);border-radius:10px 10px 0 0;background:transparent;font-size:18px;font-weight:700;color:var(--ink)}
+.sheet-r2{gap:6px}
+.sheet-r2 .pri-pick{gap:6px}
+.sheet-zone{flex:none;width:96px;padding:0 6px;border-radius:22px}
+.sheet-sep{flex:none;width:1px;height:28px;background:var(--line)}
+.sheet-note{flex:1;min-height:0;width:100%;margin-top:4px;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--bg);font-size:16px;line-height:1.55;color:var(--ink);resize:none}
+.sheet-r4{gap:8px}
+.sheet-del-task{display:flex;align-items:center;gap:6px;height:48px;padding:0 14px;border:0;border-radius:12px;background:transparent;color:var(--p1e);font-size:15px;font-weight:600}
+.sheet-done{width:120px;flex:none;font-size:16px}
+.phone-app .btn.sheet-done{font-size:16px}
 
 /* ===== v8 đợt 2: viết tắt ===== */
 /* nút "/a" trên đầu (cạnh đám mây) */
@@ -300,9 +314,10 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .vt-item-wrap:last-child{border-bottom:0}
 .vt-item-wrap.on{background:var(--tint)}
 .vt-item-wrap .swipe{border-radius:0}
-.vt-item{display:flex;align-items:center;gap:8px;min-height:50px;padding-left:12px;background:var(--surface)}
+.vt-item{display:flex;align-items:center;gap:8px;min-height:50px;padding:0 4px 0 12px;background:var(--surface)}
 .vt-item-wrap.on .vt-item{background:var(--tint)}
 .vt-k{flex:none;width:70px;font-size:14px;font-weight:700;color:var(--tintInk);overflow-wrap:anywhere}
 .vt-v{flex:1;min-width:0;font-size:14px;line-height:1.35;overflow-wrap:anywhere}
 .vt-empty{padding:24px 16px}
 @media (hover:hover) and (pointer:fine){.vt-key{width:140px}}
+.swipe.armed .task-row.compact{padding-right:5px}

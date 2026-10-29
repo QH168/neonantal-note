@@ -58,22 +58,23 @@ export function TagDot({ tag, faded, className = '' }) {
   return <span className={'tag-dot ' + className} style={{ background: `var(--p${n})`, color: `var(--p${n}i)`, opacity: faded ? 0.45 : 1 }}>{tag}</span>;
 }
 
-// ----- Vuốt trái để xoá (dùng chung cho dòng việc và việc cần làm của bé) -----
-const MO_RONG = 84;   // bề rộng nút xoá khi mở
-const NGUONG = 40;    // vuốt quá ngần này mới mở / mới đóng
-let dangMo = null;    // hàm đóng của dòng đang mở: chỉ một dòng mở cùng lúc
+// ----- Vuốt trái để xoá, kiểu C (dùng chung cho dòng việc, việc cần làm của bé, thư viện viết tắt) -----
+const NGUONG = 40;    // vuốt quá ngần này mới "gài" / mới trả về
+let dangMo = null;    // hàm đóng của dòng đang gài: chỉ một dòng cùng lúc
 
 /**
- * Dòng vuốt-để-xoá. Cảm ứng: vuốt trái ≥40px thì dòng trượt 84px lộ nút "Xoá"; vuốt phải hoặc chạm chỗ khác thì trả về.
- * Chuột (PC): rê vào dòng thì hiện nút thùng rác ở cuối dòng. Nút luôn có trong thứ tự Tab.
- * `label` là tên việc (để đọc "Xoá việc: <tên>"). `className` áp cho phần thân dòng.
+ * Dòng vuốt-để-xoá. Thẻ KHÔNG trượt.
+ * Cảm ứng: vuốt trái ≥40px → dòng sang trạng thái "đang xoá" (viền đỏ, phần cuối dòng đổi thành nút đỏ "Xoá" nằm trong thẻ);
+ * vuốt phải, chạm chỗ khác hoặc mở dòng khác → trở lại. Chạm nút mới xoá.
+ * Chuột (PC): rê vào dòng thì hiện nút "Xoá" viền đỏ cạnh nhãn. Nút luôn có trong thứ tự Tab.
+ * `label` là tên (để đọc "Xoá <kind>: <tên>"). `className` áp cho thân dòng.
+ * Phần cuối dòng muốn bị thay bằng nút khi đang xoá (cụm nhãn, chấm mức) thì gắn thêm class `swipe-tail`.
  */
 export function SwipeRow({ label, onDelete, className = '', kind = 'việc', children }) {
   const ref = useRef(null);
   const st = useRef(null);
   const vuaVuot = useRef(false);
   const [open, setOpen] = useState(false);
-  const [drag, setDrag] = useState(null);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -86,53 +87,54 @@ export function SwipeRow({ label, onDelete, className = '', kind = 'việc', chi
   }, [open]);
 
   const down = (e) => {
-    if (e.pointerType === 'mouse' || !e.isPrimary) return; // PC dùng nút thùng rác, không rê-kéo
-    st.current = { x: e.clientX, y: e.clientY, base: open ? -MO_RONG : 0, on: false };
+    if (e.pointerType === 'mouse' || !e.isPrimary) return; // PC dùng nút "Xoá" khi rê chuột, không rê-kéo
+    st.current = { x: e.clientX, y: e.clientY, on: false };
   };
   const move = (e) => {
     const s = st.current;
-    if (!s) return;
+    if (!s || s.on) return;
     const dx = e.clientX - s.x, dy = e.clientY - s.y;
-    if (!s.on) {
-      if (Math.abs(dx) < 8 || Math.abs(dx) < Math.abs(dy)) return; // chưa rõ là vuốt ngang
-      s.on = true;
-      try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* bỏ qua */ }
-    }
-    setDrag(Math.max(-MO_RONG, Math.min(0, s.base + dx)));
+    if (Math.abs(dx) < 8 || Math.abs(dx) < Math.abs(dy)) return; // chưa rõ là vuốt ngang
+    s.on = true;
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* bỏ qua */ }
   };
   const up = (e) => {
     const s = st.current;
     st.current = null;
     if (!s || !s.on) return;
     const dx = e.clientX - s.x;
-    setOpen(s.base === 0 ? dx <= -NGUONG : !(dx >= NGUONG));
-    setDrag(null);
+    if (!open && dx <= -NGUONG) setOpen(true);
+    else if (open && dx >= NGUONG) setOpen(false);
     vuaVuot.current = true; // chặn cú "click" ngay sau khi vuốt
     setTimeout(() => { vuaVuot.current = false; }, 400);
   };
-  const huy = () => { st.current = null; setDrag(null); };
+  const huy = () => { st.current = null; };
   const bam = (e) => {
+    if (e.target.closest?.('.swipe-del')) return; // chạm nút xoá: để nút làm việc của nó
     if (vuaVuot.current) { e.stopPropagation(); return; }
-    if (open) { e.stopPropagation(); setOpen(false); } // chạm vào dòng đang mở: chỉ trả về
+    if (open) { e.stopPropagation(); setOpen(false); } // chạm vào dòng đang xoá: chỉ trả về
   };
-  const offset = drag !== null ? drag : open ? -MO_RONG : 0;
 
   return (
-    <div ref={ref} className={'swipe' + (open || drag !== null ? ' reveal' : '')}>
-      <button type="button" className="swipe-del" aria-label={`Xoá ${kind}: ${label}`} onClick={() => { setOpen(false); onDelete(); }}>
-        <TrashIcon /><span className="swipe-del-t">Xoá</span>
-      </button>
-      <div className={'swipe-body ' + className + (drag !== null ? ' drag' : '')}
-        style={offset !== 0 ? { transform: `translateX(${offset}px)` } : undefined}
+    <div ref={ref} className={'swipe' + (open ? ' armed' : '')}>
+      <div className={'swipe-body ' + className}
         onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={huy} onClickCapture={bam}>
         {children}
+        <button type="button" className="swipe-del" aria-label={`Xoá ${kind}: ${label}`} onClick={() => { setOpen(false); onDelete(); }}>
+          <span className="swipe-del-face"><TrashIcon size={18} /><span className="swipe-del-t">Xoá</span></span>
+        </button>
       </div>
     </div>
   );
 }
 
-/** Bảng trượt lên (iPhone) / hộp giữa màn hình (PC). */
+/**
+ * Bảng trượt lên (iPhone) / hộp giữa màn hình (PC).
+ * Khi bàn phím iPhone hiện (visualViewport thấp hơn cửa sổ) thì khung bảng co theo phần màn hình còn thấy,
+ * nên bảng nằm trên bàn phím.
+ */
 export function Sheet({ label, onClose, children, wide, className = '' }) {
+  const wrap = useRef(null);
   useEffect(() => {
     const k = (e) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', k);
@@ -140,8 +142,29 @@ export function Sheet({ label, onClose, children, wide, className = '' }) {
     document.body.style.overflow = 'hidden';
     return () => { window.removeEventListener('keydown', k); document.body.style.overflow = prev; };
   }, [onClose]);
+  useEffect(() => {
+    const vv = window.visualViewport;
+    const el = wrap.current;
+    if (!vv || !el) return undefined;
+    const khop = () => {
+      const bp = window.innerHeight - vv.height - vv.offsetTop;
+      if (vv.scale <= 1.01 && (bp > 80 || vv.offsetTop > 0)) {
+        el.classList.add('kb');
+        el.style.top = vv.offsetTop + 'px';
+        el.style.bottom = 'auto';
+        el.style.height = vv.height + 'px';
+      } else {
+        el.classList.remove('kb');
+        el.style.top = ''; el.style.bottom = ''; el.style.height = '';
+      }
+    };
+    khop();
+    vv.addEventListener('resize', khop);
+    vv.addEventListener('scroll', khop);
+    return () => { vv.removeEventListener('resize', khop); vv.removeEventListener('scroll', khop); };
+  }, []);
   return (
-    <div className={'sheet-wrap' + (wide ? ' center' : '')}>
+    <div ref={wrap} className={'sheet-wrap' + (wide ? ' center' : '')}>
       <button type="button" className="sheet-backdrop" aria-label={'Đóng ' + label.toLowerCase()} onClick={onClose} />
       <section className={'sheet' + (className ? ' ' + className : '')} role="dialog" aria-modal="true" aria-label={label}>
         {children}

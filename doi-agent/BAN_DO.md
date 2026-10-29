@@ -19,19 +19,19 @@
 
 | Khu vực | File, hàm chính | Agent phụ trách | Thẻ chi tiết |
 |---|---|---|---|
-| Việc | `src/components/Tasks.jsx` (ZoneNav, TaskGroups, TaskRow, TagSheet, NoteSheet, TaskForm, Calendar); `src/lib/actions.js` (addTask, setTaskTags, setTaskNote, toggleTask, cycleUrgency, removeTask, clearDone); `src/lib/viec.js` (TAGS, TAG_COLOR, laViecMoi, chuanHoaTags, batTatNhan, soSanhViec, sapViec, khuHienThi, boDemCham, themCham) | Giao diện; Thuật toán khi đổi luật sắp xếp | `doi-agent/the-tinh-nang/viec.md` |
+| Việc | `src/components/Tasks.jsx` (ZoneNav, TaskGroups, TaskRow, TaskDetail, TaskForm, Calendar); `src/lib/actions.js` (addTask, setTaskTags, setTaskNote, setTaskText, setTaskZone, toggleTask, cycleUrgency, removeTask, clearDone); `src/lib/viec.js` (TAGS, TAG_COLOR, laViecMoi, chuanHoaTags, batTatNhan, soSanhViec, sapViec, khuHienThi, boDemCham, themCham, chuanTenViec, khuDeChon) | Giao diện; Thuật toán khi đổi luật sắp xếp | `doi-agent/the-tinh-nang/viec.md` |
 | Khám | `src/components/Exam.jsx` (ExamActions, RoomManager, RoomList, PatientDetail, SummaryPanel); `src/lib/actions.js` (phòng, bệnh nhân, việc của bé, copyPatientsFrom); `src/lib/thu-tu.js` (soSanhBe, sapBe, orderTiepTheo — thứ tự bé) | Giao diện + Thuật toán | `doi-agent/the-tinh-nang/kham.md` |
 | Tính tuần tuổi, tổng hợp y lệnh | `src/lib/clinical.js` (parseGa, parseDob, calcAge, gaFmt, buildSummary, copyText); `src/lib/dates.js` | Thuật toán | `doi-agent/the-tinh-nang/tuan-tuoi.md` |
 | Sao lưu, gộp dữ liệu | `src/db.js` (bảng `abbrevs` ở db.version(2)); `src/lib/merge.js`; `src/lib/backup.js`; `src/components/BackupPanel.jsx` | Dữ liệu và sao lưu | `doi-agent/the-tinh-nang/sao-luu.md` |
 | Viết tắt (v8.1) | `src/lib/viet-tat.js` (chuanKey, taoMap, moRong, hoanTac, goiY, chenGoiY, BO_MAU — hàm thuần); `src/lib/actions.js` (addAbbrev, updateAbbrev, removeAbbrev, seedAbbrevs); `src/hooks.js` (useAbbrevs); bảng `abbrevs` trong `src/db.js`; giao diện: `src/components/VietTat.jsx` (VietTatProvider, useVietTat — thay chữ, dải gợi ý, Hoàn tác cho mọi ô gõ), `src/components/ThuVien.jsx` (bảng Thư viện viết tắt), nút "/a" và VietTatProvider bọc app trong `src/App.jsx`; hàm `PencilIcon` trong `src/components/ui.jsx` | Dữ liệu (hàm + bảng); Giao diện (màn hình) | `doi-agent/the-tinh-nang/viet-tat.md` |
-| Khung chung | `src/App.jsx`; `src/App.css`; `src/components/ui.jsx` (SwipeRow, TagDot, Sheet); `src/hooks.js`; `src/main.jsx`; `index.html`; `vite.config.js` | Giao diện | `doi-agent/the-tinh-nang/khung-chung.md` |
+| Khung chung | `src/App.jsx`; `src/App.css`; `src/components/ui.jsx` (SwipeRow kiểu C, TagDot, Sheet — co theo visualViewport, SheetHead); `src/hooks.js`; `src/main.jsx`; `index.html`; `vite.config.js` | Giao diện | `doi-agent/the-tinh-nang/khung-chung.md` |
 
 ## 3. Tra theo lời nói thường
 
 | Bác sĩ nói… | Khu vực |
 |---|---|
-| ô tick, nhãn NV/BM/CK/HC/XN, chạm 2 lần ghi chú, chạm 3 lần sửa nhãn, vuốt trái xoá việc, thùng rác, chấm số 1–4 (việc cũ), lịch tháng, "Xoá việc đã xong", khu NICU/CT/KAN/PS-PM/Ngoại Trú/DV/HP/HS | Việc |
-| phòng, bé, mã giường, "Lấy danh sách hôm qua", việc cần làm của bé (vuốt trái để xoá), đã khám, xoá bé | Khám |
+| ô tick, nhãn NV/BM/CK/HC/XN, chạm 2 lần mở chi tiết việc, sửa tên việc, đổi khu của việc, ghi chú việc, vuốt trái hiện nút Xoá đỏ trong dòng, nút "Xoá việc" trong chi tiết, chấm số 1–4 (việc cũ), lịch tháng, "Xoá việc đã xong", khu NICU/CT/KAN/PS-PM/Ngoại Trú/DV/HP/HS | Việc |
+| phòng, bé, mã giường, "Lấy danh sách hôm qua", việc cần làm của bé (vuốt trái hiện nút Xoá đỏ; chưa có chạm 2 lần), đã khám, xoá bé | Khám |
 | tuần tuổi, ngày tuổi, tuổi thai hiệu chỉnh, 34w6d, ngày sinh 0810, tổng hợp y lệnh, sao chép | Tính tuần tuổi, tổng hợp y lệnh |
 | đám mây, chấm đỏ, OneDrive, file JSON, nhập/xuất, đổi máy, mất dữ liệu | Sao lưu, gộp dữ liệu |
 | sáng/tối, cỡ chữ, tiêu đề, tab Việc/Khám, giao diện PC/iPhone, icon app | Khung chung |
@@ -46,7 +46,8 @@
 - Đổi cách tính tuổi thai/ngày tuổi → chạy lại `doi-agent/ca-chuan-lam-sang.md` và `tests/clinical.test.js`; kiểm cả `buildSummary` (in tuổi hiệu chỉnh).
 - Đổi nhãn loại việc (NV/BM/CK/HC/XN) → `src/lib/viec.js` (TAGS, TAG_COLOR) + `src/components/ui.jsx` (TagDot) + `src/App.css` (--p1…--p5). Việc cũ (không có `tags`) vẫn dùng mức 1–5: `src/components/ui.jsx` (PRI_NAME, PRI_LEVELS, PriDot) + `src/lib/actions.js` (cycleUrgency); NV cũ màu tím (--p5), NV mới màu đỏ (--p1) — đúng yêu cầu, không gộp.
 - Đổi khu vực → `src/db.js` (ZONES cho việc mới, LEGACY_ZONES cho khu cũ như BM) + `src/lib/viec.js` (khuHienThi: khu cũ chỉ hiện khi còn việc chưa xoá).
-- Vuốt trái để xoá (Việc + việc của bé) dùng chung `SwipeRow` trong `src/components/ui.jsx`; sửa chỗ này phải xem cả `src/components/Tasks.jsx` và `src/components/Exam.jsx`.
+- Xoá kiểu C (vuốt trái: thẻ đứng yên, viền đỏ, nút "Xoá" thay phần cuối dòng; PC rê chuột hiện nút) dùng chung `SwipeRow` trong `src/components/ui.jsx` cho Việc, việc của bé và thư viện viết tắt; sửa chỗ này phải xem cả `src/components/Tasks.jsx`, `src/components/Exam.jsx`, `src/components/ThuVien.jsx` và `src/App.css`. Phần cuối dòng muốn bị thay bằng nút thì gắn class `swipe-tail`.
+- Chi tiết việc (chạm 2 lần): `TaskDetail` trong `src/components/Tasks.jsx` (đặt ở `TaskGroups`) ghi qua `setTaskText`, `setTaskZone`, `setTaskTags`, `setTaskNote`, `removeTask` (`src/lib/actions.js`); tên rỗng lọc bằng `chuanTenViec`, ô chọn khu dùng `khuDeChon` (`src/lib/viec.js`); khung là `Sheet` (`className="sheet-half"`) co theo bàn phím iPhone qua visualViewport.
 - Đổi cỡ chữ iPhone → `src/App.css` khối "thang chữ gọn"; ô nhập phải ≥16px; vùng chạm ≥44px.
 - Thêm bé / chép bé phải gán `order` qua `orderTiepTheo`/`sapBe` (`src/lib/thu-tu.js`); danh sách hiển thị sắp bằng `sapBe` trong `src/hooks.js`.
 - Mọi thao tác ghi dữ liệu → qua `src/lib/actions.js` → `addRow/updateRow/softDelete` trong `src/db.js` (để có updatedAt cho gộp sao lưu).
@@ -68,7 +69,7 @@
 
 ## 6. Trạng thái hiện tại
 
-- Phiên bản: **v8.1** (đợt 2 của v8: viết tắt).
-- Lần sửa gần nhất: 29/10/2026 — viết tắt: gõ "/chữ tắt" rồi dấu cách ở mọi ô gõ chữ thì tự thay; gợi ý tối đa 4 mục, Hoàn tác ~4 giây; nút "/a" mở Thư viện viết tắt (thêm, sửa, tìm, vuốt xoá, 13 mục mẫu); bảng `abbrevs` ở `db.version(2)`, có trong sao lưu.
+- Phiên bản: **v8.2** (nút xoá kiểu C, chi tiết việc).
+- Lần sửa gần nhất: 29/10/2026 — v8.2: vuốt trái thì thẻ đứng yên, viền đỏ, nút "Xoá" đỏ hiện trong dòng (Việc, việc của bé, thư viện viết tắt; PC rê chuột hiện nút); chạm 2 lần vào việc mở bảng "chi tiết việc" cao ~50% (sửa tên, khu, nhãn, ghi chú, xoá); bỏ chạm 3 lần, bảng nhãn riêng, bảng ghi chú cũ, vòng nét đứt. Trước đó (v8.1): viết tắt, bảng `abbrevs` ở `db.version(2)`.
 - Việc tiếp theo: không còn việc dở trong kế hoạch; việc chờ bác sĩ quyết xem bên dưới.
 - Việc còn chờ bác sĩ quyết: xem mục "Chờ duyệt" trong `doi-agent/NHAT_KY.md`.

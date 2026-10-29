@@ -1,0 +1,36 @@
+{
+  "ten": "v8.2 — Nút xoá kiểu C (nút 'Xoá' hiện trong dòng) và khung 'chi tiết việc' khi chạm 2 lần (sửa tên, khu, nhãn, ghi chú rộng); bỏ chạm 3 lần",
+  "ngay": "2026-10-29",
+  "khuVuc": "Việc, Khám (việc cần làm của bé), Viết tắt (thư viện), Khung chung",
+  "loai": "vua",
+  "canBacSiDuyet": true,
+  "daDuyet": "Bác sĩ duyệt canvas 'Ghi chú Sơ sinh v8 — thiết kế' bảng 8 (kiểu C) và bảng 9 (chi tiết việc) ngày 29/10/2026 12:04",
+  "agent": ["giao-dien", "kiem-thu", "ghi-chep"],
+  "dacTa": {
+    "xoaKieuC": "Thay cách hiện nút xoá của SwipeRow (dùng chung cho dòng việc tab Việc, việc cần làm của bé ở Khám, dòng thư viện viết tắt). Thẻ KHÔNG trượt nữa. Vuốt trái (≥ ~40px, cử chỉ như cũ) → dòng chuyển trạng thái 'đang xoá': viền thẻ đỏ 1.5px (--p1), phần cuối dòng (cụm nhãn/PriDot nếu có) được THAY bằng nút đỏ bo tròn 10px cao 44px, icon thùng rác + chữ 'Xoá' (nền --p1, chữ --p1i; sáng #C62828/trắng, tối #EF5350/#1A0A0A), nằm gọn trong thẻ; chữ việc rút gọn bằng '…' nếu chật. Dòng không có nhãn (việc của bé, thư viện) thì nút hiện ở cuối dòng. Vuốt phải / chạm chỗ khác / mở dòng khác → trở lại bình thường. Chạm nút mới xoá (hàm xoá như cũ, xoá mềm). PC (chuột): rê chuột vào dòng hiện nút 'Xoá' viền đỏ (nền thẻ, chữ và viền --p1, cao ≥40px vùng chạm 44px) NẰM CẠNH nhãn, không ẩn nhãn; vẫn trong thứ tự Tab. Giữ touch-action pan-y, aria-label 'Xoá việc: <tên>' / 'Xoá viết tắt: /key'.",
+    "chiTietViec": "Chạm 2 lần (trong 1 giây) vào thân dòng việc (tab Việc; PC nhấp đúp) → mở bảng dưới (Sheet) cao ~50% màn hình (≈ 450px trên iPhone 15; PC hộp giữa, tương đương), KHÔNG có tiêu đề chữ 'Sửa việc'/'Ghi chú' (có aria-label 'Chi tiết việc'). Bố cục từ trên xuống: thanh kéo nhỏ; hàng 1 = ô sửa tên việc (input chữ 18px đậm, nền trong suốt, gạch chân, label ẩn 'Nội dung việc') + nút × Đóng 44px; hàng 2 = ô chọn khu (96px, bo tròn, 16px, ZONES — nếu việc đang ở khu cũ BM thì có thêm lựa chọn BM để không mất) + vạch ngăn + 5 nút nhãn NV BM CK HC XN 44px bật/tắt; hàng 3 = textarea ghi chú CHIẾM PHẦN CÒN LẠI (flex-grow), 16px, placeholder 'Ghi chú… (gõ / để viết tắt)'; hàng cuối = nút chữ đỏ 'Xoá việc' (icon thùng rác, không nền) bên trái, nút 'Xong' (120px, nền accent) bên phải. KHÔNG có chữ 'Tự lưu'. Mọi ô tự lưu (tên: lưu khi gõ, 0,4 giây; tên rỗng → không lưu, khi đóng trả lại chữ cũ; khu: lưu ngay; nhãn: lưu ngay; ghi chú: 0,4 giây như hiện tại). Viết tắt (useVietTat) dùng được ở ô tên và ô ghi chú. 'Xoá việc' xoá mềm rồi đóng bảng (không hỏi lại; giống nút xoá dòng). Khi bàn phím iPhone hiện, bảng phải nằm trên bàn phím (dùng visualViewport hoặc cách có sẵn của Sheet; ô đang gõ không bị che).",
+    "viecCu": "Việc cũ (không có tags, có urgency): trong bảng chi tiết vẫn hiện 5 nút nhãn mới, chưa bật nút nào; dòng việc vẫn hiện PriDot số cũ. Bật một nhãn đầu tiên → setTaskTags → việc thành kiểu mới (tags), dòng hiện nhãn mới thay cho số cũ; urgency giữ nguyên trong dữ liệu (không xoá). Không bật gì → việc giữ nguyên kiểu cũ. Chạm vào PriDot của việc cũ vẫn đổi vòng như trước.",
+    "boChamBa": "Bỏ chạm 3 lần vào cụm nhãn và bỏ bảng 'Nhãn của việc' riêng. Cụm nhãn trên dòng giờ chỉ để xem (không phải nút riêng; chạm vào vùng nhãn tính như chạm thân dòng → chạm 2 lần mở chi tiết). Việc không nhãn: bỏ vòng tròn nét đứt (không còn cần vùng chạm riêng). Bỏ bảng Ghi chú cũ (thay bằng bảng chi tiết). Hàm boDemCham/themCham trong src/lib/viec.js giữ nguyên (vẫn dùng n=2).",
+    "hamGhi": "Thêm vào src/lib/actions.js: setTaskText(id, text) (bỏ khoảng trắng 2 đầu; rỗng → không ghi), setTaskZone(id, zone). Mọi ghi dữ liệu qua actions.js (luật 4).",
+    "khongLam": "Việc cần làm của bé ở Khám KHÔNG thêm chạm 2 lần (bác sĩ: chưa cần). Không đổi db.js, không đổi định dạng sao lưu, không thêm thư viện."
+  },
+  "fileDuocSua": [
+    "src/lib/actions.js",
+    "src/lib/*.js",
+    "src/components/*.jsx",
+    "src/App.jsx",
+    "src/App.css",
+    "src/hooks.js",
+    "tests/*.test.js",
+    "scripts/chup-giao-dien.mjs"
+  ],
+  "tieuChiDat": [
+    "Vuốt trái dòng việc / việc của bé / dòng thư viện: thẻ đứng yên, viền đỏ, nút 'Xoá' đỏ hiện trong dòng; chạm nút mới xoá; không còn mảnh đỏ rời bên ngoài thẻ",
+    "PC: rê chuột hiện nút 'Xoá' viền đỏ cạnh nhãn",
+    "Chạm 2 lần vào việc mở bảng chi tiết cao ~50% màn hình, không có chữ 'Sửa việc' và 'Tự lưu'; sửa được tên, khu, nhãn, ghi chú; khung ghi chú lớn nhất",
+    "Việc cũ gắn nhãn mới thì chuyển kiểu mới; không gắn thì giữ số cũ",
+    "Không còn chạm 3 lần, không còn vòng tròn nét đứt",
+    "npm test đạt; vùng chạm ≥44px; ô nhập ≥16px; sáng/tối đủ màu"
+  ],
+  "ghiChu": "Mọi phiếu được phép sửa doi-agent/** (hồ sơ). Bản thiết kế: canvas bảng 8 (XoaKieuC) và bảng 9 (SuaViec)."
+}

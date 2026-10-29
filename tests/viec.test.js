@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { TAGS, TAG_COLOR, laViecMoi, chuanHoaTags, batTatNhan, soSanhViec, sapViec, khuHienThi, boDemCham, themCham } from '../src/lib/viec.js';
+import { TAGS, TAG_COLOR, laViecMoi, chuanHoaTags, batTatNhan, soSanhViec, sapViec, khuHienThi, boDemCham, themCham, chuanTenViec, khuDeChon } from '../src/lib/viec.js';
 
 test('TAGS và màu', () => {
   assert.deepEqual(TAGS, ['NV', 'BM', 'CK', 'HC', 'XN']);
@@ -73,4 +73,19 @@ test('themCham: bỏ mốc cũ, chạm chậm không cộng dồn', () => {
   m = themCham([], 0); m = themCham(m, 2000);
   assert.deepEqual(m, [2000]);
   assert.equal(boDemCham(m, 2), false);
+});
+
+test('chuanTenViec: bỏ khoảng trắng 2 đầu, rỗng thì ra chuỗi rỗng', () => {
+  assert.equal(chuanTenViec('  Siêu âm tim  '), 'Siêu âm tim');
+  assert.equal(chuanTenViec('   '), '');
+  assert.equal(chuanTenViec(undefined), '');
+  assert.equal(chuanTenViec(null), '');
+});
+
+test('khuDeChon: giữ khu cũ (BM) để ô chọn khu không làm mất khu hiện tại', () => {
+  const Z = ['NICU', 'CT'];
+  assert.deepEqual(khuDeChon(Z, 'CT'), ['NICU', 'CT']);
+  assert.deepEqual(khuDeChon(Z, 'BM'), ['NICU', 'CT', 'BM']);
+  assert.deepEqual(khuDeChon(Z, undefined), ['NICU', 'CT']);
+  assert.notEqual(khuDeChon(Z, 'CT'), Z); // trả mảng mới
 });
