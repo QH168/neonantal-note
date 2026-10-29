@@ -74,6 +74,7 @@ function TaskDetail({ t, wide, onClose }) {
   const vtTen = useVietTat(ten, doiTen, { onBlur: () => { luuTen(); if (!ten.trim()) datLaiTen(t.text); } });
   const vtNote = useVietTat(ghiChu, doiGhiChu, { onBlur: luuGhiChu });
   const tags = laViecMoi(t) ? t.tags : [];
+  // Xoá việc: bảng trượt xuống trước (DongBtn), xong mới xoá và gỡ bảng.
   const xoaViec = () => { boTen(); boGhiChu(); removeTask(t.id); onClose(); };
   return (
     <Sheet label="Chi tiết việc" onClose={onClose} wide={wide} className="sheet-half">
@@ -97,7 +98,7 @@ function TaskDetail({ t, wide, onClose }) {
       <textarea id="ghichu-viec" className="sheet-note" placeholder="Ghi chú… (gõ / để viết tắt)" {...vtNote.props} />
       {vtNote.strip}
       <div className="row8 sheet-r4">
-        <button type="button" className="sheet-del-task" onClick={xoaViec}><TrashIcon size={18} />Xoá việc</button>
+        <DongBtn className="sheet-del-task" onClose={xoaViec}><TrashIcon size={18} />Xoá việc</DongBtn>
         <span className="grow" />
         <DongBtn className="btn primary big sheet-done" onClose={onClose}>Xong</DongBtn>
       </div>

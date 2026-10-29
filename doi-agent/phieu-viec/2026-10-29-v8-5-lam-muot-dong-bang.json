@@ -1,0 +1,19 @@
+{
+  "ten": "v8.5 — 'Xoá việc' trong chi tiết việc có chuyển động đóng; cú chạm trong lúc bảng đang đóng không rơi xuống danh sách",
+  "ngay": "2026-10-29",
+  "khuVuc": "Khung chung (Sheet), Việc (chi tiết việc)",
+  "loai": "nho",
+  "canBacSiDuyet": false,
+  "daDuyet": "Bác sĩ yêu cầu 'làm nốt 2 chỗ này' ngày 29/10/2026 22:02",
+  "agent": ["dieu-phoi", "kiem-thu", "ghi-chep"],
+  "dacTa": {
+    "xoaViec": "Nút 'Xoá việc' trong bảng chi tiết dùng DongBtn: bảng trượt xuống trước, xong chuyển động mới xoá mềm việc và gỡ bảng (giảm chuyển động: xoá ngay). Không xoá hai lần.",
+    "chamKhiDong": "Trong lúc bảng đang đóng (class .out), lớp nền vẫn nhận cú chạm (không pointer-events:none trên cả .sheet-wrap), nên cú chạm không rơi xuống dòng việc phía sau và không bị tính là lần chạm thứ nhất của 'chạm 2 lần'. Nội dung bảng (.sheet) không bấm được khi đang đóng."
+  },
+  "fileDuocSua": ["src/components/Tasks.jsx", "src/App.css"],
+  "tieuChiDat": [
+    "Bấm 'Xoá việc': bảng trượt xuống rồi việc mới biến mất khỏi danh sách; việc bị xoá mềm đúng một lần",
+    "Chạm vào danh sách trong lúc bảng đang đóng: không có gì xảy ra; sau khi bảng đóng xong, chạm 2 lần mới mở lại",
+    "npm test đạt; các bảng khác vẫn mở/đóng bình thường"
+  ]
+}

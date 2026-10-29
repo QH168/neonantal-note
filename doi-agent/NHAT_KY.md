@@ -14,6 +14,11 @@
 | 6 | Thiết kế có dòng chữ "MỚI" dưới nút "/a" nhưng chưa làm vì đè thanh tiến độ. | Lưu ý | Hỏi bác sĩ có cần dòng "MỚI" không; nếu cần thì chọn chỗ đặt khác. | Giao diện |
 | 7 | Chạm nút Xoá trong vòng ~0,5 giây sau khi vuốt có thể không ăn (trình duyệt giả lập không sinh click; trang trống cũng vậy). | Lưu ý | Bác sĩ thử trên iPhone; nếu bị thì đổi nút Xoá sang xử lý pointerup (SwipeRow, ui.jsx). | Giao diện |
 
+## 29/10/2026 — v8.5 — Làm mượt đóng bảng
+- Phiếu: `doi-agent/phieu-viec/2026-10-29-v8-5-lam-muot-dong-bang.json` (bác sĩ yêu cầu làm nốt 2 ghi chú của v8.4).
+- Đã đổi (lời thường): bấm "Xoá việc" trong chi tiết việc thì bảng trượt xuống trước rồi việc mới biến mất; chạm vào danh sách khi bảng đang đóng thì không có gì xảy ra (không còn bị tính là lần chạm thứ nhất).
+- Kết quả kiểm: kiểm thử độc lập ĐẠT; npm test 76/76; xoá đúng một lần; 12 tổ hợp đóng × thời điểm chạm đều không lọt xuống danh sách.
+
 ## 29/10/2026 — v8.4 — Chuyển động mượt, nút xoá chỉ biểu tượng
 - Phiếu: `doi-agent/phieu-viec/2026-10-29-v8-4-chuyen-dong-nut-icon.json` (bác sĩ duyệt mô phỏng canvas bảng 10 và bảng 11).
 - Đã đổi (lời thường):

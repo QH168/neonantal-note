@@ -305,7 +305,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .sheet-backdrop{animation:bdIn 260ms ease backwards}
 .sheet{animation:shIn 340ms cubic-bezier(.2,.8,.2,1) 140ms backwards}
 .sheet-wrap.center .sheet{animation:boxIn 200ms ease backwards}
-.sheet-wrap.out{pointer-events:none}
+.sheet-wrap.out .sheet{pointer-events:none} /* đang đóng: nền vẫn hứng cú chạm để không rơi xuống danh sách */
 .sheet-wrap.out .sheet-backdrop{animation:bdOut 220ms ease 120ms forwards}
 .sheet-wrap.out .sheet{animation:shOut 220ms cubic-bezier(.4,0,1,1) forwards}
 .sheet-wrap.center.out .sheet{animation:boxOut 200ms ease forwards}

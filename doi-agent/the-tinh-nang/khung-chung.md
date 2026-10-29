@@ -15,7 +15,7 @@
 - Giữ đủ biến màu cho cả sáng và tối.
 
 ## Điểm dễ hỏng
-- SwipeRow (v8.4): khi kéo chỉ ghi biến CSS `--p` lên phần tử (không setState mỗi pointermove); CSS tính clip-path/opacity từ `--p`. Nút xoá cảm ứng xử lý ở `pointerup` (Chromium/Safari có thể không sinh click ngay sau cú vuốt); chuột/bàn phím dùng click. Sheet có trạng thái đang đóng: gỡ khỏi trang sau chuyển động; nơi nào gỡ Sheet từ bên ngoài (vd. "Xoá việc") thì bảng mất ngay không có hoạt ảnh.
+- SwipeRow (v8.4): khi kéo chỉ ghi biến CSS `--p` lên phần tử (không setState mỗi pointermove); CSS tính clip-path/opacity từ `--p`. Nút xoá cảm ứng xử lý ở `pointerup` (Chromium/Safari có thể không sinh click ngay sau cú vuốt); chuột/bàn phím dùng click. Sheet có trạng thái đang đóng: gỡ khỏi trang sau chuyển động; nút trong bảng muốn đóng có chuyển động phải dùng `DongBtn`/`useDongSheet` (vd. "Xoá việc" từ v8.5); gỡ Sheet từ bên ngoài thì bảng mất ngay. Khi đang đóng, chỉ `.sheet` tắt pointer-events, nền vẫn hứng chạm.
 - `Sheet` PHẢI vẽ bằng `createPortal` vào `document.body` (⚙ luật 10). Nếu để trong vùng cuộn `.ph-main`, Safari iPhone cho phần đầu và thanh thêm việc đè lên bảng (Chromium không bị, máy chụp không bắt được). Bảng điện thoại có class `sheet-ph`; quy tắc cỡ chữ iPhone viết `:is(.phone-app,.sheet-ph) X`.
 - Tiêu đề luôn một dòng (`white-space: nowrap` + `text-overflow: ellipsis`).
 - `Sheet` đổi chiều cao theo `visualViewport` khi bàn phím iPhone hiện (class `kb`, đặt `top`/`height` trực tiếp); bỏ hoặc sửa mà không thử bàn phím thì ô đang gõ bị che. Chưa thử trên iPhone thật.
