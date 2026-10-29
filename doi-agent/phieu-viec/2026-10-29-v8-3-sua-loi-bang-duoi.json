@@ -1,0 +1,31 @@
+{
+  "ten": "v8.3 — Sửa lỗi bảng chi tiết việc bị thanh thêm việc che trên iPhone thật; tên việc dài bị cắt",
+  "ngay": "2026-10-29",
+  "khuVuc": "Khung chung (Sheet), Việc (chi tiết việc)",
+  "loai": "nho",
+  "canBacSiDuyet": false,
+  "agent": [
+    "dieu-phoi",
+    "kiem-thu",
+    "ghi-chep"
+  ],
+  "dacTa": {
+    "loi1": "Ảnh bác sĩ chụp trên iPhone (29/10 20:32): bảng chi tiết việc nằm DƯỚI thanh thêm việc ở đáy màn hình (che mất nửa khung ghi chú, nút 'Xoá việc' và 'Xong'), phần đầu trang (tiêu đề, tab, chip khu) không bị làm mờ. Nguyên nhân: Sheet được vẽ bên trong vùng cuộn .ph-main; trên Safari iPhone vùng cuộn này tạo lớp riêng nên position:fixed không phủ lên phần đầu và thanh dưới (Chromium giả lập không bị). Sửa: Sheet vẽ thẳng vào document.body bằng createPortal (react-dom có sẵn). Màu sáng/tối vẫn đúng vì class .th/.dark đặt trên thẻ html.",
+    "loi2": "Tên việc dài bị cắt ở ô tên ('…đặt thông dạ dà'). Sửa: ô tên thành textarea, tự xuống tối đa 3 dòng (rows 1–3 theo độ dài; dài hơn nữa thì cuộn trong ô), Enter không xuống dòng mà rời ô; vẫn 18px đậm, vẫn tự lưu và viết tắt.",
+    "harness": "Thêm luật vào tests/luat.test.js: Sheet trong src/components/ui.jsx phải dùng createPortal tới document.body (để mọi bảng dưới luôn phủ trên cùng trên iPhone).",
+    "coChu": "Sheet ra khỏi .phone-app nên mất cỡ chữ gọn của iPhone: bảng dưới (không wide) mang class sheet-ph; mọi bộ chọn CSS '.phone-app X' đổi thành ':is(.phone-app,.sheet-ph) X' để giữ đúng cỡ chữ cũ."
+  },
+  "fileDuocSua": [
+    "src/components/ui.jsx",
+    "src/components/Tasks.jsx",
+    "src/App.css",
+    "tests/luat.test.js",
+    "scripts/chup-giao-dien.mjs"
+  ],
+  "tieuChiDat": [
+    "Mọi bảng dưới (chi tiết việc, chi tiết bé, thư viện, sao lưu, quản lý phòng, lịch) phủ lên trên cả phần đầu và thanh thêm việc; nền phía sau mờ toàn màn hình",
+    "Thấy đủ khung ghi chú, nút 'Xoá việc' và 'Xong'",
+    "Tên việc dài hiện đủ (tối đa 3 dòng, dài hơn thì cuộn trong ô)",
+    "npm test đạt"
+  ]
+}

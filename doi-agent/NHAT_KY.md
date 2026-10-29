@@ -14,6 +14,15 @@
 | 6 | Thiết kế có dòng chữ "MỚI" dưới nút "/a" nhưng chưa làm vì đè thanh tiến độ. | Lưu ý | Hỏi bác sĩ có cần dòng "MỚI" không; nếu cần thì chọn chỗ đặt khác. | Giao diện |
 | 7 | Chạm nút Xoá trong vòng ~0,5 giây sau khi vuốt có thể không ăn (trình duyệt giả lập không sinh click; trang trống cũng vậy). | Lưu ý | Bác sĩ thử trên iPhone; nếu bị thì đổi nút Xoá sang xử lý pointerup (SwipeRow, ui.jsx). | Giao diện |
 
+## 29/10/2026 — v8.3 — Sửa lỗi bảng dưới bị che trên iPhone
+- Phiếu: `doi-agent/phieu-viec/2026-10-29-v8-3-sua-loi-bang-duoi.json` (bác sĩ gửi ảnh iPhone báo lỗi).
+- Đã đổi (lời thường):
+  1. Bảng chi tiết việc (và mọi bảng trượt lên khác) giờ luôn nằm trên cùng: không còn bị thanh "Thêm việc" che nút "Xoá việc", "Xong"; nền mờ phủ cả phần đầu trang.
+  2. Tên việc dài hiện đủ (tối đa 3 dòng, dài hơn thì cuộn trong ô); Enter không xuống dòng.
+- Kỹ thuật: `Sheet` (ui.jsx) dùng `createPortal(…, document.body)`; bảng điện thoại có class `sheet-ph`, CSS `.phone-app X` → `:is(.phone-app,.sheet-ph) X`; ô tên là textarea; luật 10 mới trong `tests/luat.test.js`.
+- Nguyên nhân: trên Safari iPhone, bảng nằm trong vùng cuộn `.ph-main` bị kẹt lớp; Chromium giả lập không bị nên các lần kiểm trước không thấy.
+- Kết quả kiểm: kiểm thử độc lập vòng 1 LỖI (bộ chụp dừng vì ô tên thành textarea; tên 68 ký tự mất dòng 3; cỡ chữ trong bảng to hơn 1px) → Điều phối sửa → vòng 2 ĐẠT; npm test 76/76; cỡ chữ trong 6 bảng giống v8.2 từng phần tử. Chưa kiểm trên Safari iPhone thật — nhờ bác sĩ xác nhận.
+
 ## 29/10/2026 — v8.2 — Nút xoá kiểu C, chi tiết việc
 - Phiếu: `doi-agent/phieu-viec/2026-10-29-v8-2-xoa-c-chi-tiet-viec.json` (bác sĩ duyệt canvas "Ghi chú Sơ sinh v8 — thiết kế" bảng 8 và 9 ngày 29/10/2026).
 - Đã đổi (lời thường):

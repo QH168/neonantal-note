@@ -69,7 +69,7 @@
 
 ## 6. Trạng thái hiện tại
 
-- Phiên bản: **v8.2** (nút xoá kiểu C, chi tiết việc).
-- Lần sửa gần nhất: 29/10/2026 — v8.2: vuốt trái thì thẻ đứng yên, viền đỏ, nút "Xoá" đỏ hiện trong dòng (Việc, việc của bé, thư viện viết tắt; PC rê chuột hiện nút); chạm 2 lần vào việc mở bảng "chi tiết việc" cao ~50% (sửa tên, khu, nhãn, ghi chú, xoá); bỏ chạm 3 lần, bảng nhãn riêng, bảng ghi chú cũ, vòng nét đứt. Trước đó (v8.1): viết tắt, bảng `abbrevs` ở `db.version(2)`.
+- Phiên bản: **v8.3** (sửa lỗi bảng dưới bị che trên iPhone).
+- Lần sửa gần nhất: 29/10/2026 — v8.3: mọi bảng dưới (Sheet) vẽ thẳng vào `<body>` bằng createPortal để không bị phần đầu/thanh thêm việc che trên Safari iPhone; bảng điện thoại mang class `sheet-ph` để giữ cỡ chữ gọn; ô tên việc trong chi tiết việc xuống tối đa 3 dòng. Trước đó (v8.2): vuốt trái thì thẻ đứng yên, viền đỏ, nút "Xoá" đỏ hiện trong dòng (Việc, việc của bé, thư viện viết tắt; PC rê chuột hiện nút); chạm 2 lần vào việc mở bảng "chi tiết việc" cao ~50% (sửa tên, khu, nhãn, ghi chú, xoá); bỏ chạm 3 lần, bảng nhãn riêng, bảng ghi chú cũ, vòng nét đứt. Trước đó (v8.1): viết tắt, bảng `abbrevs` ở `db.version(2)`.
 - Việc tiếp theo: không còn việc dở trong kế hoạch; việc chờ bác sĩ quyết xem bên dưới.
 - Việc còn chờ bác sĩ quyết: xem mục "Chờ duyệt" trong `doi-agent/NHAT_KY.md`.

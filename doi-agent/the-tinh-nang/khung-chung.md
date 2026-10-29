@@ -15,6 +15,7 @@
 - Giữ đủ biến màu cho cả sáng và tối.
 
 ## Điểm dễ hỏng
+- `Sheet` PHẢI vẽ bằng `createPortal` vào `document.body` (⚙ luật 10). Nếu để trong vùng cuộn `.ph-main`, Safari iPhone cho phần đầu và thanh thêm việc đè lên bảng (Chromium không bị, máy chụp không bắt được). Bảng điện thoại có class `sheet-ph`; quy tắc cỡ chữ iPhone viết `:is(.phone-app,.sheet-ph) X`.
 - Tiêu đề luôn một dòng (`white-space: nowrap` + `text-overflow: ellipsis`).
 - `Sheet` đổi chiều cao theo `visualViewport` khi bàn phím iPhone hiện (class `kb`, đặt `top`/`height` trực tiếp); bỏ hoặc sửa mà không thử bàn phím thì ô đang gõ bị che. Chưa thử trên iPhone thật.
 - `SwipeRow`: chặn click ngay sau khi vuốt (~0,4 giây); chạm nút Xoá sát sau khi vuốt có thể không ăn — nếu bị trên iPhone thì đổi nút Xoá sang `pointerup` (xem "Chờ duyệt" trong `NHAT_KY.md`). Giữ `touch-action: pan-y`.

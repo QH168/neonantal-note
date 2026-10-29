@@ -106,3 +106,9 @@ test('luật 9: đường dẫn app lấy từ BASE_PATH (giữ nguyên link Git
   assert.match(v, /process\.env\.BASE_PATH/);
   assert.match(v, /start_url: base/);
 });
+
+test('luật 10: bảng dưới (Sheet) vẽ thẳng vào body để luôn phủ trên cùng trên iPhone (bác sĩ báo lỗi 29/10/2026)', () => {
+  const ui = read('src/components/ui.jsx');
+  assert.match(ui, /import \{ createPortal \} from 'react-dom'/);
+  assert.match(ui, /createPortal\([\s\S]*?document\.body\s*\)/);
+});

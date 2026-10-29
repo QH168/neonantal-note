@@ -387,7 +387,7 @@ async function thuThuVien(page, T, tien, cdp) {
     const nhanTrongBang = await bang.getByRole('button', { name: /^Nhãn / }).count();
     if (nhanTrongBang !== 5) ketQua.loi.push('Bảng chi tiết có ' + nhanTrongBang + ' nút nhãn (mong đợi 5)');
     // ghi chú là khung lớn nhất
-    const ghiChuCao = (await bang.locator('textarea').boundingBox()).height;
+    const ghiChuCao = (await bang.getByRole('textbox', { name: 'Ghi chú' }).boundingBox()).height;
     T.ghiChuCao = Math.round(ghiChuCao);
     if (ghiChuCao < 0.35 * hb.height) ketQua.loi.push('Khung ghi chú nhỏ (' + T.ghiChuCao + 'px)');
     const ta = bang.getByRole('textbox', { name: 'Ghi chú' });

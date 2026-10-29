@@ -1,5 +1,6 @@
 // Biểu tượng và các phần giao diện dùng chung.
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { TAG_COLOR } from '../lib/viec.js';
 
 const S = { fill: 'none', stroke: 'currentColor', strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true };
@@ -163,13 +164,15 @@ export function Sheet({ label, onClose, children, wide, className = '' }) {
     vv.addEventListener('scroll', khop);
     return () => { vv.removeEventListener('resize', khop); vv.removeEventListener('scroll', khop); };
   }, []);
-  return (
-    <div ref={wrap} className={'sheet-wrap' + (wide ? ' center' : '')}>
+  // Vẽ thẳng vào <body>: trên Safari iPhone, bảng nằm trong vùng cuộn sẽ bị phần đầu/thanh dưới che.
+  return createPortal(
+    <div ref={wrap} className={'sheet-wrap' + (wide ? ' center' : ' sheet-ph')}>
       <button type="button" className="sheet-backdrop" aria-label={'Đóng ' + label.toLowerCase()} onClick={onClose} />
       <section className={'sheet' + (className ? ' ' + className : '')} role="dialog" aria-modal="true" aria-label={label}>
         {children}
       </section>
-    </div>
+    </div>,
+    document.body
   );
 }
 

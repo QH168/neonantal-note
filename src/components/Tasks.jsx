@@ -80,7 +80,8 @@ function TaskDetail({ t, wide, onClose }) {
       <div className="sheet-grip" aria-hidden="true" />
       <div className="row-between sheet-r1">
         <label htmlFor="ten-viec" className="sr-only">Nội dung việc</label>
-        <input id="ten-viec" type="text" className="sheet-name" autoComplete="off" {...vtTen.props} />
+        <textarea id="ten-viec" className="sheet-name" rows={ten.length > 52 ? 3 : ten.length > 26 ? 2 : 1} autoComplete="off" {...vtTen.props}
+          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } }} />
         <button type="button" className="icon-btn" aria-label="Đóng" onClick={onClose}><XIcon /></button>
       </div>
       {vtTen.strip}

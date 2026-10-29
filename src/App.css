@@ -171,68 +171,68 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .ph-tabs{flex:none;padding:0 16px 8px}
 .ph-main{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 16px 16px;display:flex;flex-direction:column;gap:8px}
 .ph-main.exam{padding-top:4px;gap:12px;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
-.phone-app .group-title{font-size:16px}
-.phone-app .chk{width:48px;height:48px}
-.phone-app .btn{min-height:44px}
+:is(.phone-app,.sheet-ph) .group-title{font-size:16px}
+:is(.phone-app,.sheet-ph) .chk{width:48px;height:48px}
+:is(.phone-app,.sheet-ph) .btn{min-height:44px}
 .grow-ph{flex:1}
 @media (min-width:900px){.grow-ph{flex:none}}
 
 /* ===== iPhone: thang chữ gọn (theo bản thiết kế "iPhone 15 – chữ gọn") =====
    Ô nhập giữ 16px để Safari không tự phóng to khi chạm vào. */
 .phone-app{font-variant-numeric:tabular-nums}
-.phone-app .h1-ph{font-size:20px}
-.phone-app .ph-head .muted.small{font-size:12px}
-.phone-app .prog-text{font-size:13px}
-.phone-app .seg button{font-size:14px}
-.phone-app .badge{font-size:11px}
-.phone-app .chip{font-size:14px}
-.phone-app .chip .zone-count{font-size:12px}
-.phone-app .exam-hint{font-size:13px}
-.phone-app .group-title{font-size:15px}
-.phone-app .group-btn .small{font-size:12px}
-.phone-app .empty{font-size:14px}
-.phone-app .task-row{min-height:50px}
-.phone-app .task-main{padding:6px 4px}
-.phone-app .task-text{font-size:15px;line-height:1.35}
-.phone-app .pri{width:24px;height:24px;font-size:13px}
-.phone-app .pri-btn{font-size:15px}
-.phone-app .btn{font-size:14px}
-.phone-app .btn.primary,.phone-app .btn.big{font-size:15px}
-.phone-app .btn.ghost,.phone-app .btn.tint{font-size:13px}
-.phone-app .xsmall{font-size:12px}
-.phone-app .bold{font-size:14px}
-.phone-app .pat-row{min-height:54px}
-.phone-app .pat-open{min-height:50px}
-.phone-app .pat-code{font-size:15px}
-.phone-app .pat-main .small{font-size:12px}
-.phone-app .pat-todo{font-size:13px}
-.phone-app .pat-note{font-size:12px}
-.phone-app .left-badge{font-size:11px}
-.phone-app .add-dashed{font-size:14px}
-.phone-app .status{font-size:13px}
+:is(.phone-app,.sheet-ph) .h1-ph{font-size:20px}
+:is(.phone-app,.sheet-ph) .ph-head .muted.small{font-size:12px}
+:is(.phone-app,.sheet-ph) .prog-text{font-size:13px}
+:is(.phone-app,.sheet-ph) .seg button{font-size:14px}
+:is(.phone-app,.sheet-ph) .badge{font-size:11px}
+:is(.phone-app,.sheet-ph) .chip{font-size:14px}
+:is(.phone-app,.sheet-ph) .chip .zone-count{font-size:12px}
+:is(.phone-app,.sheet-ph) .exam-hint{font-size:13px}
+:is(.phone-app,.sheet-ph) .group-title{font-size:15px}
+:is(.phone-app,.sheet-ph) .group-btn .small{font-size:12px}
+:is(.phone-app,.sheet-ph) .empty{font-size:14px}
+:is(.phone-app,.sheet-ph) .task-row{min-height:50px}
+:is(.phone-app,.sheet-ph) .task-main{padding:6px 4px}
+:is(.phone-app,.sheet-ph) .task-text{font-size:15px;line-height:1.35}
+:is(.phone-app,.sheet-ph) .pri{width:24px;height:24px;font-size:13px}
+:is(.phone-app,.sheet-ph) .pri-btn{font-size:15px}
+:is(.phone-app,.sheet-ph) .btn{font-size:14px}
+:is(.phone-app,.sheet-ph) .btn.primary,:is(.phone-app,.sheet-ph) .btn.big{font-size:15px}
+:is(.phone-app,.sheet-ph) .btn.ghost,:is(.phone-app,.sheet-ph) .btn.tint{font-size:13px}
+:is(.phone-app,.sheet-ph) .xsmall{font-size:12px}
+:is(.phone-app,.sheet-ph) .bold{font-size:14px}
+:is(.phone-app,.sheet-ph) .pat-row{min-height:54px}
+:is(.phone-app,.sheet-ph) .pat-open{min-height:50px}
+:is(.phone-app,.sheet-ph) .pat-code{font-size:15px}
+:is(.phone-app,.sheet-ph) .pat-main .small{font-size:12px}
+:is(.phone-app,.sheet-ph) .pat-todo{font-size:13px}
+:is(.phone-app,.sheet-ph) .pat-note{font-size:12px}
+:is(.phone-app,.sheet-ph) .left-badge{font-size:11px}
+:is(.phone-app,.sheet-ph) .add-dashed{font-size:14px}
+:is(.phone-app,.sheet-ph) .status{font-size:13px}
 /* ô tick nhỏ còn 80%, vùng chạm giữ nguyên */
-.phone-app .chk .box{width:21px;height:21px;border-radius:6px}
-.phone-app .chk .box svg{width:13px;height:13px}
-.phone-app .chk.small .box{width:19px;height:19px;border-radius:5px}
-.phone-app .chk.small .box svg{width:11px;height:11px}
+:is(.phone-app,.sheet-ph) .chk .box{width:21px;height:21px;border-radius:6px}
+:is(.phone-app,.sheet-ph) .chk .box svg{width:13px;height:13px}
+:is(.phone-app,.sheet-ph) .chk.small .box{width:19px;height:19px;border-radius:5px}
+:is(.phone-app,.sheet-ph) .chk.small .box svg{width:11px;height:11px}
 /* bảng trượt lên (chi tiết bé, tổng hợp, lịch, sao lưu) */
-.phone-app .sheet .h2{font-size:17px}
-.phone-app .sheet .field .muted.small{font-size:12px}
-.phone-app .sheet .todo-text{font-size:15px}
-.phone-app .calc-box{font-size:14px}
-.phone-app .err-box{font-size:13px}
-.phone-app .cal-title{font-size:15px}
-.phone-app .cal-wd{font-size:11px}
-.phone-app .msg{font-size:13px}
+:is(.phone-app,.sheet-ph) .sheet .h2{font-size:17px}
+:is(.phone-app,.sheet-ph) .sheet .field .muted.small{font-size:12px}
+:is(.phone-app,.sheet-ph) .sheet .todo-text{font-size:15px}
+:is(.phone-app,.sheet-ph) .calc-box{font-size:14px}
+:is(.phone-app,.sheet-ph) .err-box{font-size:13px}
+:is(.phone-app,.sheet-ph) .cal-title{font-size:15px}
+:is(.phone-app,.sheet-ph) .cal-wd{font-size:11px}
+:is(.phone-app,.sheet-ph) .msg{font-size:13px}
 
 /* Mức ưu tiên 5 "NV": vẫn là hình tròn như số 1–4, chữ nhỏ hơn một chút để vừa 2 ký tự */
 .pri.nv{font-size:11px;letter-spacing:-.02em}
 .pri-btn.nv{font-size:14px;letter-spacing:-.02em}
-.phone-app .pri.nv{font-size:10px}
-.phone-app .pri-btn.nv{font-size:13px}
+:is(.phone-app,.sheet-ph) .pri.nv{font-size:10px}
+:is(.phone-app,.sheet-ph) .pri-btn.nv{font-size:13px}
 /* iPhone: 5 nút ưu tiên + "Thêm việc" vừa một hàng */
-.phone-app .task-form-ph .pri-pick{gap:4px}
-.phone-app .task-form-ph .btn.primary{white-space:nowrap;padding:0 10px}
+:is(.phone-app,.sheet-ph) .task-form-ph .pri-pick{gap:4px}
+:is(.phone-app,.sheet-ph) .task-form-ph .btn.primary{white-space:nowrap;padding:0 10px}
 
 /* ===== v8 đợt 1: nhãn loại việc, ghi chú, vuốt-để-xoá ===== */
 .ink{color:var(--ink)}
@@ -244,10 +244,10 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .tag-zone{flex:none;max-width:100px;align-self:stretch;padding:0 4px;display:flex;flex-wrap:wrap;align-content:center;align-items:center;justify-content:center;gap:4px;touch-action:manipulation}
 .tag-dot{flex:none;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;letter-spacing:-.02em}
 .tag-dot.big{width:32px;height:32px;font-size:12px}
-.phone-app .tag-dot{width:24px;height:24px;font-size:10px}
-.phone-app .tag-dot.big{width:32px;height:32px;font-size:12px}
+:is(.phone-app,.sheet-ph) .tag-dot{width:24px;height:24px;font-size:10px}
+:is(.phone-app,.sheet-ph) .tag-dot.big{width:32px;height:32px;font-size:12px}
 .tag-btn{font-size:13px;letter-spacing:-.02em}
-.phone-app .tag-btn{font-size:13px}
+:is(.phone-app,.sheet-ph) .tag-btn{font-size:13px}
 
 /* ===== v8.2: nút xoá kiểu C (nằm trong dòng, thẻ không trượt) ===== */
 .swipe{position:relative}
@@ -276,7 +276,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .sheet-grip{flex:none;align-self:center;width:40px;height:5px;border-radius:3px;background:var(--edge)}
 .sheet-r1,.sheet-r2,.sheet-r4{flex:none}
 .sheet-r1{gap:6px}
-.sheet-name{flex:1;min-width:0;height:48px;padding:0 10px;border:1px solid transparent;border-bottom:2px solid var(--edge);border-radius:10px 10px 0 0;background:transparent;font-size:18px;font-weight:700;color:var(--ink)}
+.sheet-name{flex:1;min-width:0;min-height:48px;padding:10px 10px 8px;line-height:1.3;resize:none;overflow-y:auto;font-family:inherit;border:1px solid transparent;border-bottom:2px solid var(--edge);border-radius:10px 10px 0 0;background:transparent;font-size:18px;font-weight:700;color:var(--ink)}
 .sheet-r2{gap:6px}
 .sheet-r2 .pri-pick{gap:6px}
 .sheet-zone{flex:none;width:96px;padding:0 6px;border-radius:22px}
@@ -285,13 +285,13 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .sheet-r4{gap:8px}
 .sheet-del-task{display:flex;align-items:center;gap:6px;height:48px;padding:0 14px;border:0;border-radius:12px;background:transparent;color:var(--p1e);font-size:15px;font-weight:600}
 .sheet-done{width:120px;flex:none;font-size:16px}
-.phone-app .btn.sheet-done{font-size:16px}
+:is(.phone-app,.sheet-ph) .btn.sheet-done{font-size:16px}
 
 /* ===== v8 đợt 2: viết tắt ===== */
 /* nút "/a" trên đầu (cạnh đám mây) */
 .vt-btn{color:var(--accent);font-size:15px;font-weight:700;letter-spacing:-.02em}
 /* iPhone: 4 nút trên đầu — thu khoảng cách giữa các nút để tiêu đề vẫn một dòng, vùng chạm giữ 44px */
-.phone-app .ph-head .row8.none{gap:4px}
+:is(.phone-app,.sheet-ph) .ph-head .row8.none{gap:4px}
 /* dải gợi ý + thông báo "Đã thay" đặt ngay cạnh ô gõ */
 .vt-strip{display:flex;flex-direction:column;gap:6px}
 .vt-sug{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px;border-radius:12px;background:var(--surface);border:1px solid var(--line)}
