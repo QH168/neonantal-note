@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useAppData, useToday, useWide } from './hooks.js';
+import { useAppData, useToday, useWide, useGiaoDien, useLanMoApp } from './hooks.js';
 import { ensureSeed, clearDone } from './lib/actions.js';
 import { buildSummary } from './lib/clinical.js';
 import { ZONES } from './db.js';
@@ -9,15 +9,9 @@ import { ExamActions, RoomManager, RoomList, PatientDetail, SummaryPanel } from 
 import ThuVien from './components/ThuVien.jsx';
 import { VietTatProvider } from './components/VietTat.jsx';
 import BackupPanel from './components/BackupPanel.jsx';
-import { Sheet, Sun, Moon, CalIcon, CloudIcon, Chevron } from './components/ui.jsx';
+import { hienDongNhac } from './lib/cai-dat.js';
+import { Sheet, CalIcon, CloudIcon, Chevron } from './components/ui.jsx';
 
-function readTheme() {
-  try {
-    const v = localStorage.getItem('theme');
-    if (v) return v === 'dark';
-  } catch { /* bỏ qua */ }
-  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
-}
 
 export default function App() {
   return <VietTatProvider><AppChinh /></VietTatProvider>;
@@ -29,7 +23,8 @@ function AppChinh() {
   const data = useAppData(today);
 
   const [tab, setTab] = useState('task');
-  const [dark, setDark] = useState(readTheme);
+  const { cheDo, setCheDo } = useGiaoDien();
+  const lanMo = useLanMoApp();
   const [viewDate, setViewDate] = useState(today);
   const [calMonth, setCalMonth] = useState(monthOf(today));
   const [calOpen, setCalOpen] = useState(true);   // PC: lịch trong cột trái
@@ -46,13 +41,7 @@ function AppChinh() {
   const [vtOpen, setVtOpen] = useState(false);
 
   useEffect(() => { ensureSeed(); }, []);
-  useEffect(() => {
-    const el = document.documentElement;
-    el.classList.add('th');
-    el.classList.toggle('dark', dark);
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#0E151C' : '#F2F7FB');
-    try { localStorage.setItem('theme', dark ? 'dark' : 'light'); } catch { /* bỏ qua */ }
-  }, [dark]);
+
   // Qua ngày mới: đưa mục Việc về hôm nay
   useEffect(() => { setViewDate(today); setCalMonth(monthOf(today)); }, [today]);
 
@@ -80,13 +69,9 @@ function AppChinh() {
     <button type="button" className="btn ghost self-start" onClick={() => clearDone(viewDate)}>Xoá việc đã xong</button>
   );
 
-  const themeBtn = (
-    <button type="button" className="round-btn" onClick={() => setDark(!dark)} aria-label={dark ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'}>
-      {dark ? <Sun /> : <Moon />}
-    </button>
-  );
+
   const backupBtn = (
-    <button type="button" className="round-btn rel" onClick={() => setBackupOpen(true)} aria-label={'Sao lưu' + (backupDue ? ' (nên sao lưu hôm nay)' : '')}>
+    <button type="button" className="round-btn rel" onClick={() => setBackupOpen(true)} aria-label={'Sao lưu và cài đặt' + (backupDue ? ' (nên sao lưu hôm nay)' : '')}>
       <CloudIcon />{backupDue && <span className="dot-alert" />}
     </button>
   );
@@ -104,8 +89,8 @@ function AppChinh() {
     <button type="button" className="exam-hint" onClick={() => setTab('exam')}>Khám: còn {examLeft} việc</button>
   );
   const backupSheet = backupOpen && (
-    <Sheet label="Sao lưu" onClose={() => setBackupOpen(false)} wide={wide}>
-      <BackupPanel onClose={() => setBackupOpen(false)} />
+    <Sheet label="Sao lưu và cài đặt" onClose={() => setBackupOpen(false)} wide={wide}>
+      <BackupPanel onClose={() => setBackupOpen(false)} cheDo={cheDo} onDoiCheDo={setCheDo} />
     </Sheet>
   );
 
@@ -117,7 +102,7 @@ function AppChinh() {
       <div className="pc">
         <div className="pc-top">
           {tabs}
-          <div className="row8">{vtBtn}{backupBtn}{themeBtn}</div>
+          <div className="row8">{vtBtn}{backupBtn}</div>
         </div>
 
         <aside className="pc-side">
@@ -189,9 +174,8 @@ function AppChinh() {
           <div className="row8 none">
             {vtBtn}
             {backupBtn}
-            {themeBtn}
             {isTask && (
-              <button type="button" className="pill-btn" onClick={() => setCalSheet(true)} aria-label="Mở lịch">
+              <button type="button" className="round-btn rel" onClick={() => setCalSheet(true)} aria-label="Mở lịch">
                 <CalIcon />{overdue > 0 && <span className="badge">{overdue}</span>}
               </button>
             )}
@@ -199,7 +183,7 @@ function AppChinh() {
         </div>
         <div className="row10">
           <div className="bar grow thin"><div style={{ width: pct + '%' }} /></div>
-          <div className="prog-text">{isTask ? 'Đã hoàn thành' : 'Đã khám'} {done}/{total}</div>
+          <div className="prog-text">{isTask ? 'Đã xong' : 'Đã khám'} {done}/{total}</div>
           {isTask && !isToday && <button type="button" className="btn tint sm" onClick={goToday}>Về hôm nay</button>}
         </div>
       </header>
@@ -210,7 +194,7 @@ function AppChinh() {
           <ZoneNav chips dayTasks={dayTasks} active={active} onPick={pickZone} />
           <main className="ph-main">
             {examHint}
-            {dayTasks.length > 0 && <div className="muted xsmall">Chạm 2 lần: chi tiết · Vuốt trái: xoá</div>}
+            {hienDongNhac(lanMo, dayTasks.length) && <div className="muted xsmall">Chạm 2 lần: chi tiết · Vuốt trái: xoá</div>}
             <TaskGroups chips dayTasks={dayTasks} active={active} collapsed={collapsed} onToggle={toggleIn(setCollapsed)} />
             {clearDoneBtn}
           </main>

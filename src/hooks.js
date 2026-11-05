@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from './db.js';
 import { todayIso } from './lib/dates.js';
+import { KHOA_CHE_DO, KHOA_LAN_MO, docCheDo, laToi, tangLanMo } from './lib/cai-dat.js';
 import { sapBe } from './lib/thu-tu.js';
 
 const alive = (r) => !r.deleted;
@@ -29,6 +30,54 @@ export function useWide(minWidth = 900) {
     return () => mq.removeEventListener?.('change', on);
   }, [q]);
   return wide;
+}
+
+const HE_TOI = '(prefers-color-scheme: dark)';
+
+/**
+ * Chế độ giao diện Sáng / Tối / Theo máy. Lưu ở localStorage khoá 'theme' (light|dark|auto), không vào CSDL.
+ * Chỉ ghi khi người dùng chọn: người đã có 'light'/'dark' từ trước giữ nguyên giao diện; chưa có gì thì là Theo máy.
+ * Theo máy: đi theo prefers-color-scheme và tự đổi khi máy đổi.
+ */
+export function useGiaoDien() {
+  const [cheDo, setCheDoState] = useState(() => {
+    try { return docCheDo(localStorage.getItem(KHOA_CHE_DO)); } catch { return 'auto'; }
+  });
+  const [heToi, setHeToi] = useState(() => !!window.matchMedia?.(HE_TOI).matches);
+  useEffect(() => {
+    const mq = window.matchMedia?.(HE_TOI);
+    if (!mq) return undefined;
+    const on = () => setHeToi(mq.matches);
+    on();
+    mq.addEventListener?.('change', on);
+    return () => mq.removeEventListener?.('change', on);
+  }, []);
+  const dark = laToi(cheDo, heToi);
+  useEffect(() => {
+    const el = document.documentElement;
+    el.classList.add('th');
+    el.classList.toggle('dark', dark);
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#0E151C' : '#F2F7FB');
+  }, [dark]);
+  const setCheDo = useCallback((v) => {
+    const c = docCheDo(v);
+    setCheDoState(c);
+    try { localStorage.setItem(KHOA_CHE_DO, c); } catch { /* bỏ qua */ }
+  }, []);
+  return { cheDo, setCheDo, dark };
+}
+
+// Mỗi lần mở app (tải trang) đếm một lần. Giữ kết quả ở biến module để React vẽ lại/gắn lại hai lần không đếm đôi.
+let lanMoApp = null;
+/** Số lần đã mở app, tính cả lần này. */
+export function useLanMoApp() {
+  if (lanMoApp === null) {
+    let raw = null;
+    try { raw = localStorage.getItem(KHOA_LAN_MO); } catch { /* bỏ qua */ }
+    lanMoApp = tangLanMo(raw);
+    try { localStorage.setItem(KHOA_LAN_MO, String(lanMoApp)); } catch { /* bỏ qua */ }
+  }
+  return lanMoApp;
 }
 
 /** Toàn bộ dữ liệu app cần, tự cập nhật khi cơ sở dữ liệu thay đổi (kể cả sau khi nhập file). */

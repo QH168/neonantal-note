@@ -9,7 +9,7 @@
   `validateBackup`, `backupFileName` (ghichu_YYYY-MM-DD_HHMM_thiet-bi.json).
 - `src/lib/backup.js` — xuất (`prepareBackupFile`, `shareFile` cho iPhone, `saveToFolder` cho PC, `downloadFile` dự phòng),
   nhập (`importBackupFile`, một giao dịch), thư mục OneDrive trên PC (`chooseBackupFolder`, `getBackupFolder`, `findLatestInFolder`).
-- `src/components/BackupPanel.jsx` — bảng "Sao lưu & OneDrive".
+- `src/components/BackupPanel.jsx` — bảng "Sao lưu và cài đặt" (từ v9.1; trước đó tên "Sao lưu & OneDrive"; `aria-label` nút đám mây và nhãn nút đóng cũng đổi theo). Phần "Sao lưu lên OneDrive" giữ đủ chức năng cũ, logic sao lưu không đổi; thêm mục "Giao diện" với nút gạt Sáng / Tối / Theo máy (nhận `cheDo`, `onDoiCheDo` từ `App.jsx`; lưu ở `localStorage`, KHÔNG nằm trong file sao lưu). Mục "Ngày làm việc bắt đầu lúc" (đợt 9.6) và "Cử chỉ" (đợt 9.2) chưa có.
 
 ## Ba luật cứng
 1. Không đổi tên CSDL, không sửa `db.version(1)` (⚙ `tests/luat.test.js`).

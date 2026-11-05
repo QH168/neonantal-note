@@ -1,7 +1,7 @@
 // Biểu tượng và các phần giao diện dùng chung.
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { TAG_COLOR } from '../lib/viec.js';
+import { TAGS } from '../lib/viec.js';
 
 const S = { fill: 'none', stroke: 'currentColor', strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true };
 
@@ -53,10 +53,15 @@ export function PriDot({ n, faded }) {
   return <span className={'pri' + (n === 5 ? ' nv' : '')} style={{ background: `var(--p${n})`, color: `var(--p${n}i)`, opacity: faded ? 0.45 : 1 }}>{priLabel(n)}</span>;
 }
 
-/** Chấm tròn chữ nhãn loại việc (NV/BM/CK/HC/XN). Màu lấy từ --p1…--p5 (có cả bản sáng/tối). */
+/** Màu nhãn loại việc (bảng 16a): nền nhạt `--tXX`, chữ đậm cùng tông `--tXXi`; có cả bản sáng và tối. Nhãn lạ dùng màu NV. */
+export const mauNhan = (tag) => {
+  const k = TAGS.includes(tag) ? tag : 'NV';
+  return { '--tb': `var(--t${k})`, '--ti': `var(--t${k}i)` };
+};
+
+/** Huy hiệu tròn chữ nhãn loại việc (NV/BM/CK/HC/XN). Việc đã xong: mờ ~0,5. */
 export function TagDot({ tag, faded, className = '' }) {
-  const n = TAG_COLOR[tag] || 1;
-  return <span className={'tag-dot ' + className} style={{ background: `var(--p${n})`, color: `var(--p${n}i)`, opacity: faded ? 0.45 : 1 }}>{tag}</span>;
+  return <span className={'tag-dot ' + className} style={{ ...mauNhan(tag), opacity: faded ? 0.5 : 1 }}>{tag}</span>;
 }
 
 // ----- Vuốt trái để xoá (dùng chung cho dòng việc, việc cần làm của bé, thư viện viết tắt) -----
@@ -259,6 +264,7 @@ export function Sheet({ label, onClose, children, wide, className = '' }) {
       <div ref={wrap} className={'sheet-wrap' + (wide ? ' center' : ' sheet-ph') + (ra ? ' out' : '')}>
         <button type="button" className="sheet-backdrop" aria-label={'Đóng ' + label.toLowerCase()} onClick={() => dong()} />
         <section className={'sheet' + (className ? ' ' + className : '')} role="dialog" aria-modal="true" aria-label={label}>
+          {!wide && <div className="sheet-grip" aria-hidden="true" />}
           {children}
         </section>
       </div>

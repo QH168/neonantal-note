@@ -2,6 +2,18 @@
 .th{color-scheme:light;--bg:#F2F7FB;--surface:#FFFFFF;--surface2:#EAF1F7;--line:#D6E2EC;--edge:#B4C6D6;--ink:#12202B;--muted:#4A5D6E;--box:#6B7F91;--done:#5A6E7F;--track:#DDE8F1;--accent:#0B79B8;--accentInk:#FFFFFF;--tint:#DCEFFB;--tint2:#E6F2FB;--tintInk:#075985;--badge:#12202B;--badgeInk:#FFFFFF;--errBg:#FBEAE8;--errInk:#8E1B13;--warn:#9A5B00;--shadow:rgba(18,32,43,.18);--overlay:rgba(18,32,43,.45);--p1:#C62828;--p1i:#FFFFFF;--p1e:#C62828;--p2:#F2B90F;--p2i:#12202B;--p2e:#A67800;--p3:#2E7D32;--p3i:#FFFFFF;--p3e:#2E7D32;--p4:#1A3FA6;--p4i:#FFFFFF;--p4e:#1A3FA6;--p5:#7B3FA0;--p5i:#FFFFFF;--p5e:#7B3FA0;--vtAct:#9AD3F5;--p1rgb:198,40,40}
 .th.dark{color-scheme:dark;--bg:#0E151C;--surface:#17212B;--surface2:#1F2C38;--line:#2A3948;--edge:#3B4E60;--ink:#E8EFF5;--muted:#9FB1C1;--box:#7F93A5;--done:#8DA0B2;--track:#263747;--accent:#5BB8EE;--accentInk:#06202F;--tint:#123248;--tint2:#14304A;--tintInk:#9AD3F5;--badge:#E8EFF5;--badgeInk:#0E151C;--errBg:#3A1B18;--errInk:#FFB4AB;--warn:#F5C26B;--shadow:rgba(0,0,0,.5);--overlay:rgba(0,0,0,.6);--p1:#EF5350;--p1i:#1A0A0A;--p1e:#EF5350;--p2:#F2B90F;--p2i:#12202B;--p2e:#F2B90F;--p3:#4CAF50;--p3i:#0B1F0C;--p3e:#4CAF50;--p4:#7C93FF;--p4i:#0A1240;--p4e:#7C93FF;--p5:#C9A0E8;--p5i:#22102F;--p5e:#C9A0E8;--vtAct:#0B79B8;--p1rgb:239,83,80}
 
+/* v9 đợt 9.1 — màu nhãn mới (bảng 16a): --tXX = nền nhạt, --tXXi = chữ đậm cùng tông.
+   --p1…--p5 ở trên KHÔNG đổi: còn dùng cho số 1–4/NV của việc cũ, chấm đỏ đám mây, cảnh báo. */
+.th{--tNV:#F8D7D3;--tNVi:#8C2A20;--tBM:#F7E6B8;--tBMi:#6E4E00;--tCK:#D3EAF0;--tCKi:#1B5566;--tHC:#DDE3F6;--tHCi:#2C3F86;--tXN:#E8DDF3;--tXNi:#573884}
+.th.dark{--tNV:#4C2723;--tNVi:#F5C4BD;--tBM:#4A3B15;--tBMi:#F0D88F;--tCK:#173A44;--tCKi:#A9D8E5;--tHC:#232D52;--tHCi:#BFCBF3;--tXN:#34284A;--tXNi:#D8C7EF}
+/* v9 đợt 9.1 — màu trạng thái (mục 1.3): mới khai báo, chưa áp vào hành vi (thuộc đợt 9.2 trở đi).
+   okBg/okInk: tích đã xong · swR/swR2: nền vuốt phải (trước/qua mốc 1/3) · swL/swL2: nền vuốt trái
+   delInk/delBg: chữ và nền nút xoá dịu · doneLine/doneInk: viền và chữ nút "Hoàn thành"
+   noteBg/noteInk/noteLine: dải "ngày trước / còn từ hôm qua" · rangeBg/rangeEnd/rangeLine/rangeInk: khoảng ngày trên lịch
+   chipZero: chữ chip khu không có việc */
+.th{--okBg:#C8E6C9;--okInk:#2E7D32;--swR:#C8E6C9;--swR2:#A5D6A7;--swL:#F6D5D2;--swL2:#EFB8B2;--delInk:#A8473D;--delBg:#FBEAE8;--doneLine:#2E7D32;--doneInk:#1B5E20;--noteBg:#FBF3DF;--noteInk:#6E4E00;--noteLine:#E4C98A;--rangeBg:#EEF6FC;--rangeEnd:#CFE6F7;--rangeLine:#5BA8DA;--rangeInk:#075985;--chipZero:#6B7F91}
+.th.dark{--okBg:#A5D6A7;--okInk:#0B2410;--swR:#2F5A34;--swR2:#3F7A47;--swL:#5A2C28;--swL2:#7A3A33;--delInk:#F5C4BD;--delBg:#4C2723;--doneLine:#A5D6A7;--doneInk:#A5D6A7;--noteBg:#3A2F14;--noteInk:#F0D88F;--noteLine:#8A7432;--rangeBg:#0F2A3C;--rangeEnd:#1E4A66;--rangeLine:#5BB8EE;--rangeInk:#CBE9FB;--chipZero:#8497A8}
+
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg,#F2F7FB);color:var(--ink);font-family:'Be Vietnam Pro',system-ui,-apple-system,sans-serif;-webkit-text-size-adjust:100%}
 button,input,select,textarea{font-family:inherit;color:inherit}
@@ -43,13 +55,14 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .icon-btn.muted{color:var(--muted)}
 .round-btn{flex:none;width:44px;height:44px;padding:0;border:1px solid var(--edge);border-radius:22px;background:var(--surface);color:var(--ink);display:flex;align-items:center;justify-content:center}
 .pill-btn{flex:none;display:flex;align-items:center;gap:6px;min-height:44px;padding:0 12px;border:1px solid var(--edge);border-radius:22px;background:var(--surface);color:var(--ink);font-size:15px;font-weight:600}
+.round-btn .badge{position:absolute;top:-4px;right:-4px;box-shadow:0 0 0 2px var(--bg)}
 .dot-alert{position:absolute;top:6px;right:6px;width:9px;height:9px;border-radius:50%;background:var(--p1);border:2px solid var(--surface)}
 .badge{min-width:22px;padding:2px 7px;border-radius:11px;background:var(--badge);color:var(--badgeInk);font-size:12px;font-weight:700;text-align:center}
 
 /* tab Việc / Khám */
 .seg{display:inline-flex;gap:4px;padding:4px;border-radius:14px;background:var(--track)}
 .seg.full{display:flex}
-.seg button{min-height:44px;padding:0 28px;border:0;border-radius:10px;font-size:15px;font-weight:600;background:transparent;color:var(--ink)}
+.seg button{height:44px;padding:0 28px;border:0;border-radius:10px;font-size:15px;font-weight:600;background:transparent;color:var(--ink)}
 .seg.full button{flex:1;padding:0}
 .seg button[aria-pressed="true"]{background:var(--surface);box-shadow:0 1px 2px var(--shadow)}
 
@@ -78,7 +91,10 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .zone-count{font-size:13px;min-width:20px;text-align:right}
 .chips{flex:none;display:flex;gap:8px;padding:0 16px 10px;overflow-x:auto}
 .chip{flex:none;display:flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border-radius:22px;font-size:15px;font-weight:500;background:var(--surface);border:1px solid var(--edge);color:var(--ink)}
+.chip{height:44px}
 .chip .zone-count{color:var(--muted);min-width:0}
+/* khu không có việc: chữ nhạt, viền nhạt, không ghi số 0 */
+.chip.zero{color:var(--chipZero);border-color:var(--line)}
 .chip.on{background:var(--accent);border-color:var(--accent);color:var(--accentInk);font-weight:600}
 .chip.on .zone-count{color:var(--accentInk)}
 .exam-hint{align-self:flex-start;min-height:44px;padding:0 14px;border:0;border-radius:20px;background:var(--tint);color:var(--tintInk);font-size:14px;font-weight:600}
@@ -181,34 +197,34 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
    Ô nhập giữ 16px để Safari không tự phóng to khi chạm vào. */
 .phone-app{font-variant-numeric:tabular-nums}
 :is(.phone-app,.sheet-ph) .h1-ph{font-size:20px}
-:is(.phone-app,.sheet-ph) .ph-head .muted.small{font-size:12px}
+:is(.phone-app,.sheet-ph) .ph-head .muted.small{font-size:13px}
 :is(.phone-app,.sheet-ph) .prog-text{font-size:13px}
-:is(.phone-app,.sheet-ph) .seg button{font-size:14px}
-:is(.phone-app,.sheet-ph) .badge{font-size:11px}
-:is(.phone-app,.sheet-ph) .chip{font-size:14px}
-:is(.phone-app,.sheet-ph) .chip .zone-count{font-size:12px}
+:is(.phone-app,.sheet-ph) .seg button{font-size:15px}
+:is(.phone-app,.sheet-ph) .badge{font-size:12px}
+:is(.phone-app,.sheet-ph) .chip{font-size:15px}
+:is(.phone-app,.sheet-ph) .chip .zone-count{font-size:inherit}
 :is(.phone-app,.sheet-ph) .exam-hint{font-size:13px}
 :is(.phone-app,.sheet-ph) .group-title{font-size:15px}
-:is(.phone-app,.sheet-ph) .group-btn .small{font-size:12px}
-:is(.phone-app,.sheet-ph) .empty{font-size:14px}
+:is(.phone-app,.sheet-ph) .group-btn .small{font-size:13px}
+:is(.phone-app,.sheet-ph) .empty{font-size:15px}
 :is(.phone-app,.sheet-ph) .task-row{min-height:50px}
 :is(.phone-app,.sheet-ph) .task-main{padding:6px 4px}
 :is(.phone-app,.sheet-ph) .task-text{font-size:15px;line-height:1.35}
 :is(.phone-app,.sheet-ph) .pri{width:24px;height:24px;font-size:13px}
 :is(.phone-app,.sheet-ph) .pri-btn{font-size:15px}
-:is(.phone-app,.sheet-ph) .btn{font-size:14px}
+:is(.phone-app,.sheet-ph) .btn{font-size:15px}
 :is(.phone-app,.sheet-ph) .btn.primary,:is(.phone-app,.sheet-ph) .btn.big{font-size:15px}
 :is(.phone-app,.sheet-ph) .btn.ghost,:is(.phone-app,.sheet-ph) .btn.tint{font-size:13px}
 :is(.phone-app,.sheet-ph) .xsmall{font-size:12px}
-:is(.phone-app,.sheet-ph) .bold{font-size:14px}
+:is(.phone-app,.sheet-ph) .bold{font-size:15px}
 :is(.phone-app,.sheet-ph) .pat-row{min-height:54px}
 :is(.phone-app,.sheet-ph) .pat-open{min-height:50px}
 :is(.phone-app,.sheet-ph) .pat-code{font-size:15px}
 :is(.phone-app,.sheet-ph) .pat-main .small{font-size:12px}
 :is(.phone-app,.sheet-ph) .pat-todo{font-size:13px}
 :is(.phone-app,.sheet-ph) .pat-note{font-size:12px}
-:is(.phone-app,.sheet-ph) .left-badge{font-size:11px}
-:is(.phone-app,.sheet-ph) .add-dashed{font-size:14px}
+:is(.phone-app,.sheet-ph) .left-badge{font-size:12px}
+:is(.phone-app,.sheet-ph) .add-dashed{font-size:15px}
 :is(.phone-app,.sheet-ph) .status{font-size:13px}
 /* ô tick nhỏ còn 80%, vùng chạm giữ nguyên */
 :is(.phone-app,.sheet-ph) .chk .box{width:21px;height:21px;border-radius:6px}
@@ -217,12 +233,12 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 :is(.phone-app,.sheet-ph) .chk.small .box svg{width:11px;height:11px}
 /* bảng trượt lên (chi tiết bé, tổng hợp, lịch, sao lưu) */
 :is(.phone-app,.sheet-ph) .sheet .h2{font-size:17px}
-:is(.phone-app,.sheet-ph) .sheet .field .muted.small{font-size:12px}
+:is(.phone-app,.sheet-ph) .sheet .field .muted.small{font-size:13px}
 :is(.phone-app,.sheet-ph) .sheet .todo-text{font-size:15px}
-:is(.phone-app,.sheet-ph) .calc-box{font-size:14px}
+:is(.phone-app,.sheet-ph) .calc-box{font-size:15px}
 :is(.phone-app,.sheet-ph) .err-box{font-size:13px}
 :is(.phone-app,.sheet-ph) .cal-title{font-size:15px}
-:is(.phone-app,.sheet-ph) .cal-wd{font-size:11px}
+:is(.phone-app,.sheet-ph) .cal-wd{font-size:12px}
 :is(.phone-app,.sheet-ph) .msg{font-size:13px}
 
 /* Mức ưu tiên 5 "NV": vẫn là hình tròn như số 1–4, chữ nhỏ hơn một chút để vừa 2 ký tự */
@@ -242,12 +258,20 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .task-main .done+.task-note{color:var(--done)}
 /* cụm chấm nhãn ở cuối dòng: chỉ để xem (chạm vào tính như chạm thân dòng) */
 .tag-zone{flex:none;max-width:100px;align-self:stretch;padding:0 4px;display:flex;flex-wrap:wrap;align-content:center;align-items:center;justify-content:center;gap:4px;touch-action:manipulation}
-.tag-dot{flex:none;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;letter-spacing:-.02em}
+.tag-dot{flex:none;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;letter-spacing:-.02em;background:var(--tb);color:var(--ti)}
 .tag-dot.big{width:32px;height:32px;font-size:12px}
-:is(.phone-app,.sheet-ph) .tag-dot{width:24px;height:24px;font-size:10px}
+:is(.phone-app,.sheet-ph) .tag-dot{font-size:11px}
 :is(.phone-app,.sheet-ph) .tag-dot.big{width:32px;height:32px;font-size:12px}
-.tag-btn{font-size:13px;letter-spacing:-.02em}
+/* nút chọn nhãn 44px tròn. Tắt: nền bề mặt, viền 1,5px, chữ màu nhãn. Bật: nền nhạt của nhãn, viền 2px màu chữ nhãn */
+.tag-btn{font-size:13px;letter-spacing:-.02em;border:1.5px solid var(--line);background:var(--surface);color:var(--ti)}
+.tag-btn[aria-pressed="true"]{border:2px solid var(--ti);background:var(--tb)}
 :is(.phone-app,.sheet-ph) .tag-btn{font-size:13px}
+/* v9 đợt 9.1: iPhone bỏ cỡ 12,5 / 14 / 18 — ghi chú dưới tên việc 13, tên việc trong bảng chi tiết 17 */
+:is(.phone-app,.sheet-ph) .task-note{font-size:13px}
+:is(.phone-app,.sheet-ph) .sheet-name{font-size:17px}
+:is(.phone-app,.sheet-ph) .cal-day{font-size:15px}
+:is(.phone-app,.sheet-ph) .cal-badge{font-size:12px}
+:is(.phone-app,.sheet-ph) .vt-chip,:is(.phone-app,.sheet-ph) .vt-k,:is(.phone-app,.sheet-ph) .vt-v,:is(.phone-app,.sheet-ph) .vt-ask{font-size:15px}
 
 /* ===== v8.4: vuốt xoá theo ngón tay + nút chỉ biểu tượng =====
    --p (0..1) do SwipeRow ghi thẳng lên .swipe khi kéo; mọi thứ dưới đây chỉ là công thức theo --p. */
@@ -315,6 +339,9 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .sheet-wrap.center .sheet.sheet-half{height:min(450px,100%);border-radius:16px;border:1px solid var(--line);padding:12px 16px 16px}
 .sheet-wrap.kb .sheet.sheet-half{height:auto;max-height:100%;flex:0 1 450px;min-height:0}
 .sheet-grip{flex:none;align-self:center;width:40px;height:5px;border-radius:3px;background:var(--edge)}
+.sheet>.sheet-grip{margin:2px 0 -2px}
+.hr{flex:none;width:100%;height:1px;margin:0;border:0;background:var(--line)}
+.btn-half{flex:1 1 0;min-width:0}
 .sheet-r1,.sheet-r2,.sheet-r4{flex:none}
 .sheet-r1{gap:6px}
 .sheet-name{flex:1;min-width:0;min-height:48px;padding:10px 10px 8px;line-height:1.3;resize:none;overflow-y:auto;font-family:inherit;border:1px solid transparent;border-bottom:2px solid var(--edge);border-radius:10px 10px 0 0;background:transparent;font-size:18px;font-weight:700;color:var(--ink)}
@@ -326,13 +353,13 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .sheet-r4{gap:8px}
 .sheet-del-task{display:flex;align-items:center;gap:6px;height:48px;padding:0 14px;border:0;border-radius:12px;background:transparent;color:var(--p1e);font-size:15px;font-weight:600}
 .sheet-done{width:120px;flex:none;font-size:16px}
-:is(.phone-app,.sheet-ph) .btn.sheet-done{font-size:16px}
+:is(.phone-app,.sheet-ph) .btn.sheet-done{font-size:15px}
 
 /* ===== v8 đợt 2: viết tắt ===== */
 /* nút "/a" trên đầu (cạnh đám mây) */
 .vt-btn{color:var(--accent);font-size:15px;font-weight:700;letter-spacing:-.02em}
-/* iPhone: 4 nút trên đầu — thu khoảng cách giữa các nút để tiêu đề vẫn một dòng, vùng chạm giữ 44px */
-:is(.phone-app,.sheet-ph) .ph-head .row8.none{gap:4px}
+/* iPhone: 3 nút trên đầu (/a, đám mây, lịch), mỗi nút 44px */
+:is(.phone-app,.sheet-ph) .ph-head .row8.none{gap:8px}
 /* dải gợi ý + thông báo "Đã thay" đặt ngay cạnh ô gõ */
 .vt-strip{display:flex;flex-direction:column;gap:6px}
 .vt-sug{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px;border-radius:12px;background:var(--surface);border:1px solid var(--line)}

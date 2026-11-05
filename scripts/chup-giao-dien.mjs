@@ -118,8 +118,11 @@ const measure = (page) => page.evaluate((sels) => {
 const ketQua = { ngayGiaDinh: NOW.toString(), anh: [], loi: [], luuY: [], doDac: {}, thuChucNang: {} };
 const browser = await chromium.launch();
 
-async function moApp(opts) {
+async function moApp(opts, { lanMo = true } = {}) {
   const ctx = await browser.newContext(opts);
+  // Dòng nhắc cử chỉ chỉ hiện 3 lần mở đầu (v9.1): mặc định coi như đã mở nhiều lần để ảnh không có dòng nhắc;
+  // truyền { lanMo: false } khi cần thử đúng 3 lần mở đầu.
+  if (lanMo) await ctx.addInitScript(() => { try { localStorage.setItem('soLanMo', '9'); } catch { /* bỏ qua */ } });
   await ctx.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
   const page = await ctx.newPage();
   await page.clock.setFixedTime(NOW);
@@ -197,10 +200,39 @@ const docViec = (page, text) => page.evaluate(async (tx) => {
   db.close();
   return all.filter((t) => t.text === tx).map((t) => ({ zone: t.zone, tags: t.tags, urgency: t.urgency, note: t.note, deleted: t.deleted }));
 }, text);
-const sangToi = async (page) => {
-  const b = page.getByRole('button', { name: /Chuyển sang giao diện/ });
-  await b.click();
+// v9.1: nút sáng/tối trên đầu đã bỏ; đổi giao diện qua bảng "Sao lưu và cài đặt" (Sáng / Tối / Theo máy)
+const moCaiDat = async (page) => {
+  await page.getByRole('button', { name: /^Sao lưu và cài đặt/ }).click();
+  const hop = page.getByRole('dialog', { name: 'Sao lưu và cài đặt' });
+  await hop.waitFor();
+  return hop;
 };
+const dongCaiDat = async (page, hop) => {
+  await hop.getByRole('button', { name: 'Đóng sao lưu và cài đặt', exact: true }).click();
+  await page.waitForTimeout(600); // chờ bảng trượt xuống xong
+};
+const datCheDo = async (page, ten) => {
+  const hop = await moCaiDat(page);
+  await hop.getByRole('button', { name: ten, exact: true }).click();
+  await dongCaiDat(page, hop);
+};
+const laToiLuc = (page) => page.evaluate(() => document.documentElement.classList.contains('dark'));
+// Thang chữ iPhone 5 bậc (v9.1): mọi chữ đang hiện phải thuộc các cỡ này (ô nhập 16). 10px chỉ cho chữ "NV" trong chấm mức việc cũ.
+const CO_CHU_CHO_PHEP = [11, 12, 13, 15, 16, 17, 20];
+const doCoChu = (page) => page.evaluate((cho) => {
+  const loi = new Set();
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+    if (!n.textContent.trim()) continue;
+    const e = n.parentElement;
+    const r = e.getBoundingClientRect();
+    if (!r.width || !r.height || getComputedStyle(e).visibility === 'hidden') continue;
+    const fs = parseFloat(getComputedStyle(e).fontSize);
+    if (cho.includes(fs) || (fs === 10 && e.closest('.pri.nv'))) continue;
+    loi.add(`${fs}px "${n.textContent.trim().slice(0, 24)}" trong ${e.tagName.toLowerCase()}.${String(e.className).slice(0, 30)}`);
+  }
+  return [...loi];
+}, CO_CHU_CHO_PHEP);
 
 
 // ---------- thử viết tắt (v8 đợt 2) ----------
@@ -334,6 +366,30 @@ async function thuThuVien(page, T, tien, cdp) {
     userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1'
   });
   await chup(page, 'iphone-viec-sang', true);
+  {
+    // v9.1: đầu trang đúng 3 nút theo thứ tự /a, đám mây, lịch; chữ tiến độ; chip khu; thang chữ 5 bậc
+    const T = ketQua.thuChucNang.dauTrang = {};
+    T.nut = await page.locator('.ph-head .round-btn').evaluateAll((es) => es.map((e) => e.getAttribute('aria-label')));
+    if (T.nut.length !== 3 || T.nut[0] !== 'Thư viện viết tắt' || !/^Sao lưu và cài đặt/.test(T.nut[1]) || T.nut[2] !== 'Mở lịch') ketQua.loi.push('Đầu trang không đúng 3 nút /a, đám mây, lịch: ' + T.nut.join(' | '));
+    if (await page.locator('.vt-btn').evaluate((e) => /MỚI/i.test(e.parentElement.textContent))) ketQua.loi.push('Đầu trang có chữ "MỚI"');
+    T.tienDo = ((await page.locator('.prog-text').textContent()) || '').trim();
+    if (!/^Đã xong \d+\/\d+$/.test(T.tienDo)) ketQua.loi.push('Chữ tiến độ tab Việc: "' + T.tienDo + '"');
+    T.chip = await page.locator('.chips .chip').evaluateAll((es) => es.map((e) => ({ chu: e.textContent.trim(), cao: Math.round(e.getBoundingClientRect().height), nhat: e.classList.contains('zero'), chon: e.classList.contains('on') })));
+    for (const c of T.chip) {
+      if (c.cao !== 44) ketQua.loi.push(`Chip "${c.chu}" cao ${c.cao}px (cần 44)`);
+      if (/\b0$/.test(c.chu)) ketQua.loi.push(`Chip "${c.chu}" ghi số 0`);
+    }
+    if (!T.chip.some((c) => c.nhat)) ketQua.loi.push('Không thấy chip khu trống (nhạt) trong dữ liệu mẫu');
+    if (T.chip.filter((c) => c.chon).length !== 1 || !T.chip[0].chon) ketQua.loi.push('Chỉ chip "Tất cả" được chọn lúc đầu');
+    T.tab = await page.locator('.seg button').evaluateAll((es) => es.map((e) => Math.round(e.getBoundingClientRect().height)));
+    if (T.tab.some((h) => h !== 44)) ketQua.loi.push('Tab Việc/Khám không cao 44px: ' + T.tab.join(','));
+    T.nhan = await page.locator('.tag-dot').first().evaluate((e) => { const r = e.getBoundingClientRect(); const s = getComputedStyle(e); return { rong: Math.round(r.width), cao: Math.round(r.height), chu: s.fontSize, dam: s.fontWeight }; });
+    if (T.nhan.rong !== 26 || T.nhan.cao !== 26 || T.nhan.chu !== '11px' || +T.nhan.dam < 700) ketQua.loi.push('Huy hiệu nhãn không phải 26px/11px đậm: ' + JSON.stringify(T.nhan));
+    T.coChu = await doCoChu(page);
+    for (const x of T.coChu) ketQua.loi.push('iPhone Việc: cỡ chữ ngoài thang 5 bậc — ' + x);
+    T.tinNhac = await page.getByText('Chạm 2 lần: chi tiết').count();
+    if (T.tinNhac) ketQua.loi.push('Dòng nhắc cử chỉ hiện khi đã mở app nhiều lần và danh sách có việc');
+  }
 
   // --- thử: nút xoá kiểu C, chi tiết việc (chạm 2 lần), việc cũ gắn nhãn, thêm việc có nhãn ---
   {
@@ -568,6 +624,9 @@ async function thuThuVien(page, T, tien, cdp) {
     // khung ghi chú của việc
     const dg = page.locator('.swipe', { hasText: 'Gọi người nhà giường 12' }).locator('.task-main');
     await dg.scrollIntoViewIfNeeded();
+    // Chromium headless nuốt cú chạm đầu sau khi đóng Thư viện: chạm vùng trống trước, như chỗ kiểm bản tối
+    await page.touchscreen.tap(60, 45);
+    await page.waitForTimeout(250);
     const cg = await tamDiem(dg);
     await page.touchscreen.tap(cg.x, cg.y);
     await page.touchscreen.tap(cg.x, cg.y);
@@ -670,7 +729,61 @@ async function thuThuVien(page, T, tien, cdp) {
   }
   await page.getByRole('button', { name: 'Đóng tổng hợp', exact: true }).click(); await page.waitForTimeout(600); // chờ bảng trượt xuống xong
 
-  await sangToi(page);
+  // --- v9.1: bảng "Sao lưu và cài đặt" sáng và tối; chế độ Sáng / Tối / Theo máy ---
+  {
+    const T = ketQua.thuChucNang.caiDat = {};
+    const hop = await moCaiDat(page);
+    T.nhanBang = await hop.getByRole('heading', { level: 2 }).textContent();
+    if (T.nhanBang !== 'Sao lưu và cài đặt') ketQua.loi.push('Bảng cài đặt: tiêu đề "' + T.nhanBang + '"');
+    T.nutGiaoDien = await hop.locator('.seg button').allTextContents();
+    if (T.nutGiaoDien.join('|') !== 'Sáng|Tối|Theo máy') ketQua.loi.push('Bảng cài đặt: nút giao diện ' + T.nutGiaoDien.join('|'));
+    T.thanhKeo = await hop.locator('.sheet-grip').count();
+    if (T.thanhKeo !== 1) ketQua.loi.push('Bảng dưới thiếu thanh kéo ở đỉnh');
+    T.macDinhTheoMay = await hop.getByRole('button', { name: 'Theo máy', exact: true }).getAttribute('aria-pressed');
+    if (T.macDinhTheoMay !== 'true') ketQua.loi.push('Chưa chọn gì mà Theo máy không được bật');
+    await hop.getByRole('button', { name: 'Sáng', exact: true }).click();
+    await chup(page, 'iphone-cai-dat-sang', true);
+    T.coChuCaiDat = await doCoChu(page);
+    for (const x of T.coChuCaiDat) ketQua.loi.push('Bảng cài đặt: cỡ chữ ngoài thang — ' + x);
+    await hop.getByRole('button', { name: 'Tối', exact: true }).click();
+    T.toiSauChon = await laToiLuc(page);
+    if (!T.toiSauChon) ketQua.loi.push('Chọn Tối mà giao diện không tối');
+    T.luuTheme = await page.evaluate(() => localStorage.getItem('theme'));
+    if (T.luuTheme !== 'dark') ketQua.loi.push('Chọn Tối mà localStorage theme = ' + T.luuTheme);
+    await chup(page, 'iphone-cai-dat-toi', true);
+    await dongCaiDat(page, hop);
+    // nút sáng/tối cũ đã bỏ
+    T.nutCu = await page.getByRole('button', { name: /Chuyển sang giao diện/ }).count();
+    if (T.nutCu) ketQua.loi.push('Nút sáng/tối trên đầu trang vẫn còn');
+
+    // Theo máy: đi theo máy, đổi theo máy tức thì
+    await datCheDo(page, 'Theo máy');
+    T.luuAuto = await page.evaluate(() => localStorage.getItem('theme'));
+    if (T.luuAuto !== 'auto') ketQua.loi.push('Chọn Theo máy mà localStorage theme = ' + T.luuAuto);
+    await page.emulateMedia({ colorScheme: 'dark' }); await page.waitForTimeout(150);
+    T.theoMayToi = await laToiLuc(page);
+    await page.emulateMedia({ colorScheme: 'light' }); await page.waitForTimeout(150);
+    T.theoMaySang = !(await laToiLuc(page));
+    await page.emulateMedia({ colorScheme: 'dark' }); await page.waitForTimeout(150);
+    T.theoMayToiLan2 = await laToiLuc(page);
+    if (!T.theoMayToi || !T.theoMaySang || !T.theoMayToiLan2) ketQua.loi.push('Theo máy không đổi theo prefers-color-scheme: ' + JSON.stringify([T.theoMayToi, T.theoMaySang, T.theoMayToiLan2]));
+    await datCheDo(page, 'Sáng');
+    T.sangKhiMayToi = !(await laToiLuc(page));
+    if (!T.sangKhiMayToi) ketQua.loi.push('Chọn Sáng nhưng máy tối thì giao diện vẫn tối');
+    await page.emulateMedia({ colorScheme: 'light' }); await page.waitForTimeout(100);
+    await datCheDo(page, 'Tối');
+    T.toiKhiMaySang = await laToiLuc(page);
+    if (!T.toiKhiMaySang) ketQua.loi.push('Chọn Tối nhưng máy sáng thì giao diện không tối');
+    // CSDL không chứa cài đặt giao diện (chỉ localStorage)
+    T.theoMayKhongVaoCsdl = await page.evaluate(async () => {
+      const db = await new Promise((res) => { const r = indexedDB.open('ghichu-sosinh'); r.onsuccess = () => res(r.result); });
+      const meta = await new Promise((res) => { const r = db.transaction('meta').objectStore('meta').getAll(); r.onsuccess = () => res(r.result); });
+      db.close();
+      return !meta.some((m) => /theme|giao.?dien/i.test(m.key));
+    });
+    if (!T.theoMayKhongVaoCsdl) ketQua.loi.push('Cài đặt giao diện bị ghi vào CSDL');
+    await page.emulateMedia({ colorScheme: 'light' });
+  }
   await chup(page, 'iphone-kham-toi', false);
   await page.getByRole('button', { name: 'Việc', exact: true }).click();
   await chup(page, 'iphone-viec-toi', true);
@@ -711,6 +824,31 @@ async function thuThuVien(page, T, tien, cdp) {
     await chup(page, 'iphone-thu-vien-toi', true);
     await page.getByRole('button', { name: 'Đóng thư viện', exact: true }).click(); await page.waitForTimeout(600); // chờ bảng trượt xuống xong
   }
+  await ctx.close();
+}
+
+// iPhone: dòng nhắc cử chỉ chỉ hiện trong 3 lần mở app đầu tiên hoặc khi danh sách của ngày trống (v9.1)
+{
+  const { ctx, page } = await moApp({
+    viewport: { width: 393, height: 852 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true,
+    userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mobile/15E148 Safari/604.1)'
+  }, { lanMo: false });
+  const T = ketQua.thuChucNang.dongNhac = {};
+  const nhac = () => page.getByText('Chạm 2 lần: chi tiết · Vuốt trái: xoá').count();
+  const taiLai = async () => { await page.reload(); await page.waitForSelector('.phone-app'); await page.waitForTimeout(500); };
+  T.lanMo = await page.evaluate(() => localStorage.getItem('soLanMo'));
+  T.lan2 = await nhac();
+  await taiLai(); T.lan3 = await nhac();
+  await taiLai(); T.lan4 = await nhac();
+  T.demLan4 = await page.evaluate(() => localStorage.getItem('soLanMo'));
+  if (T.lanMo !== '2' || T.demLan4 !== '4') ketQua.loi.push(`Đếm số lần mở app sai: ${T.lanMo} rồi ${T.demLan4} (mong đợi 2 rồi 4)`);
+  if (T.lan2 !== 1 || T.lan3 !== 1) ketQua.loi.push(`Dòng nhắc phải hiện ở lần mở thứ 2 và 3 (thấy ${T.lan2}, ${T.lan3})`);
+  if (T.lan4 !== 0) ketQua.loi.push('Dòng nhắc vẫn hiện ở lần mở thứ 4 khi danh sách có việc');
+  await page.getByRole('button', { name: 'Mở lịch', exact: true }).click();
+  await page.getByRole('button', { name: /^Ngày 25 tháng 10,/ }).click();
+  await page.waitForTimeout(700);
+  T.ngayTrong = await nhac();
+  if (T.ngayTrong !== 1) ketQua.loi.push('Dòng nhắc không hiện khi danh sách của ngày trống (lần mở thứ 4)');
   await ctx.close();
 }
 
@@ -770,6 +908,50 @@ async function thuThuVien(page, T, tien, cdp) {
   await page.waitForTimeout(400);
   await page.locator('.pat-open', { hasText: 'G01' }).click();
   await chup(page, 'pc-kham-sang', false);
+  {
+    // v9.1: PC cũng bỏ nút sáng/tối; bảng "Sao lưu và cài đặt" vẫn có chức năng cũ (xuất, nhập, thư mục)
+    const T = ketQua.thuChucNang.pcCaiDat = {};
+    T.nutCu = await page.getByRole('button', { name: /Chuyển sang giao diện/ }).count();
+    if (T.nutCu) ketQua.loi.push('PC: nút sáng/tối trên đầu vẫn còn');
+    T.nutDauTrang = await page.locator('.pc-top .round-btn').evaluateAll((es) => es.map((e) => e.getAttribute('aria-label')));
+    if (T.nutDauTrang.length !== 2 || T.nutDauTrang[0] !== 'Thư viện viết tắt' || !/^Sao lưu và cài đặt/.test(T.nutDauTrang[1])) ketQua.loi.push('PC: đầu trang không đúng /a và đám mây: ' + T.nutDauTrang.join(' | '));
+    const hop = await moCaiDat(page);
+    T.nutTrongBang = (await hop.locator('button, label.btn').allTextContents()).map((s) => s.trim()).filter(Boolean);
+    for (const can of ['Xuất sao lưu', 'Nhập từ file…']) if (!T.nutTrongBang.some((s) => s === can)) ketQua.loi.push('PC: bảng cài đặt thiếu nút "' + can + '"');
+    if (!T.nutTrongBang.some((s) => /Thư mục|Chọn thư mục OneDrive/.test(s))) ketQua.luuY.push('PC: không thấy nút chọn thư mục OneDrive (Chromium headless có thể không có showDirectoryPicker)');
+    await chup(page, 'pc-cai-dat-sang', false);
+    await dongCaiDat(page, hop);
+  }
+  await ctx.close();
+}
+// PC: người đã có 'dark' hoặc 'light' lưu từ bản cũ giữ nguyên giao diện sau khi cập nhật, kể cả khi máy báo ngược lại
+for (const [cu, maySang, kyVong] of [['dark', 'light', true], ['light', 'dark', false]]) {
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: maySang });
+  await ctx.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
+  await ctx.addInitScript((v) => { try { if (!sessionStorage.getItem('__da')) { localStorage.setItem('theme', v); sessionStorage.setItem('__da', '1'); } } catch { /* bỏ qua */ } }, cu);
+  const page = await ctx.newPage();
+  page.on('pageerror', (e) => ketQua.loi.push('Lỗi chạy trang: ' + e.message));
+  await page.goto(URL);
+  await page.waitForSelector('.pc');
+  await page.waitForTimeout(300);
+  const toi = await laToiLuc(page);
+  const giu = await page.evaluate(() => localStorage.getItem('theme'));
+  ketQua.thuChucNang['giaTriCu_' + cu] = { maySang, toi, giu };
+  if (toi !== kyVong || giu !== cu) ketQua.loi.push(`Giá trị theme cũ "${cu}" (máy ${maySang}): giao diện tối=${toi}, đã lưu "${giu}" — phải giữ nguyên`);
+  await ctx.close();
+}
+// Chưa có giá trị theme: Theo máy, và không tự ghi gì vào localStorage
+{
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
+  await ctx.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
+  const page = await ctx.newPage();
+  await page.goto(URL);
+  await page.waitForSelector('.pc');
+  await page.waitForTimeout(300);
+  const toi = await laToiLuc(page);
+  const giu = await page.evaluate(() => localStorage.getItem('theme'));
+  ketQua.thuChucNang.chuaCoTheme = { maySang: 'dark', toi, giu };
+  if (!toi || giu !== null) ketQua.loi.push(`Chưa có theme, máy tối: giao diện tối=${toi}, đã lưu "${giu}" (mong đợi tối, chưa lưu gì)`);
   await ctx.close();
 }
 await browser.close();

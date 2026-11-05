@@ -10,7 +10,10 @@ import { SheetHead } from './ui.jsx';
 
 const fmt = (ts) => (ts ? new Date(ts).toLocaleString('vi-VN') : 'chưa có');
 
-export default function BackupPanel({ onClose }) {
+const CHE_DO_NHAN = [['light', 'Sáng'], ['dark', 'Tối'], ['auto', 'Theo máy']];
+
+/** Bảng "Sao lưu và cài đặt": sao lưu (như cũ) + chọn giao diện Sáng / Tối / Theo máy. */
+export default function BackupPanel({ onClose, cheDo, onDoiCheDo }) {
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
   const [pendingFile, setPendingFile] = useState(null); // khi iOS chặn lần chia sẻ đầu
@@ -80,7 +83,8 @@ export default function BackupPanel({ onClose }) {
 
   return (
     <>
-      <SheetHead title="Sao lưu & OneDrive" onClose={onClose} closeLabel="Đóng sao lưu" />
+      <SheetHead title="Sao lưu và cài đặt" onClose={onClose} closeLabel="Đóng sao lưu và cài đặt" />
+      <h3 className="bold m0">Sao lưu lên OneDrive</h3>
       <div className="stack4">
         <p className={'m0 small ' + (overdue ? 'warn' : 'muted')}>
           Lần xuất gần nhất: {fmt(lastExport?.at)}{overdue && ' — nên xuất bản sao lưu hôm nay'}
@@ -88,9 +92,9 @@ export default function BackupPanel({ onClose }) {
         <p className="m0 small muted">Lần nhập gần nhất: {fmt(lastImport?.at)}{lastImport && ` (${lastImport.file})`}</p>
       </div>
 
-      <div className="row8 wrap">
-        <button type="button" className="btn primary" disabled={busy} onClick={handleExport}>Xuất sao lưu</button>
-        <label className={'btn' + (busy ? ' disabled' : '')}>
+      <div className="row8">
+        <button type="button" className="btn primary btn-half" disabled={busy} onClick={handleExport}>Xuất sao lưu</button>
+        <label className={'btn btn-half' + (busy ? ' disabled' : '')}>
           Nhập từ file…
           <input type="file" accept=".json,application/json" hidden onChange={handlePickFile} disabled={busy} />
         </label>
@@ -112,6 +116,14 @@ export default function BackupPanel({ onClose }) {
         Dữ liệu nằm trong máy này{persisted ? ' và đã được trình duyệt giữ lâu dài' : ''}. Xuất sao lưu lên OneDrive mỗi ngày để
         không mất khi đổi máy; nhập file ở máy kia để có cùng dữ liệu.
         {persisted === false && isIOS() && ' Trên iPhone, luôn mở app bằng icon ở Màn hình chính.'}
+      </div>
+
+      <hr className="hr" />
+      <h3 className="bold m0" id="gd-tieu-de">Giao diện</h3>
+      <div className="seg full" role="group" aria-labelledby="gd-tieu-de">
+        {CHE_DO_NHAN.map(([k, nhan]) => (
+          <button key={k} type="button" aria-pressed={cheDo === k} onClick={() => onDoiCheDo(k)}>{nhan}</button>
+        ))}
       </div>
     </>
   );

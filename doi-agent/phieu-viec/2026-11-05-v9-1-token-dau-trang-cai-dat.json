@@ -1,0 +1,56 @@
+{
+  "ten": "v9 đợt 9.1 — Token, đầu trang 3 nút, bảng Sao lưu và cài đặt",
+  "ngay": "2026-11-05",
+  "khuVuc": "Khung chung",
+  "loai": "vua",
+  "canBacSiDuyet": false,
+  "keHoachTong": "doi-agent/phieu-viec/2026-11-05-v9-ke-hoach.json",
+  "dacTa": "doi-agent/thiet-ke-v9/THIET_KE_V9.md (mục 1, mục 2)",
+  "bangCanvas": ["15a ApViec (chỉ phần đầu trang, tab, chip, huy hiệu nhãn)", "15f ApCaiDat", "15g ApViecToi (như 15a, bản tối)", "16a MauNhan"],
+  "agent": ["giao-dien", "kiem-thu", "ghi-chep"],
+  "fileDuocSua": [
+    "src/App.css",
+    "src/App.jsx",
+    "src/hooks.js",
+    "src/components/ui.jsx",
+    "src/components/Tasks.jsx",
+    "src/components/BackupPanel.jsx",
+    "src/lib/cai-dat.js",
+    "tests/luat.test.js",
+    "scripts/chup-giao-dien.mjs"
+  ],
+  "viecCanLam": [
+    "Thang chữ iPhone 5 bậc (mục 1.1): bỏ cỡ 12,5/13,5/14/18 trên iPhone; ô nhập vẫn 16px; PC giữ cỡ cũ.",
+    "Màu nhãn mới (mục 1.2): thêm biến mới cho cả .th và .th.dark; TagDot và nút chọn nhãn dùng biến mới. KHÔNG đổi giá trị --p1…--p5; PriDot của việc cũ giữ nguyên. TAG_COLOR trong src/lib/viec.js giữ nguyên (có bài kiểm tra).",
+    "Huy hiệu nhãn trong dòng 26px, chữ 11px đậm, việc đã xong mờ ~0,5. Nút chọn nhãn 44px tròn, kiểu Tắt/Bật theo mục 1.2.",
+    "Khai báo biến màu trạng thái (mục 1.3) cho cả sáng và tối, gồm các màu đề xuất cho bản tối. Đo tương phản (chữ ≥4,5:1, biểu tượng ≥3:1), chốt và báo số đo. Đợt này chỉ khai báo, chưa áp vào hành vi.",
+    "Tab Việc/Khám, chip khu vực, nút trên đầu cao 44px (mục 1.4). Chip khu không có việc: chữ nhạt #6B7F91 (bản tối chọn màu tương ứng), không ghi số 0. Chỉ chip đang chọn có nền xanh; bỏ kiểu tô xanh nhạt cho khu mới.",
+    "Đầu trang còn 3 nút theo thứ tự /a, đám mây, lịch (mục 2.1). Bỏ nút sáng/tối ở cả iPhone và PC. Chữ 'MỚI' không thêm. Nút lịch vẫn chỉ hiện ở tab Việc như hiện tại (lịch Khám thuộc 9.5).",
+    "Chữ tiến độ trên iPhone theo canvas 15a: 'Đã xong x/y' ở tab Việc; tab Khám giữ 'Đã khám x/y'.",
+    "Bảng 'Sao lưu và cài đặt' (mục 2.2, canvas 15f): đổi tên bảng và aria-label của nút đám mây; phần sao lưu giữ đủ chức năng cũ, không đổi logic sao lưu; thêm nút gạt Sáng / Tối / Theo máy.",
+    "Theo máy: theo prefers-color-scheme và tự đổi khi máy đổi. Lưu lựa chọn ở localStorage khoá 'theme' với giá trị light|dark|auto; giá trị cũ light/dark vẫn đọc đúng; chưa có giá trị thì là auto. Không lưu vào CSDL, không sao lưu.",
+    "Dòng nhắc cử chỉ trên tab Việc chỉ hiện trong 3 lần mở app đầu tiên và khi danh sách của ngày trống (mục 2.3). Đếm số lần mở bằng localStorage, mỗi lần mở app đếm một lần. Nội dung giữ đúng cử chỉ hiện có: 'Chạm 2 lần: chi tiết · Vuốt trái: xoá'.",
+    "Hàm thuần đặt ở src/lib/cai-dat.js (đọc chế độ giao diện, tính sáng/tối, quyết định hiện dòng nhắc), không dùng window khi được import, thêm một dòng cho file này vào bảng khu vực 'Khung chung' của doi-agent/BAN_DO.md để tests/ban-do.test.js đạt. Viết bài kiểm tra trong tests/luat.test.js.",
+    "Bảng dưới (Sheet) có thanh kéo nhỏ ở đỉnh (chỉ để trang trí, chưa cần kéo được), tiêu đề 17px, nút đóng 44px (mục 2.4), không phá createPortal, chuyển động đóng và co theo bàn phím.",
+    "Sửa scripts/chup-giao-dien.mjs cho khớp: đổi sáng/tối qua bảng cài đặt thay vì nút đã bỏ; thêm ảnh iphone-cai-dat-sang, iphone-cai-dat-toi và kiểm 3 chế độ Sáng/Tối/Theo máy."
+  ],
+  "khongLam": [
+    "Mục 'Ngày làm việc bắt đầu lúc' trong bảng cài đặt: thuộc đợt 9.6.",
+    "Mục 'Cử chỉ' trong bảng cài đặt: để tới đợt 9.2, vì danh sách mô tả vuốt phải và Hoàn tác mà app chưa có. Không hiện hướng dẫn sai.",
+    "Không đổi nội dung dòng nhắc sang cử chỉ mới: thuộc 9.2.",
+    "Ô tick, gạch ngang, xoá kiểu C, vuốt: giữ nguyên, thuộc 9.2.",
+    "Ô thêm việc 1 dòng: thuộc 9.3. Lịch, chi tiết việc, chi tiết bé, tab Khám: không đổi bố cục.",
+    "Không đổi src/db.js, src/lib/actions.js, src/lib/backup.js, src/lib/merge.js, không thêm thư viện npm, không sửa package.json.",
+    "Không chạy --luu-chuan. Không commit, không push."
+  ],
+  "tieuChiDat": [
+    "npm test đạt, gồm bài kiểm tra mới; không nới lỏng bài kiểm tra cũ",
+    "npm run build thành công; node scripts/chup-giao-dien.mjs dist báo ĐẠT",
+    "Ảnh iPhone sáng/tối khớp phần đầu trang, tab, chip, nhãn của bảng 15a/15g và bảng 15f (trừ 2 mục ghi trong khongLam)",
+    "Người đang dùng bản tối/sáng trên máy không bị đổi giao diện sau khi cập nhật",
+    "Việc cũ vẫn hiện số 1–4/NV tím như trước; chấm đỏ đám mây và cảnh báo không đổi màu",
+    "Sao lưu, nhập file, chọn thư mục OneDrive trên PC vẫn hoạt động như cũ",
+    "Mọi màu bản tối đạt tương phản, có số đo"
+  ],
+  "ghiChu": "scripts/chup-giao-dien.mjs đã có sẵn sửa nhỏ của Điều phối: chạm vùng trống trước khi mở chi tiết việc 'Gọi người nhà giường 12', vì Chromium headless nuốt cú chạm đầu sau khi đóng Thư viện viết tắt. Ảnh trước khi sửa: C:/Users/hnqh1/ghi-chu-cong-viec/cong-cu/anh-truoc. Ảnh canvas: C:/Users/hnqh1/ghi-chu-cong-viec/cong-cu/anh-canvas."
+}

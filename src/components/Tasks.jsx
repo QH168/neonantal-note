@@ -3,9 +3,9 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { ZONES, LEGACY_ZONES } from '../db.js';
 import { addTask, toggleTask, cycleUrgency, removeTask, setTaskTags, setTaskNote, setTaskText, setTaskZone } from '../lib/actions.js';
 import { isoOf, parseIso } from '../lib/dates.js';
-import { TAGS, TAG_COLOR, laViecMoi, batTatNhan, sapViec, khuHienThi, khuDeChon, boDemCham, themCham } from '../lib/viec.js';
+import { TAGS, laViecMoi, batTatNhan, sapViec, khuHienThi, khuDeChon, boDemCham, themCham } from '../lib/viec.js';
 import { useVietTat } from './VietTat.jsx';
-import { CheckBtn, PriDot, PRI_NAME, Chevron, XIcon, SwipeRow, TagDot, Sheet, TrashIcon, DongBtn, useDongSheet } from './ui.jsx';
+import { CheckBtn, PriDot, PRI_NAME, Chevron, XIcon, SwipeRow, TagDot, mauNhan, Sheet, TrashIcon, DongBtn, useDongSheet } from './ui.jsx';
 
 /** Thanh khu vực: dạng cột (PC) hoặc chip vuốt ngang (iPhone). */
 export function ZoneNav({ dayTasks, active, onPick, chips }) {
@@ -16,9 +16,10 @@ export function ZoneNav({ dayTasks, active, onPick, chips }) {
     <nav aria-label="Khu vực làm việc" className={chips ? 'chips noscroll' : 'zone-col'}>
       {items.map(([key, label, count]) => (
         <button key={key} type="button" aria-pressed={active === key} onClick={() => onPick(key)}
-          className={(chips ? 'chip' : 'zone-btn') + (active === key ? ' on' : '')}>
+          className={(chips ? 'chip' : 'zone-btn') + (active === key ? ' on' : '') + (chips && !count ? ' zero' : '')}>
           <span className={chips ? '' : 'grow'}>{label}</span>
-          <span className="zone-count">{count}</span>
+          {/* chip (iPhone): khu không có việc thì không ghi số 0, chữ nhạt */}
+          {(!chips || count > 0) && <span className="zone-count">{count}</span>}
         </button>
       ))}
     </nav>
@@ -29,14 +30,10 @@ export function ZoneNav({ dayTasks, active, onPick, chips }) {
 function TagBtns({ tags, onToggle, label }) {
   return (
     <div className="pri-pick" role="group" aria-label={label}>
-      {TAGS.map((tag) => {
-        const n = TAG_COLOR[tag];
-        const on = tags.includes(tag);
-        return (
-          <button key={tag} type="button" aria-label={`Nhãn ${tag}`} aria-pressed={on} onClick={() => onToggle(tag)}
-            className="pri-btn tag-btn" style={{ borderColor: `var(--p${n}e)`, ...(on ? { background: `var(--p${n})`, color: `var(--p${n}i)` } : {}) }}>{tag}</button>
-        );
-      })}
+      {TAGS.map((tag) => (
+        <button key={tag} type="button" aria-label={`Nhãn ${tag}`} aria-pressed={tags.includes(tag)} onClick={() => onToggle(tag)}
+          className="pri-btn tag-btn" style={mauNhan(tag)}>{tag}</button>
+      ))}
     </div>
   );
 }
@@ -78,7 +75,6 @@ function TaskDetail({ t, wide, onClose }) {
   const xoaViec = () => { boTen(); boGhiChu(); removeTask(t.id); onClose(); };
   return (
     <Sheet label="Chi tiết việc" onClose={onClose} wide={wide} className="sheet-half">
-      <div className="sheet-grip" aria-hidden="true" />
       <div className="row-between sheet-r1">
         <label htmlFor="ten-viec" className="sr-only">Nội dung việc</label>
         <textarea id="ten-viec" className="sheet-name" rows={ten.length > 52 ? 3 : ten.length > 26 ? 2 : 1} autoComplete="off" {...vtTen.props}

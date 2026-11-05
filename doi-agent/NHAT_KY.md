@@ -7,12 +7,34 @@
 | # | Phát hiện | Mức | Đề xuất | Agent |
 |---|---|---|---|---|
 | 1 | Cuộn dọc danh sách và vuốt trái (SwipeRow kiểu C) bằng ngón tay thật, cùng bàn phím iPhone thật với bảng chi tiết việc, chưa kiểm được bằng máy (Chromium headless) — bác sĩ thử trên iPhone. | Lưu ý | Bác sĩ thử vuốt dọc/trái và gõ trong chi tiết việc trên iPhone; nếu vướng thì giao phiếu chỉnh. | Giao diện |
-| 2 | Ảnh chuẩn `doi-agent/anh-chuan/` chưa cập nhật cho v8. | Lưu ý | Cập nhật sau khi bác sĩ xem giao diện v8 trên máy thật. | Kiểm thử |
+| 2 | Ảnh chuẩn `doi-agent/anh-chuan/` chưa cập nhật cho v8 và v9.1. | Lưu ý | Chờ bác sĩ duyệt ảnh v9 (ảnh v9.1 đã chụp), rồi mới chạy `--luu-chuan` để lưu bộ chuẩn mới. | Kiểm thử |
 | 3 | Ô thêm việc một dòng: gõ "/ctm" rồi Enter thì gửi luôn, không thay chữ (phiếu chỉ yêu cầu dấu cách). | Lưu ý | Hỏi bác sĩ có muốn Enter cũng thay chữ trước khi gửi không. | Giao diện |
 | 4 | Bản tối: hộp thông báo "Đã thay" nền sáng, đọc rõ nhưng sáng hơn phần còn lại. | Lưu ý | Bác sĩ xem trên máy thật; nếu chói thì chỉnh màu `--vtAct` và nền hộp. | Giao diện |
 | 5 | PC: ô lịch tháng 39×48px (có từ trước, không phải do v8.1). | Lưu ý | Phóng to ô nếu bác sĩ dùng chuột/chạm trên PC. | Giao diện |
-| 6 | Thiết kế có dòng chữ "MỚI" dưới nút "/a" nhưng chưa làm vì đè thanh tiến độ. | Lưu ý | Hỏi bác sĩ có cần dòng "MỚI" không; nếu cần thì chọn chỗ đặt khác. | Giao diện |
 | 7 | Chạm nút Xoá trong vòng ~0,5 giây sau khi vuốt có thể không ăn (trình duyệt giả lập không sinh click; trang trống cũng vậy). | Lưu ý | Bác sĩ thử trên iPhone; nếu bị thì đổi nút Xoá sang xử lý pointerup (SwipeRow, ui.jsx). | Giao diện |
+| 8 | Chữ chip khu trống `#6B7F91` do đặc tả chốt đo 4,14:1 trên trắng và 3,84:1 trên nền trang, dưới 4,5:1. | Lưu ý | Đề xuất đổi `--chipZero` (sáng) sang `#5E7183` (5,04:1 trên trắng, 4,67:1 trên nền trang). Hỏi bác sĩ. | Giao diện |
+| 9 | Dòng nhắc cử chỉ hiện cả khi danh sách của ngày trống, kể cả sau 3 lần mở đầu (đúng chữ đặc tả mục 2.3, khác hành vi cũ là ẩn khi trống). | Lưu ý | Hỏi bác sĩ giữ theo đặc tả hay chỉ hiện trong 3 lần mở đầu. | Giao diện |
+| 10 | Đếm "3 lần mở" tính theo lần tải trang; trên iPhone, app tiếp tục từ nền không tính là lần mở mới. | Lưu ý | Chấp nhận; nếu bác sĩ muốn đếm cả lần quay lại từ nền thì đổi `useLanMoApp` (sự kiện `visibilitychange`). | Giao diện |
+| 11 | Chi tiết bé: thanh kéo mới làm nội dung tụt ~19px, nút "Hoàn tất khám" trong ảnh chụp bị cắt ở đáy (vẫn cuộn tới được). | Lưu ý | Đợt 9.4 làm lại màn chi tiết bé nên xử lý ở đó. | Giao diện |
+| 12 | Chromium headless nuốt cú chạm đầu tiên sau khi đóng Thư viện viết tắt (script chụp đã vòng qua bằng cách chạm vùng trống trước). | Lưu ý | Bác sĩ thử trên iPhone: đóng Thư viện viết tắt rồi chạm 2 lần vào một việc, xem có bị mất cú chạm đầu không. | Giao diện |
+| 13 | Biến màu mốc vuốt bản tối `--swR2` `#3F7A47` và `--swL2` `#7A3A33` là đề xuất của Giao diện, đã khai báo nhưng chưa dùng. | Lưu ý | Kiểm lại tương phản và cảm giác khi làm đợt 9.2 (cử chỉ mới). | Giao diện |
+| 14 | Ở màn 320px, huy hiệu số việc quá hạn đè nhẹ lên góc nút lịch. | Lưu ý | Chỉnh vị trí huy hiệu nếu bác sĩ dùng máy nhỏ; không ảnh hưởng iPhone 15. | Giao diện |
+
+## 05/11/2026 — v9.1 — Màu nhãn mới, đầu trang 3 nút, bảng Sao lưu và cài đặt
+- Phiếu: `doi-agent/phieu-viec/2026-11-05-v9-1-token-dau-trang-cai-dat.json` (đợt 1/6 của v9; thiết kế do bác sĩ duyệt 05/11/2026, đặc tả `doi-agent/thiet-ke-v9/THIET_KE_V9.md`).
+- Đã đổi (lời thường):
+  1. Đầu trang iPhone còn 3 nút: "/a", đám mây, lịch; nút sáng/tối bỏ (iPhone và PC). Tab Việc/Khám, chip khu, nút trên đầu cao 44px. Chữ tiến độ tab Việc thành "Đã xong x/y".
+  2. Nút đám mây mở bảng "Sao lưu và cài đặt": phần sao lưu giữ nguyên chức năng, thêm nút gạt Sáng / Tối / Theo máy (Theo máy đi theo máy và tự đổi). Ai đã chọn sáng hoặc tối từ trước giữ nguyên giao diện; chưa chọn thì Theo máy. Lựa chọn chỉ nằm trên máy, không vào sao lưu.
+  3. Màu nhãn NV/BM/CK/HC/XN theo bảng màu mới: nền nhạt, chữ đậm cùng tông, có bản sáng và tối. Huy hiệu nhãn trong dòng tròn 26px; nút chọn nhãn 44px tròn (tắt: viền mảnh, bật: nền nhạt viền đậm); việc đã xong thì nhãn mờ. Việc cũ vẫn hiện số 1–4 và NV tím như trước; chấm đỏ đám mây và cảnh báo không đổi màu.
+  4. Chip khu không có việc: chữ nhạt, không ghi số 0; chỉ chip đang chọn có nền xanh.
+  5. Chữ iPhone theo thang 5 bậc 20/17/15/13/12 (bỏ cỡ 12,5/13,5/14/18); ô nhập vẫn 16px; PC giữ cỡ cũ.
+  6. Dòng nhắc "Chạm 2 lần: chi tiết · Vuốt trái: xoá" chỉ hiện trong 3 lần mở app đầu hoặc khi danh sách của ngày trống.
+  7. Bảng trượt lên có thanh kéo nhỏ ở đỉnh (chỉ trang trí), tiêu đề 17px, nút đóng 44px.
+  8. Khai báo sẵn màu trạng thái của v9 (tích xong, nền vuốt, nút xoá dịu, dải ngày trước, khoảng ngày) cho cả sáng và tối; chưa dùng, trừ màu chữ chip khu trống.
+- Kỹ thuật: `src/lib/cai-dat.js` mới (hàm thuần); `src/hooks.js` thêm `useGiaoDien`, `useLanMoApp`; `ui.jsx` thêm `mauNhan` (`TAG_COLOR` còn trong `viec.js`, giao diện không dùng); biến màu mới trong `App.css`; `BackupPanel.jsx`, `App.jsx`, `Tasks.jsx` sửa theo; `tests/luat.test.js` thêm bài kiểm v9.1. Không đổi CSDL, sao lưu, `actions.js`, `package.json`.
+- Sửa nhỏ `scripts/chup-giao-dien.mjs`: chạm vùng trống trước khi mở chi tiết việc "Gọi người nhà giường 12" (Chromium headless nuốt cú chạm đầu sau khi đóng Thư viện viết tắt). Ngoài ra script được cập nhật cho khớp: đổi sáng/tối qua bảng cài đặt, thêm ảnh iPhone cài đặt sáng/tối, kiểm 3 chế độ Sáng/Tối/Theo máy.
+- Kết quả kiểm: kiểm thử độc lập ĐẠT, không vòng sửa nào; `npm test` 83/83; script chụp ĐẠT 34 ảnh. Chưa thử trên iPhone thật. So ảnh chuẩn tự động chưa chạy (máy chụp không có `sharp`), đã so bằng mắt; ảnh chuẩn chưa lưu lại (chờ bác sĩ duyệt ảnh). Các điểm cần bác sĩ quyết xem bảng "Chờ duyệt" (#8–#14).
+- Việc tiếp theo: đợt 9.2 (cử chỉ mới) — chờ bác sĩ duyệt ảnh 9.1 và duyệt phiếu 9.2.
 
 ## 05/11/2026 — Đóng gói thiết kế v9 (chưa đổi app)
 - Bác sĩ duyệt toàn bộ canvas "Ghi chú Sơ sinh v8 — thiết kế" (25 bảng): bỏ ô tick, vuốt phải/trái 1/3 để xong/xoá (có Hoàn tác), màu nhãn dịu cùng tông, thang chữ 5 bậc, đầu trang 3 nút, Sao lưu và cài đặt (Sáng/Tối/Theo máy, ngày làm việc bắt đầu 07:00), ô thêm việc 1 dòng, Khám có nút + trên dòng phòng và chi tiết bé mới, lịch ô tròn, xem lại ngày trước, tổng hợp nhiều ngày, xem 2 ngày để giao tour.

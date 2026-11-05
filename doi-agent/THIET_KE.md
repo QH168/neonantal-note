@@ -26,12 +26,16 @@
 
 - **Màu**: dùng đúng biến trong `src/App.css` (`.th` sáng, `.th.dark` tối). Không viết mã màu cứng trong component.
   - Chủ đạo xanh da trời `--accent` #0B79B8 (tối #5BB8EE); nền #F2F7FB (tối #0E151C); bề mặt thẻ trắng (tối #17212B); chữ #12202B.
-  - Màu nhãn có nghĩa: NV đỏ `--p1`, BM vàng `--p2`, CK xanh lá `--p3`, HC xanh đậm `--p4`, XN tím `--p5`.
+  - Màu nhãn có nghĩa (từ v9.1, bảng 16a): nền nhạt `--tNV` + chữ đậm cùng tông `--tNVi` (và `--tBM`, `--tCK`, `--tHC`, `--tXN` tương tự): NV đỏ phấn, BM vàng nhạt, CK xanh lơ, HC xanh chàm nhạt, XN tím nhạt; có cả sáng và tối. `--p1…--p5` (đỏ, vàng, xanh lá, xanh đậm, tím) không đổi, chỉ còn cho số ưu tiên của việc cũ, chấm đỏ đám mây, cảnh báo, nút xoá.
+  - Màu trạng thái của v9 (tích xong, nền vuốt, nút xoá dịu, dải ngày trước, khoảng ngày) đã khai báo sẵn trong `src/App.css` nhưng **chưa áp dụng** (thuộc các đợt 9.2–9.5); đừng coi là đã có trên màn hình.
   - **Đỏ chỉ dùng cho khẩn/cảnh báo/xoá.** Không dùng đỏ để trang trí.
 - **Phông**: Be Vietnam Pro (một họ chữ duy nhất, đọc tốt dấu tiếng Việt). Không thêm phông khác.
-- **Cỡ chữ iPhone**: tiêu đề 20px, nội dung việc và mã giường 15px, chữ phụ 12–13px, **ô nhập ≥16px** (Safari không phóng to).
-- **Vùng chạm ≥44px** cho mọi nút, ô tick, nút biểu tượng.
-- **Chế độ tối** cho mọi màu mới. Tiêu đề luôn **một dòng**.
+- **Cỡ chữ iPhone** (thang 5 bậc, từ v9.1): tiêu đề 20px; tên bảng dưới 17px; nội dung việc, mã giường, nút, chip 15px; chữ phụ 13px; ghi chú nhỏ 12px; **ô nhập ≥16px** (Safari không phóng to). Không dùng 12,5 / 13,5 / 14 / 18 trên iPhone. PC giữ cỡ cũ.
+- **Vùng chạm ≥44px** cho mọi nút, ô tick, nút biểu tượng. Từ v9.1: tab Việc/Khám, chip khu vực và nút trên đầu trang cao đúng 44px; nút chọn nhãn 44px tròn; huy hiệu nhãn trong dòng tròn 26px, chữ 11px đậm, việc đã xong mờ ~0,5.
+- **Đầu trang** (v9.1): iPhone có 3 nút tròn 44px theo thứ tự "/a", đám mây, lịch (lịch chỉ tab Việc); PC có "/a" và đám mây. Không có nút sáng/tối: Sáng / Tối / Theo máy nằm trong bảng "Sao lưu và cài đặt" (mở bằng nút đám mây). Không có chữ "MỚI".
+- **Chip khu vực**: chỉ chip đang chọn có nền xanh; khu không có việc chữ và viền nhạt, không ghi số 0 (chữ nhạt `--chipZero` hiện chưa đạt 4,5:1 — chờ bác sĩ quyết, xem "Chờ duyệt" trong `NHAT_KY.md`).
+- **Bảng dưới (Sheet) trên điện thoại**: có thanh kéo nhỏ ở đỉnh (chỉ trang trí, chưa kéo được), tiêu đề 17px, nút đóng 44px.
+- **Chế độ tối** cho mọi màu mới (người dùng chọn Sáng / Tối / Theo máy). Tiêu đề luôn **một dòng**.
 - Chuỗi số liệu nối bằng dấu chấm giữa như `25w0d · 1850 g` là **cách ghi lâm sàng đã duyệt**, giữ nguyên (skill coi đây là "dấu hiệu AI" — ở app này thì không).
 - Chữ viết tắt nhãn viết hoa (NV, BM, CK, HC, XN, NICU) là **tên riêng**, giữ nguyên.
 
@@ -68,5 +72,6 @@ Mỗi ảnh chụp iPhone (sáng và tối) chấm 8 mục. Mục nào **Không*
 
 ## 7. Ảnh tham chiếu
 
-- Ảnh đã duyệt: `doi-agent/anh-chuan/` (iPhone sáng/tối, PC). Thay đổi giao diện phải so với bộ này.
+- Ảnh đã duyệt: `doi-agent/anh-chuan/` (iPhone sáng/tối, PC). Thay đổi giao diện phải so với bộ này. Bộ này chưa được lưu lại cho v9.1: chờ bác sĩ duyệt ảnh v9 rồi mới lưu chuẩn mới.
+- Thiết kế v9 đã duyệt 05/11/2026: `doi-agent/thiet-ke-v9/THIET_KE_V9.md`. Mới áp dụng đợt 9.1 (token, đầu trang, bảng cài đặt); cử chỉ, ô thêm việc 1 dòng, lịch mới, tab Khám mới, ngày làm việc thuộc các đợt sau — chưa làm.
 - Bản thiết kế gốc: canvas "Ghi chú công việc theo khu vực", bảng "iPhone 15 – chữ gọn".
