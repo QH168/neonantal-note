@@ -1,13 +1,16 @@
 // Mục Khám: phòng, bệnh nhân, chi tiết bé, tổng hợp y lệnh.
 import { useEffect, useRef, useState } from 'react';
 import {
-  addRoom, renameRoom, removeRoom, addPatient, updatePatient, removePatient,
-  addTodo, toggleTodo, removeTodo, copyPatientsFrom
+  addRoom, renameRoom, removeRoom, addPatient, updatePatient, setPatientDone, removePatient,
+  addTodo, toggleTodo, removeTodo, khoiPhucTodo, setTodoText, copyPatientsFrom
 } from '../lib/actions.js';
 import { calcAge, gaFmt, copyText } from '../lib/clinical.js';
 import { addDays, fmtDM } from '../lib/dates.js';
+import { boDemCham, themCham, gioXong } from '../lib/viec.js';
 import { useVietTat } from './VietTat.jsx';
-import { CheckBtn, Chevron, XIcon, SheetHead, SwipeRow } from './ui.jsx';
+import { useHoanTac } from './HoanTac.jsx';
+import { useTuLuu } from './Tasks.jsx';
+import { CheckBtn, Chevron, XIcon, SheetHead, SwipeRow, Sheet, DongBtn, TickOk, TrangThaiXong, TrashIcon } from './ui.jsx';
 
 /** Nút "Lấy danh sách hôm qua" + "Quản lý phòng". */
 export function ExamActions({ prev, today, roomEdit, onToggleRoomEdit, compact }) {
@@ -88,7 +91,7 @@ function PatientRow({ p, todos, selected, onOpen }) {
   const sub = [gaFmt(p.ga), p.wt ? p.wt + ' g' : ''].filter(Boolean).join(' · ') || 'Chưa có thông tin';
   return (
     <div className={'pat-row' + (selected ? ' sel' : '')} style={{ opacity: p.done ? 0.65 : 1 }}>
-      <CheckBtn done={p.done} onClick={() => updatePatient(p.id, { done: !p.done })}
+      <CheckBtn done={p.done} onClick={() => setPatientDone(p)}
         label={(p.done ? 'Bỏ đánh dấu đã khám: ' : 'Đánh dấu đã khám: ') + (p.code || 'bệnh nhân')} />
       <button type="button" className="pat-open" onClick={onOpen}>
         <span className="pat-main">
@@ -146,8 +149,65 @@ export function RoomList({ rooms, patients, todosByPid, collapsed, onToggle, sel
   });
 }
 
-/** Chi tiết một bé. Gõ tới đâu lưu tới đó (sau 0,4 giây ngừng gõ). */
-export function PatientDetail({ p, todos, onClose }) {
+/** Một việc cần làm của bé: vuốt phải = xong, vuốt trái = xoá (có Hoàn tác), chạm 2 lần = bảng nhỏ sửa tên / bỏ đánh dấu xong / xoá. */
+function TodoRow({ t, onOpen }) {
+  const hoanTac = useHoanTac();
+  const taps = useRef([]);
+  const tap = () => {
+    taps.current = themCham(taps.current, Date.now());
+    if (boDemCham(taps.current, 2)) { taps.current = []; onOpen(t.id); }
+  };
+  const xoa = async () => {
+    await removeTodo(t.id);
+    hoanTac.hien({ nhan: 'Đã xoá: ' + t.text, lam: () => khoiPhucTodo(t.id) });
+  };
+  return (
+    <SwipeRow className={'todo-row' + (t.done ? ' xong' : '')} label={t.text} daXong={!!t.done}
+      onDone={() => { if (!t.done) toggleTodo(t); }} onDelete={xoa}>
+      <div className="todo-main" role="button" tabIndex={0} aria-label={'Mở chi tiết việc của bé: ' + t.text}
+        onClick={tap} onKeyDown={(e) => { if (e.key === 'Enter' && e.target === e.currentTarget) onOpen(t.id); }}>
+        <span className={'todo-text' + (t.done ? ' done' : '')}>{t.text}</span>
+      </div>
+      {t.done && <TickOk />}
+    </SwipeRow>
+  );
+}
+
+/** Bảng nhỏ chi tiết việc của bé (mở trên bảng chi tiết bé nếu đang mở). Tên tự lưu; ô tên có viết tắt. */
+function TodoDetail({ t, wide, onClose }) {
+  const hoanTac = useHoanTac();
+  const [ten, doiTen, luuTen, datLaiTen, boTen] = useTuLuu(t.text, (x) => { setTodoText(t.id, x); });
+  const vt = useVietTat(ten, doiTen, { onBlur: () => { luuTen(); if (!ten.trim()) datLaiTen(t.text); } });
+  // Xoá việc: bảng trượt xuống trước (DongBtn), xong mới xoá rồi hiện thanh Hoàn tác.
+  const xoaViec = async () => {
+    boTen();
+    await removeTodo(t.id);
+    onClose();
+    hoanTac.hien({ nhan: 'Đã xoá: ' + t.text, lam: () => khoiPhucTodo(t.id) });
+  };
+  return (
+    <Sheet label="Chi tiết việc của bé" onClose={onClose} wide={wide} className="sheet-todo">
+      <div className="row-between sheet-r1">
+        <label htmlFor="ten-viec-be" className="sr-only">Nội dung việc của bé</label>
+        <textarea id="ten-viec-be" className="sheet-name" rows={ten.length > 52 ? 3 : ten.length > 26 ? 2 : 1} autoComplete="off" {...vt.props}
+          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } }} />
+        <DongBtn className="icon-btn" aria-label="Đóng" onClose={onClose}><XIcon /></DongBtn>
+      </div>
+      {vt.strip}
+      <TrangThaiXong xong={!!t.done} gio={gioXong(t.doneAt)} onDanhDau={() => toggleTodo(t)} onBo={() => toggleTodo(t)} />
+      <div className="row8 sheet-r4">
+        <DongBtn className="sheet-del-task" onClose={xoaViec}><TrashIcon size={18} />Xoá việc</DongBtn>
+        <span className="grow" />
+        <DongBtn className="btn primary big sheet-done" onClose={onClose}>Xong</DongBtn>
+      </div>
+    </Sheet>
+  );
+}
+
+/** Chi tiết một bé. Gõ tới đâu lưu tới đó (sau 0,4 giây ngừng gõ). `wide`: PC (bảng nhỏ mở giữa màn hình). */
+export function PatientDetail({ p, todos, onClose, wide = false }) {
+  const [todoMoId, setTodoMoId] = useState(null);
+  const todoMo = todoMoId ? todos.find((t) => t.id === todoMoId) : null;
   const [f, setF] = useState({ code: p.code, dob: p.dob, ga: p.ga, wt: p.wt, note: p.note });
   const [calc, setCalc] = useState(null);
   const [todoDraft, setTodoDraft] = useState('');
@@ -210,13 +270,7 @@ export function PatientDetail({ p, todos, onClose }) {
 
       <div className="stack8">
         <div className="bold">Việc cần làm</div>
-        {todos.map((t) => (
-          <SwipeRow key={t.id} className="todo-row" label={t.text} onDelete={() => removeTodo(t.id)}>
-            <CheckBtn small done={t.done} onClick={() => toggleTodo(t)}
-              label={(t.done ? 'Bỏ đánh dấu hoàn thành: ' : 'Đánh dấu hoàn thành: ') + t.text} />
-            <span className={'todo-text' + (t.done ? ' done' : '')}>{t.text}</span>
-          </SwipeRow>
-        ))}
+        {todos.map((t) => <TodoRow key={t.id} t={t} onOpen={setTodoMoId} />)}
         {vtTodo.strip}
         <form onSubmit={submitTodo} className="row8">
           <label className="grow row0">
@@ -234,12 +288,13 @@ export function PatientDetail({ p, todos, onClose }) {
       </div>
 
       <div className="stack8">
-        <button type="button" aria-pressed={p.done} onClick={() => updatePatient(p.id, { done: !p.done })}
+        <button type="button" aria-pressed={p.done} onClick={() => setPatientDone(p)}
           className={'btn big ' + (p.done ? 'done-btn' : 'primary')}>
           {p.done ? 'Đã khám xong (bấm để bỏ)' : 'Hoàn tất khám'}
         </button>
         <button type="button" className="btn ghost" onClick={del}>Xoá khỏi danh sách hôm nay</button>
       </div>
+      {todoMo && <TodoDetail key={todoMo.id} t={todoMo} wide={wide} onClose={() => setTodoMoId(null)} />}
     </>
   );
 }

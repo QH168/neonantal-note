@@ -89,3 +89,109 @@ test('khuDeChon: giữ khu cũ (BM) để ô chọn khu không làm mất khu hi
   assert.deepEqual(khuDeChon(Z, undefined), ['NICU', 'CT']);
   assert.notEqual(khuDeChon(Z, 'CT'), Z); // trả mảng mới
 });
+
+
+// ---- Cử chỉ vuốt (src/lib/vuot.js) ----
+import { NGUONG_NGANG, huongCuChi, duocVuot, doDich, quaMoc, nenHien, ketQuaKhiTha } from '../src/lib/vuot.js';
+
+test('vuot: huongCuChi ngang / dọc / chưa rõ / chéo', () => {
+  assert.equal(NGUONG_NGANG, 8);
+  assert.equal(huongCuChi(8, 0), 'ngang');
+  assert.equal(huongCuChi(-8, 3), 'ngang');
+  assert.equal(huongCuChi(7, 0), 'chua');
+  assert.equal(huongCuChi(0, 40), 'doc');          // cuộn dọc không tính vuốt
+  assert.equal(huongCuChi(10, 30), 'doc');
+  assert.equal(huongCuChi(0, 7), 'chua');
+  assert.equal(huongCuChi(20, 20), 'ngang');       // chéo 45°: như SwipeRow cũ
+  assert.equal(huongCuChi(20, 21), 'doc');
+  assert.equal(huongCuChi(NaN, undefined), 'chua');
+});
+
+test('vuot: biên mốc 1/3 cả hai hướng (đúng mốc là qua)', () => {
+  assert.equal(quaMoc(100, 300), true);
+  assert.equal(quaMoc(-100, 300), true);
+  assert.equal(quaMoc(99.9, 300), false);
+  assert.equal(quaMoc(-99.9, 300), false);
+  assert.equal(ketQuaKhiTha(100, 300), 'xong');
+  assert.equal(ketQuaKhiTha(-100, 300), 'xoa');
+  assert.equal(quaMoc(100, 300.0000001), false);
+  assert.equal(quaMoc(1, 3), true);                // 1/3 không dính sai số số thực
+  assert.equal(quaMoc(33, 99), true);
+});
+
+test('vuot: thả trước mốc thì về', () => {
+  assert.equal(ketQuaKhiTha(99, 300), 've');
+  assert.equal(ketQuaKhiTha(-99, 300), 've');
+  assert.equal(ketQuaKhiTha(0, 300), 've');
+});
+
+test('vuot: vuốt dọc/chéo nhẹ chưa tới mốc không ra kết quả', () => {
+  // cuộn dọc: dx nhỏ, nên không bao giờ nhận là vuốt
+  assert.equal(huongCuChi(5, 120), 'doc');
+  assert.equal(ketQuaKhiTha(5, 300), 've');
+  // chéo: dx tới mốc nhưng dy lớn hơn thì là cuộn dọc
+  assert.equal(huongCuChi(100, 150), 'doc');
+});
+
+test('vuot: việc đã xong vuốt phải chỉ nhúc nhích, luôn về', () => {
+  const o = { daXong: true };
+  assert.equal(ketQuaKhiTha(250, 300, o), 've');
+  assert.equal(ketQuaKhiTha(300, 300, o), 've');
+  assert.equal(quaMoc(250, 300, o), false);
+  assert.equal(nenHien(250, o), null);
+  assert.ok(doDich(250, 300, o) > 0 && doDich(250, 300, o) <= 16);
+  assert.ok(doDich(10, 300, o) < 10);              // có lực cản
+  assert.equal(doDich(1000, 300, o), 16);
+});
+
+test('vuot: vuốt trái trên việc đã xong vẫn xoá được', () => {
+  const o = { daXong: true };
+  assert.equal(ketQuaKhiTha(-100, 300, o), 'xoa');
+  assert.equal(ketQuaKhiTha(-99, 300, o), 've');
+  assert.equal(doDich(-80, 300, o), -80);
+  assert.equal(nenHien(-80, o), 'xoa');
+});
+
+test('vuot: duocPhai=false (thư viện viết tắt) chỉ vuốt trái', () => {
+  const o = { duocPhai: false };
+  assert.equal(duocVuot(50, o), false);
+  assert.equal(duocVuot(-50, o), true);
+  assert.equal(ketQuaKhiTha(200, 300, o), 've');
+  assert.equal(doDich(200, 300, o), 0);
+  assert.equal(nenHien(200, o), null);
+  assert.equal(ketQuaKhiTha(-200, 300, o), 'xoa');
+  assert.equal(nenHien(100, {}), 'xong');
+});
+
+test('vuot: độ dịch bám ngón tay và giới hạn trong chiều rộng', () => {
+  assert.equal(doDich(50, 300), 50);
+  assert.equal(doDich(-50, 300), -50);
+  assert.equal(doDich(500, 300), 300);
+  assert.equal(doDich(-500, 300), -300);
+});
+
+test('vuot: chiều rộng 0 hoặc không hợp lệ không lỗi, luôn về', () => {
+  for (const r of [0, -5, NaN, undefined, null, Infinity]) {
+    assert.equal(ketQuaKhiTha(100, r), 've');
+    assert.equal(ketQuaKhiTha(-100, r), 've');
+    assert.equal(quaMoc(100, r), false);
+    assert.equal(doDich(100, r), 0);
+  }
+  assert.equal(ketQuaKhiTha(NaN, 300), 've');
+  assert.equal(doDich(NaN, 300), 0);
+});
+
+test('vuot: luật sắp xếp không đổi (chưa xong trước, rồi theo thứ tự thêm)', () => {
+  const a = { id: 1, done: true, createdAt: 1 };
+  const b = { id: 2, done: false, createdAt: 2 };
+  const c = { id: 3, done: false, createdAt: 3 };
+  assert.deepEqual(sapViec([a, b, c]).map((x) => x.id), [2, 3, 1]);
+});
+import { gioXong } from '../src/lib/viec.js';
+
+test('gioXong: "hh:mm" theo giờ máy; việc cũ chưa có doneAt thì rỗng (chỉ ghi "Đã xong")', () => {
+  assert.equal(gioXong(new Date(2026, 9, 21, 9, 42).getTime()), '09:42');
+  assert.equal(gioXong(new Date(2026, 9, 21, 0, 5).getTime()), '00:05');
+  assert.equal(gioXong(new Date(2026, 9, 21, 23, 59).getTime()), '23:59');
+  for (const v of [undefined, null, 0, NaN, 'x', -5]) assert.equal(gioXong(v), '');
+});

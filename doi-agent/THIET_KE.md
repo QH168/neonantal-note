@@ -12,7 +12,7 @@
   ca đêm dùng **chế độ tối**. PC ở phòng bác sĩ để soạn và tổng hợp.
 - **Việc chính của giao diện (theo thứ tự):**
   1. Nhìn 2 giây là biết **còn gì chưa làm, ở khu/phòng nào**.
-  2. Tick xong **một chạm**, không cần ngắm.
+  2. Đánh dấu xong **một cú vuốt phải** (từ v9.2; trước đó là tick một chạm), không cần ngắm.
   3. Ghi thêm việc/bé **nhanh**, ít bước.
 
 ## 2. Tính cách
@@ -27,14 +27,16 @@
 - **Màu**: dùng đúng biến trong `src/App.css` (`.th` sáng, `.th.dark` tối). Không viết mã màu cứng trong component.
   - Chủ đạo xanh da trời `--accent` #0B79B8 (tối #5BB8EE); nền #F2F7FB (tối #0E151C); bề mặt thẻ trắng (tối #17212B); chữ #12202B.
   - Màu nhãn có nghĩa (từ v9.1, bảng 16a): nền nhạt `--tNV` + chữ đậm cùng tông `--tNVi` (và `--tBM`, `--tCK`, `--tHC`, `--tXN` tương tự): NV đỏ phấn, BM vàng nhạt, CK xanh lơ, HC xanh chàm nhạt, XN tím nhạt; có cả sáng và tối. `--p1…--p5` (đỏ, vàng, xanh lá, xanh đậm, tím) không đổi, chỉ còn cho số ưu tiên của việc cũ, chấm đỏ đám mây, cảnh báo, nút xoá.
-  - Màu trạng thái của v9 (tích xong, nền vuốt, nút xoá dịu, dải ngày trước, khoảng ngày) đã khai báo sẵn trong `src/App.css` nhưng **chưa áp dụng** (thuộc các đợt 9.2–9.5); đừng coi là đã có trên màn hình.
+  - Màu trạng thái của v9 đã khai báo trong `src/App.css`. **Đã áp dụng từ v9.2:** tích xong (`--okBg/--okInk`), nền vuốt (`--swR/--swR2` xanh nhạt, `--swL/--swL2` đỏ phấn), nút xoá dịu trên PC và chữ "Xoá việc" (`--delBg/--delInk`), nút trạng thái (`--doneLine/--doneInk`), thanh Hoàn tác (`--undoBg/--undoInk/--undoAct/--undoLine`, mới ở v9.2). **Chưa áp dụng** (đợt 9.3–9.5): ghi chú đêm qua, dải ngày trước, khoảng ngày (`--noteBg…`, `--rangeBg…`); đừng coi là đã có trên màn hình.
   - **Đỏ chỉ dùng cho khẩn/cảnh báo/xoá.** Không dùng đỏ để trang trí.
 - **Phông**: Be Vietnam Pro (một họ chữ duy nhất, đọc tốt dấu tiếng Việt). Không thêm phông khác.
 - **Cỡ chữ iPhone** (thang 5 bậc, từ v9.1): tiêu đề 20px; tên bảng dưới 17px; nội dung việc, mã giường, nút, chip 15px; chữ phụ 13px; ghi chú nhỏ 12px; **ô nhập ≥16px** (Safari không phóng to). Không dùng 12,5 / 13,5 / 14 / 18 trên iPhone. PC giữ cỡ cũ.
-- **Vùng chạm ≥44px** cho mọi nút, ô tick, nút biểu tượng. Từ v9.1: tab Việc/Khám, chip khu vực và nút trên đầu trang cao đúng 44px; nút chọn nhãn 44px tròn; huy hiệu nhãn trong dòng tròn 26px, chữ 11px đậm, việc đã xong mờ ~0,5.
+- **Cử chỉ trên dòng** (từ v9.2): vuốt phải qua 1/3 chiều rộng = xong, vuốt trái qua 1/3 = xoá (có thanh Hoàn tác 6 giây); chạm 2 lần = chi tiết. Dòng việc và việc của bé không còn ô tick (chữ sát lề trái 14px); việc xong không gạch ngang, chữ nhạt, tích xanh tròn 26px cuối dòng (chỉ hiển thị). Dòng bé ở tab Khám vẫn còn ô tick tới đợt 9.4. Nút thùng rác chỉ có trên PC khi rê chuột. Chi tiết việc cao ~76%, khu vực dạng chip. iPhone Safari không rung khi qua mốc, chỉ đổi màu nền.
+- **Vùng chạm ≥44px** cho mọi nút, ô tick (dòng bé tab Khám), nút biểu tượng, nút Hoàn tác. Từ v9.1: tab Việc/Khám, chip khu vực và nút trên đầu trang cao đúng 44px; nút chọn nhãn 44px tròn; huy hiệu nhãn trong dòng tròn 26px, chữ 11px đậm, việc đã xong mờ ~0,5.
 - **Đầu trang** (v9.1): iPhone có 3 nút tròn 44px theo thứ tự "/a", đám mây, lịch (lịch chỉ tab Việc); PC có "/a" và đám mây. Không có nút sáng/tối: Sáng / Tối / Theo máy nằm trong bảng "Sao lưu và cài đặt" (mở bằng nút đám mây). Không có chữ "MỚI".
 - **Chip khu vực**: chỉ chip đang chọn có nền xanh; khu không có việc chữ và viền nhạt, không ghi số 0 (chữ nhạt `--chipZero` hiện chưa đạt 4,5:1 — chờ bác sĩ quyết, xem "Chờ duyệt" trong `NHAT_KY.md`).
-- **Bảng dưới (Sheet) trên điện thoại**: có thanh kéo nhỏ ở đỉnh (chỉ trang trí, chưa kéo được), tiêu đề 17px, nút đóng 44px.
+- **Bảng dưới (Sheet) trên điện thoại**: có thanh kéo nhỏ ở đỉnh (chỉ trang trí, chưa kéo được), tiêu đề 17px, nút đóng 44px. Bảng có thể mở chồng lên bảng khác (chi tiết việc của bé trên chi tiết bé); Esc chỉ đóng bảng trên cùng.
+- **Thanh Hoàn tác** (v9.2): thanh tối cao ≥52px ở đáy màn hình, nổi trên bảng dưới và thanh thêm việc, nút "Hoàn tác" 44px; 6 giây rồi tự mất. Che đáy màn hình trong 6 giây (tab Việc che "Thêm việc"; trong chi tiết bé che "Hoàn tất khám").
 - **Chế độ tối** cho mọi màu mới (người dùng chọn Sáng / Tối / Theo máy). Tiêu đề luôn **một dòng**.
 - Chuỗi số liệu nối bằng dấu chấm giữa như `25w0d · 1850 g` là **cách ghi lâm sàng đã duyệt**, giữ nguyên (skill coi đây là "dấu hiệu AI" — ở app này thì không).
 - Chữ viết tắt nhãn viết hoa (NV, BM, CK, HC, XN, NICU) là **tên riêng**, giữ nguyên.
@@ -72,6 +74,6 @@ Mỗi ảnh chụp iPhone (sáng và tối) chấm 8 mục. Mục nào **Không*
 
 ## 7. Ảnh tham chiếu
 
-- Ảnh đã duyệt: `doi-agent/anh-chuan/` (iPhone sáng/tối, PC). Thay đổi giao diện phải so với bộ này. Bộ này chưa được lưu lại cho v9.1: chờ bác sĩ duyệt ảnh v9 rồi mới lưu chuẩn mới.
-- Thiết kế v9 đã duyệt 05/11/2026: `doi-agent/thiet-ke-v9/THIET_KE_V9.md`. Mới áp dụng đợt 9.1 (token, đầu trang, bảng cài đặt); cử chỉ, ô thêm việc 1 dòng, lịch mới, tab Khám mới, ngày làm việc thuộc các đợt sau — chưa làm.
+- Ảnh đã duyệt: `doi-agent/anh-chuan/` (iPhone sáng/tối, PC). Thay đổi giao diện phải so với bộ này. Bộ này chưa được lưu lại cho v9.1 và v9.2: chờ bác sĩ duyệt ảnh 9.2 rồi mới lưu chuẩn mới (ảnh 9.1 bác sĩ đã duyệt 05/11/2026 nhưng ảnh chuẩn 9.2 chưa lưu).
+- Thiết kế v9 đã duyệt 05/11/2026: `doi-agent/thiet-ke-v9/THIET_KE_V9.md`. Đã áp dụng đợt 9.1 (token, đầu trang, bảng cài đặt) và đợt 9.2 (cử chỉ vuốt phải/trái 1/3, Hoàn tác, tích xanh, `doneAt`, chi tiết việc của bé, chi tiết việc cao ~76% với chip khu, mục "Cử chỉ" trong cài đặt). Ô thêm việc 1 dòng và thư viện bỏ bút chì (9.3), tab Khám mới và dòng bé vuốt phải (9.4), lịch mới (9.5), ngày làm việc (9.6) thuộc các đợt sau — chưa làm.
 - Bản thiết kế gốc: canvas "Ghi chú công việc theo khu vực", bảng "iPhone 15 – chữ gọn".

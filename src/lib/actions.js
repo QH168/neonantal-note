@@ -6,6 +6,25 @@ import { db, addRow, updateRow, softDelete, getDeviceId, getMeta, setMeta } from
 
 const alive = (r) => !r.deleted;
 
+// ---------- Hàm thuần (kiểm được bằng Node) ----------
+// Phần thay đổi khi đánh dấu xong / bỏ xong: xong → doneAt = giờ, bỏ xong → doneAt = null.
+// Dòng cũ chưa có doneAt vẫn là "đã xong" (done: true), chỉ không có giờ.
+export const phanDoiXong = (done, now = Date.now()) => (done ? { done: true, doneAt: now } : { done: false, doneAt: null });
+// Phần thay đổi khi khôi phục sau xoá: CHỈ đổi deleted, giữ nguyên mọi ô khác.
+export const phanKhoiPhuc = () => ({ deleted: false });
+
+// Khôi phục một dòng đã xoá mềm (chỉ updateRow { deleted: false }). Bảng bất kỳ trong DATA_TABLES.
+export async function khoiPhuc(table, id) {
+  await updateRow(table, id, phanKhoiPhuc());
+  return { ok: true };
+}
+// Khôi phục nhiều dòng (Hoàn tác "Xoá việc đã xong"): mỗi dòng một updateRow. Trả về mảng id đã khôi phục.
+export async function khoiPhucNhieu(table, ids) {
+  const out = [];
+  for (const id of ids || []) { await updateRow(table, id, phanKhoiPhuc()); out.push(id); }
+  return out;
+}
+
 // ---------- Khởi tạo lần đầu ----------
 let seeding = null;
 export function ensureSeed() {
@@ -55,14 +74,18 @@ export async function setTaskText(id, text) {
   return true;
 }
 export const setTaskZone = (id, zone) => updateRow('tasks', id, { zone });
-export const toggleTask = (t) => updateRow('tasks', t.id, { done: !t.done });
+export const toggleTask = (t) => updateRow('tasks', t.id, phanDoiXong(!t.done));
 // Chạm vào số để đổi mức: 1→2→3→4→5 (NV)→1
 export const cycleUrgency = (t) => updateRow('tasks', t.id, { urgency: (t.urgency % 5) + 1 });
 export const removeTask = (id) => softDelete('tasks', id);
+// Trả về danh sách id đã xoá mềm → giao diện gọi khoiPhucNhieu('tasks', ids) khi Hoàn tác.
 export async function clearDone(date) {
   const done = await db.tasks.where('date').equals(date).filter((t) => alive(t) && t.done).toArray();
-  for (const t of done) await softDelete('tasks', t.id);
+  const ids = [];
+  for (const t of done) { await softDelete('tasks', t.id); ids.push(t.id); }
+  return ids;
 }
+export const khoiPhucTask = (id) => khoiPhuc('tasks', id);
 
 // ---------- Phòng ----------
 export async function addRoom(name) {
@@ -87,6 +110,8 @@ export async function addPatient(roomId, examDate) {
   });
 }
 export const updatePatient = (id, changes) => updateRow('exam_patients', id, changes);
+// Đánh dấu đã khám / bỏ đánh dấu: p là dòng bé; done mặc định đảo trạng thái hiện tại. Ghi doneAt cùng lúc.
+export const setPatientDone = (p, done = !p.done) => updateRow('exam_patients', p.id, phanDoiXong(done));
 export async function removePatient(id) {
   await getDeviceId();
   await db.transaction('rw', db.exam_patients, db.patient_todos, db.meta, async () => {
@@ -101,8 +126,16 @@ export async function addTodo(patientId, text) {
   const n = await db.patient_todos.where('patientId').equals(patientId).count();
   return addRow('patient_todos', { patientId, text, done: false, order: n + 1 });
 }
-export const toggleTodo = (t) => updateRow('patient_todos', t.id, { done: !t.done });
+export const toggleTodo = (t) => updateRow('patient_todos', t.id, phanDoiXong(!t.done));
 export const removeTodo = (id) => softDelete('patient_todos', id);
+export const khoiPhucTodo = (id) => khoiPhuc('patient_todos', id);
+// Sửa tên việc của bé: bỏ khoảng trắng 2 đầu; rỗng thì không ghi (trả false).
+export async function setTodoText(id, text) {
+  const s = chuanTenViec(text);
+  if (!s) return false;
+  await updateRow('patient_todos', id, { text: s });
+  return true;
+}
 
 /**
  * Chép bệnh nhân của một ngày trước sang hôm nay, kèm việc chưa xong.
@@ -166,3 +199,13 @@ export async function updateAbbrev(id, changes) {
   return { ok: true };
 }
 export const removeAbbrev = (id) => softDelete('abbrevs', id);
+// Hoàn tác xoá viết tắt. Nếu trong lúc chờ đã có mục sống cùng key → KHÔNG khôi phục, trả { trung: true, muc }.
+// Ngược lại khôi phục (chỉ đổi deleted) và trả { ok: true }. Dòng không còn → { loi: 'khong-thay' }.
+export async function khoiPhucAbbrev(id) {
+  const row = await db.abbrevs.get(id);
+  if (!row) return { loi: 'khong-thay' };
+  const muc = await mucSongTheoKey(row.key);
+  if (muc && muc.id !== id) return { trung: true, muc };
+  await updateRow('abbrevs', id, phanKhoiPhuc());
+  return { ok: true };
+}

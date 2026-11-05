@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAppData, useToday, useWide, useGiaoDien, useLanMoApp } from './hooks.js';
-import { ensureSeed, clearDone } from './lib/actions.js';
+import { ensureSeed, clearDone, khoiPhucNhieu } from './lib/actions.js';
 import { buildSummary } from './lib/clinical.js';
 import { ZONES } from './db.js';
 import { fmtLong, fmtDM, parseIso } from './lib/dates.js';
@@ -8,16 +8,20 @@ import { ZoneNav, TaskGroups, TaskForm, Calendar, monthOf } from './components/T
 import { ExamActions, RoomManager, RoomList, PatientDetail, SummaryPanel } from './components/Exam.jsx';
 import ThuVien from './components/ThuVien.jsx';
 import { VietTatProvider } from './components/VietTat.jsx';
+import { HoanTacProvider, useHoanTac } from './components/HoanTac.jsx';
 import BackupPanel from './components/BackupPanel.jsx';
 import { hienDongNhac } from './lib/cai-dat.js';
 import { Sheet, CalIcon, CloudIcon, Chevron } from './components/ui.jsx';
 
+// Dòng nhắc cử chỉ ở tab Việc (v9.2): một dòng ở 393px
+const CHU_NHAC_CU_CHI = 'Vuốt phải: xong · Vuốt trái: xoá · Chạm 2 lần: chi tiết';
 
 export default function App() {
-  return <VietTatProvider><AppChinh /></VietTatProvider>;
+  return <VietTatProvider><HoanTacProvider><AppChinh /></HoanTacProvider></VietTatProvider>;
 }
 
 function AppChinh() {
+  const hoanTac = useHoanTac();
   const today = useToday();
   const wide = useWide();
   const data = useAppData(today);
@@ -65,8 +69,13 @@ function AppChinh() {
   const toggleIn = (setter) => (k) => setter((c) => ({ ...c, [k]: !c[k] }));
   const goToday = () => { setViewDate(today); setCalMonth(monthOf(today)); };
   const summary = () => buildSummary({ rooms, patients, todosByPid });
+  // Xoá việc đã xong: một lần Hoàn tác trả lại tất cả việc vừa xoá
+  const xoaDaXong = async () => {
+    const ids = await clearDone(viewDate);
+    if (ids.length) hoanTac.hien({ nhan: `Đã xoá ${ids.length} việc đã xong`, lam: () => khoiPhucNhieu('tasks', ids) });
+  };
   const clearDoneBtn = isTask && dayTasks.some((t) => t.done) && (
-    <button type="button" className="btn ghost self-start" onClick={() => clearDone(viewDate)}>Xoá việc đã xong</button>
+    <button type="button" className="btn ghost self-start" onClick={xoaDaXong}>Xoá việc đã xong</button>
   );
 
 
@@ -151,7 +160,7 @@ function AppChinh() {
             </main>
             {sel && (
               <aside className="card pc-detail" aria-label="Chi tiết bệnh nhân">
-                <PatientDetail key={sel.id} p={sel} todos={todosByPid[sel.id] || []} onClose={() => setSelPid(null)} />
+                <PatientDetail key={sel.id} wide p={sel} todos={todosByPid[sel.id] || []} onClose={() => setSelPid(null)} />
               </aside>
             )}
           </>
@@ -194,7 +203,7 @@ function AppChinh() {
           <ZoneNav chips dayTasks={dayTasks} active={active} onPick={pickZone} />
           <main className="ph-main">
             {examHint}
-            {hienDongNhac(lanMo, dayTasks.length) && <div className="muted xsmall">Chạm 2 lần: chi tiết · Vuốt trái: xoá</div>}
+            {hienDongNhac(lanMo, dayTasks.length) && <div className="muted xsmall dong-nhac">{CHU_NHAC_CU_CHI}</div>}
             <TaskGroups chips dayTasks={dayTasks} active={active} collapsed={collapsed} onToggle={toggleIn(setCollapsed)} />
             {clearDoneBtn}
           </main>

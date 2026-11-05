@@ -6,18 +6,37 @@
 
 | # | Phát hiện | Mức | Đề xuất | Agent |
 |---|---|---|---|---|
-| 1 | Cuộn dọc danh sách và vuốt trái (SwipeRow kiểu C) bằng ngón tay thật, cùng bàn phím iPhone thật với bảng chi tiết việc, chưa kiểm được bằng máy (Chromium headless) — bác sĩ thử trên iPhone. | Lưu ý | Bác sĩ thử vuốt dọc/trái và gõ trong chi tiết việc trên iPhone; nếu vướng thì giao phiếu chỉnh. | Giao diện |
+| 1 | Cuộn dọc danh sách và cử chỉ mới (vuốt phải/trái 1/3 trên Việc, việc của bé, thư viện) bằng ngón tay thật, cùng bàn phím iPhone thật với bảng chi tiết việc, chưa kiểm được bằng máy (Chromium headless) — bác sĩ thử trên iPhone. | Lưu ý | Bác sĩ thử cuộn dọc, vuốt phải/trái và gõ trong chi tiết việc trên iPhone; nếu vướng thì giao phiếu chỉnh. | Giao diện |
 | 3 | Ô thêm việc một dòng: gõ "/ctm" rồi Enter thì gửi luôn, không thay chữ (phiếu chỉ yêu cầu dấu cách). | Lưu ý | Hỏi bác sĩ có muốn Enter cũng thay chữ trước khi gửi không. | Giao diện |
 | 4 | Bản tối: hộp thông báo "Đã thay" nền sáng, đọc rõ nhưng sáng hơn phần còn lại. | Lưu ý | Bác sĩ xem trên máy thật; nếu chói thì chỉnh màu `--vtAct` và nền hộp. | Giao diện |
 | 5 | PC: ô lịch tháng 39×48px (có từ trước, không phải do v8.1). | Lưu ý | Phóng to ô nếu bác sĩ dùng chuột/chạm trên PC. | Giao diện |
-| 7 | Chạm nút Xoá trong vòng ~0,5 giây sau khi vuốt có thể không ăn (trình duyệt giả lập không sinh click; trang trống cũng vậy). | Lưu ý | Bác sĩ thử trên iPhone; nếu bị thì đổi nút Xoá sang xử lý pointerup (SwipeRow, ui.jsx). | Giao diện |
 | 8 | Chữ chip khu trống `#6B7F91` do đặc tả chốt đo 4,14:1 trên trắng và 3,84:1 trên nền trang, dưới 4,5:1. | Lưu ý | Đề xuất đổi `--chipZero` (sáng) sang `#5E7183` (5,04:1 trên trắng, 4,67:1 trên nền trang). Hỏi bác sĩ. | Giao diện |
 | 9 | Dòng nhắc cử chỉ hiện cả khi danh sách của ngày trống, kể cả sau 3 lần mở đầu (đúng chữ đặc tả mục 2.3, khác hành vi cũ là ẩn khi trống). | Lưu ý | Hỏi bác sĩ giữ theo đặc tả hay chỉ hiện trong 3 lần mở đầu. | Giao diện |
 | 10 | Đếm "3 lần mở" tính theo lần tải trang; trên iPhone, app tiếp tục từ nền không tính là lần mở mới. | Lưu ý | Chấp nhận; nếu bác sĩ muốn đếm cả lần quay lại từ nền thì đổi `useLanMoApp` (sự kiện `visibilitychange`). | Giao diện |
 | 11 | Chi tiết bé: thanh kéo mới làm nội dung tụt ~19px, nút "Hoàn tất khám" trong ảnh chụp bị cắt ở đáy (vẫn cuộn tới được). | Lưu ý | Đợt 9.4 làm lại màn chi tiết bé nên xử lý ở đó. | Giao diện |
 | 12 | Chromium headless nuốt cú chạm đầu tiên sau khi đóng Thư viện viết tắt (script chụp đã vòng qua bằng cách chạm vùng trống trước). | Lưu ý | Bác sĩ thử trên iPhone: đóng Thư viện viết tắt rồi chạm 2 lần vào một việc, xem có bị mất cú chạm đầu không. | Giao diện |
-| 13 | Biến màu mốc vuốt bản tối `--swR2` `#3F7A47` và `--swL2` `#7A3A33` là đề xuất của Giao diện, đã khai báo nhưng chưa dùng. | Lưu ý | Kiểm lại tương phản và cảm giác khi làm đợt 9.2 (cử chỉ mới). | Giao diện |
+| 13 | Màu nền vuốt trái qua mốc ở bản tối `--swL2` `#7A3A33` chỉ 1,92:1 so với bề mặt và 2,17:1 so với nền trang; bước từ `--swL` sang `--swL2` là 1,36:1, nhìn thấy nhưng nhẹ. Giữ vì đó không phải chữ và dòng đang chuyển động kèm theo. | Lưu ý | Hỏi bác sĩ: nếu khó nhận ra mốc ở bản tối thì làm đậm `--swL2` hoặc thêm dấu hiệu khác. | Giao diện |
 | 14 | Ở màn 320px, huy hiệu số việc quá hạn đè nhẹ lên góc nút lịch. | Lưu ý | Chỉnh vị trí huy hiệu nếu bác sĩ dùng máy nhỏ; không ảnh hưởng iPhone 15. | Giao diện |
+| 15 | Thanh Hoàn tác che đáy màn hình trong 6 giây: trên tab Việc che nút "Thêm việc"; trong chi tiết bé che nút "Hoàn tất khám". | Lưu ý | Đợt 9.3 (ô thêm việc 1 dòng) sẽ giảm phần che ở tab Việc. Hỏi bác sĩ sau khi dùng thật xem có vướng không. | Giao diện |
+| 16 | Thanh Hoàn tác dùng `position: fixed`, không theo `visualViewport`: khi bàn phím iPhone đang mở có thể che thanh trong khi hẹn giờ 6 giây vẫn chạy. Chưa thử trên máy thật. | Lưu ý | Nếu bác sĩ gặp, cho thanh co theo `visualViewport` như `Sheet`. | Giao diện |
+| 17 | Vuốt chéo nghiêng ngang (tới 45° so với phương ngang, đã đo thử ở khoảng 35°) vẫn tính là vuốt (`huongCuChi` trong `src/lib/vuot.js`), nên có thể vô tình xong hoặc xoá khi cuộn bằng ngón cái. | Lưu ý | Bác sĩ thử cuộn bằng ngón cái trên iPhone; nếu vướng thì siết góc trong `src/lib/vuot.js`. | Giao diện |
+| 18 | iPhone không rung khi qua mốc 1/3 vì Safari không hỗ trợ `navigator.vibrate`; chỉ đổi màu nền. | Lưu ý | Chấp nhận (không có cách khác trên Safari); nhắc bác sĩ để khỏi tưởng lỗi. | Giao diện |
+| 19 | Dòng trạng thái "Đã xong lúc hh:mm" trong chi tiết chỉ có chữ xám; canvas có tích xanh và chữ xanh. Lệch nhỏ so với thiết kế. | Lưu ý | Chỉnh màu và thêm tích xanh nếu bác sĩ muốn. | Giao diện |
+
+## 06/11/2026 — v9.2 — Cử chỉ mới: vuốt phải xong, vuốt trái xoá, Hoàn tác
+- Phiếu: `doi-agent/phieu-viec/2026-11-05-v9-2-cu-chi-moi.json` (đợt 2/6 của v9; bác sĩ duyệt phiếu và cả 4 đề xuất ngày 05/11/2026; đặc tả `doi-agent/thiet-ke-v9/THIET_KE_V9.md`).
+- Đã đổi (lời thường):
+  1. Việc và việc của bé không còn ô tick đầu dòng; chữ sát lề trái. Vuốt phải qua 1/3 dòng là xong, vuốt trái qua 1/3 là xoá. Dòng trượt theo ngón tay, phía sau lộ nền xanh nhạt (xong) hoặc đỏ phấn (xoá), không chữ; qua mốc nền đậm hơn một nấc. Thả trước mốc thì dòng trượt về.
+  2. Việc xong không còn gạch ngang: chữ nhạt, có tích xanh tròn ở cuối dòng, tự xuống cuối nhóm. Vuốt phải trên việc đã xong chỉ nhúc nhích rồi về. Muốn bỏ đánh dấu thì chạm 2 lần mở chi tiết, bấm "Bỏ đánh dấu xong".
+  3. Xoá có thanh "Đã xoá: … — Hoàn tác" ở đáy màn hình 6 giây. Có cho vuốt trái, nút "Xoá việc" trong chi tiết (cả việc của bé), thư viện viết tắt và "Xoá việc đã xong" (Hoàn tác trả lại tất cả việc vừa xoá). Khôi phục chữ tắt mà đã có chữ tắt trùng thì không khôi phục và báo.
+  4. Chi tiết việc có dòng trạng thái: "Chưa xong" + "Hoàn thành", hoặc "Đã xong lúc hh:mm" + "Bỏ đánh dấu xong"; việc cũ không có giờ chỉ ghi "Đã xong". Bảng cao ~76%, khu vực là hàng chip; chữ "Xoá việc" đỏ dịu.
+  5. Việc của bé có chạm 2 lần (bác sĩ đưa lên 9.2): bảng nhỏ sửa tên, trạng thái, xoá. Dùng cả trên máy tính.
+  6. Máy tính: rê chuột vào dòng hiện nút thùng rác nền đỏ phấn. Bảng cài đặt có mục "Cử chỉ" 4 dòng; dòng nhắc đổi thành "Vuốt phải: xong · Vuốt trái: xoá · Chạm 2 lần: chi tiết". Dòng BÉ ở tab Khám giữ ô tick tới 9.4 (chỉ thêm ghi giờ khi đánh dấu đã khám).
+- Kỹ thuật: `src/lib/vuot.js` và `src/components/HoanTac.jsx` mới; `ui.jsx` (SwipeRow viết lại, thêm `TickOk`, `TrangThaiXong`, ngăn xếp `Sheet`); `actions.js` (`phanDoiXong`, `phanKhoiPhuc`, `khoiPhuc*`, `setPatientDone`, `setTodoText`, `clearDone` trả danh sách id); `viec.js` (`gioXong`); `Tasks.jsx`, `Exam.jsx`, `ThuVien.jsx`, `BackupPanel.jsx`, `App.jsx`, `App.css` sửa theo. `doneAt` là trường thường: không đổi CSDL, `BACKUP_VERSION` (vẫn 1), `merge.js`, `backup.js`. Bài kiểm mới trong `tests/viec.test.js` và `tests/merge.test.js`.
+- Kết quả kiểm: kiểm thử độc lập ĐẠT, không vòng sửa nào; `npm test` 100/100; script chụp ĐẠT 45 ảnh; đo an toàn dữ liệu trên bản dựng thật 52/52 đạt (dữ liệu cũ không đổi khi mở app, file sao lưu cũ nhập được, Hoàn tác trả đúng dòng). Chưa thử trên iPhone thật.
+- Thay đổi trong script chụp `scripts/chup-giao-dien.mjs`: các phép kiểm kiểu C được thay vì thiết kế đã đổi (không phải bỏ bớt kiểm). Ngưỡng khung ghi chú trong chi tiết việc đổi từ ≥35% xuống ≥30% (bảng cao hơn nhưng thêm chip khu và dòng trạng thái) và thêm điều kiện cao hơn 2 lần mọi ô khác.
+- Ảnh chuẩn chưa lưu lại, chờ bác sĩ duyệt ảnh 9.2. Các điểm cần bác sĩ quyết xem bảng "Chờ duyệt" (#1, #13, #15–#19).
+- Việc tiếp theo: đợt 9.3 (ô thêm việc 1 dòng, gợi ý chip trên ô gõ viết tắt, thư viện bỏ bút chì) sau khi bác sĩ duyệt ảnh 9.2.
 
 ## 05/11/2026 — v9.1 — Màu nhãn mới, đầu trang 3 nút, bảng Sao lưu và cài đặt
 - Phiếu: `doi-agent/phieu-viec/2026-11-05-v9-1-token-dau-trang-cai-dat.json` (đợt 1/6 của v9; thiết kế do bác sĩ duyệt 05/11/2026, đặc tả `doi-agent/thiet-ke-v9/THIET_KE_V9.md`).

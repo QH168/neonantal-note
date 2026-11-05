@@ -2,6 +2,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { TAGS } from '../lib/viec.js';
+import { huongCuChi, doDich, quaMoc, nenHien, ketQuaKhiTha } from '../lib/vuot.js';
 
 const S = { fill: 'none', stroke: 'currentColor', strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true };
 
@@ -34,12 +35,29 @@ const Tick = ({ size = 16 }) => (
   <svg width={size} height={size} viewBox="0 0 16 16" strokeWidth="2.3" {...S}><path d="M3 8.5l3.2 3.2L13 4.8" /></svg>
 );
 
-/** Ô vuông đánh dấu (vùng chạm 44–48px). */
+/** Ô vuông đánh dấu (vùng chạm 44–48px). Còn dùng cho dòng bé ở tab Khám tới đợt 9.4. */
 export function CheckBtn({ done, label, onClick, small }) {
   return (
     <button type="button" className={'chk' + (small ? ' small' : '')} aria-pressed={done} aria-label={label} onClick={onClick}>
       <span className={'box' + (done ? ' on' : '')}><Tick size={small ? 14 : 16} /></span>
     </button>
+  );
+}
+
+/** Tích xanh tròn 26px cuối dòng việc đã xong. Chỉ để hiển thị, không bấm được. */
+export function TickOk() {
+  return <span className="tick-ok" role="img" aria-label="Đã xong"><Tick size={14} /></span>;
+}
+
+/** Dòng trạng thái trong chi tiết việc: "Chưa xong" + "Hoàn thành", hoặc "Đã xong lúc hh:mm" + "Bỏ đánh dấu xong". */
+export function TrangThaiXong({ xong, gio, onDanhDau, onBo }) {
+  return (
+    <div className="trang-thai">
+      <span className="trang-thai-chu" aria-live="polite">{xong ? (gio ? `Đã xong lúc ${gio}` : 'Đã xong') : 'Chưa xong'}</span>
+      {xong
+        ? <button type="button" className="nut-trang-thai bo" onClick={onBo}>Bỏ đánh dấu xong</button>
+        : <button type="button" className="nut-trang-thai" onClick={onDanhDau}>Hoàn thành</button>}
+    </div>
   );
 }
 
@@ -64,133 +82,130 @@ export function TagDot({ tag, faded, className = '' }) {
   return <span className={'tag-dot ' + className} style={{ ...mauNhan(tag), opacity: faded ? 0.5 : 1 }}>{tag}</span>;
 }
 
-// ----- Vuốt trái để xoá (dùng chung cho dòng việc, việc cần làm của bé, thư viện viết tắt) -----
-const KEO_DAY = 56;   // kéo tới đây thì nút lộ đủ (p = 1)
-const KEO_MAX = 72;   // kéo tối đa
+// ----- Dòng vuốt (v9.2): vuốt phải = xong, vuốt trái = xoá; mốc 1/3 chiều rộng -----
 const THOI_GIAN_XOA = 260;
-let dangMo = null;    // hàm đóng của dòng đang mở: chỉ một dòng cùng lúc
 
 const giamChuyenDong = () => typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
 /**
- * Dòng vuốt-để-xoá. Thẻ KHÔNG trượt; khi vuốt trái, tiến độ p (0..1) chạy theo ngón tay:
- * nút thùng rác (chỉ biểu tượng, viền đỏ) lộ dần từ phải sang trái, nhãn mờ dần, viền thẻ đỏ dần.
- * p được ghi thẳng vào biến CSS `--p` của phần tử (không setState mỗi lần kéo, nên không vẽ lại danh sách).
- * Thả quá nửa thì mở hẳn, chưa tới thì trả về. Chạm nút (chỉ khi đã mở) → dòng thu gọn rồi mới xoá.
- * Chuột (PC): rê vào dòng thì nút hiện đầy đủ, không cần kéo. Nút luôn có trong thứ tự Tab.
+ * Dòng vuốt. Dòng trượt theo ngón tay; phía sau lộ nền xanh nhạt (vuốt phải) hoặc đỏ phấn (vuốt trái), không chữ, không biểu tượng.
+ * Qua mốc 1/3 chiều rộng: nền đậm một nấc, rung nhẹ nếu máy có `navigator.vibrate`. Thả qua mốc: phải → onDone(), trái → xoá;
+ * thả trước mốc: trượt về. Mọi con số do src/lib/vuot.js tính; ở đây chỉ nối vào ngón tay.
+ * Khi kéo chỉ ghi biến CSS/thuộc tính data lên phần tử (không setState mỗi lần kéo, nên không vẽ lại danh sách).
+ *  - onDone: có thì cho vuốt phải (thư viện viết tắt không truyền). daXong: dòng đã xong chỉ nhúc nhích rồi về.
+ *  - onDelete: gọi SAU khi dòng đã thu lại (một lần duy nhất; gỡ dòng giữa chừng vẫn gọi).
+ * Chuột (PC): không rê-kéo; rê vào dòng thì hiện nút thùng rác cạnh nhãn, Tab vào nút cũng hiện.
  * `label` là tên (để đọc "Xoá <kind>: <tên>"). `className` áp cho thân dòng.
- * Phần cuối dòng muốn mờ đi khi nút hiện (cụm nhãn, chấm mức) thì gắn thêm class `swipe-tail`.
  */
-export function SwipeRow({ label, onDelete, className = '', kind = 'việc', children }) {
+export function SwipeRow({ label, onDelete, onDone, daXong = false, className = '', kind = 'việc', children }) {
   const ref = useRef(null);
+  const thanRef = useRef(null);
   const st = useRef(null);
   const vuaVuot = useRef(false);
-  const daKeo = useRef(false);     // cú chạm hiện tại là cú kéo
-  const nhanTrenNut = useRef(false);
+  const hetVuot = useRef(null);
   const xoaSt = useRef({ dang: false, goi: false, timer: null });
   const xoaRef = useRef(onDelete);
   xoaRef.current = onDelete;
-  const [open, setOpen] = useState(false);
-  const datP = (p) => { ref.current?.style.setProperty('--p', String(p)); };
+  const xongRef = useRef(onDone);
+  xongRef.current = onDone;
+  const opts = { duocPhai: !!onDone, daXong };
+  const optsRef = useRef(opts);
+  optsRef.current = opts;
 
-  useEffect(() => { datP(open ? 1 : 0); }, [open]);
+  const dat = (px, nen, qua, hien) => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.setProperty('--dx', px + 'px');
+    if (nen) el.dataset.nen = nen; // giữ nền cũ khi thả để nó mờ dần đúng màu
+    if (qua !== null) el.dataset.qua = qua ? '1' : '0';
+    el.dataset.hien = hien ? '1' : '0';
+  };
 
-  useEffect(() => {
-    if (!open) return undefined;
-    const dong = () => setOpen(false);
-    if (dangMo && dangMo !== dong) dangMo();
-    dangMo = dong;
-    const ngoai = (e) => { if (ref.current && !ref.current.contains(e.target)) dong(); };
-    document.addEventListener('pointerdown', ngoai);
-    return () => { document.removeEventListener('pointerdown', ngoai); if (dangMo === dong) dangMo = null; };
-  }, [open]);
-
-  // Gỡ giữa chừng lúc đang thu gọn thì vẫn xoá (không mất thao tác).
   useEffect(() => () => {
+    clearTimeout(hetVuot.current);
+    // Gỡ giữa chừng lúc đang thu lại thì vẫn xoá (không mất thao tác).
     const x = xoaSt.current;
     clearTimeout(x.timer);
     if (x.dang && !x.goi) { x.goi = true; xoaRef.current(); }
   }, []);
 
   const down = (e) => {
-    if (e.pointerType === 'mouse' || !e.isPrimary) return; // PC dùng nút khi rê chuột, không rê-kéo
-    daKeo.current = false;
-    st.current = { x: e.clientX, y: e.clientY, on: false, d0: open ? KEO_DAY : 0, d: open ? KEO_DAY : 0 };
+    if (e.pointerType === 'mouse' || !e.isPrimary || xoaSt.current.dang) return; // PC dùng nút khi rê chuột, không rê-kéo
+    st.current = { id: e.pointerId, x: e.clientX, y: e.clientY, on: false, rong: 0, dx: 0, qua: false };
   };
   const move = (e) => {
     const s = st.current;
-    if (!s) return;
+    if (!s || e.pointerId !== s.id) return;
+    const dx = e.clientX - s.x;
     if (!s.on) {
-      const dx = e.clientX - s.x, dy = e.clientY - s.y;
-      if (Math.abs(dx) < 8 || Math.abs(dx) < Math.abs(dy)) return; // chưa rõ là vuốt ngang
+      const h = huongCuChi(dx, e.clientY - s.y);
+      if (h === 'chua') return;
+      if (h === 'doc') { st.current = null; return; } // cuộn dọc: bỏ cử chỉ
       s.on = true;
-      s.x = e.clientX; // tính độ kéo từ lúc nhận ra là vuốt ngang để nút không nhảy
-      daKeo.current = true;
-      ref.current?.classList.add('drag');
-      try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* bỏ qua */ }
-      return;
+      s.rong = ref.current ? ref.current.getBoundingClientRect().width : 0;
+      ref.current.dataset.keo = '1';
+      ref.current.dataset.qua = '0';
+      try { thanRef.current?.setPointerCapture(e.pointerId); } catch { /* bỏ qua */ }
     }
-    s.d = Math.max(0, Math.min(KEO_MAX, s.d0 - (e.clientX - s.x)));
-    datP(Math.min(1, s.d / KEO_DAY));
+    s.dx = dx;
+    const o = optsRef.current;
+    const qua = quaMoc(dx, s.rong, o);
+    if (qua && !s.qua) { try { navigator.vibrate?.(12); } catch { /* máy không rung */ } }
+    s.qua = qua;
+    const nen = nenHien(dx, o);
+    dat(giamChuyenDong() ? 0 : doDich(dx, s.rong, o), nen, qua, !!nen);
   };
+  const traVe = () => dat(0, null, null, false);
   const up = () => {
     const s = st.current;
     st.current = null;
     if (!s || !s.on) return;
-    ref.current?.classList.remove('drag');
-    const mo = s.d / KEO_DAY > 0.5;
-    datP(mo ? 1 : 0);
-    setOpen(mo);
-    vuaVuot.current = true; // chặn cú "click" ngay sau khi vuốt
-    setTimeout(() => { vuaVuot.current = false; }, 400);
+    delete ref.current.dataset.keo;
+    vuaVuot.current = true; // chặn cú "click" ngay sau khi vuốt (khỏi tính thành chạm 2 lần)
+    clearTimeout(hetVuot.current);
+    hetVuot.current = setTimeout(() => { vuaVuot.current = false; }, 400);
+    const kq = ketQuaKhiTha(s.dx, s.rong, optsRef.current);
+    if (kq === 'xoa') { xoa(); return; }
+    traVe();
+    if (kq === 'xong') xongRef.current?.();
   };
-  const huy = () => {
+  const huy = () => { // trình duyệt giành cú chạm (cuộn dọc…): trả dòng về, không đổi gì
     const s = st.current;
     st.current = null;
-    if (s?.on) { ref.current?.classList.remove('drag'); datP(open ? 1 : 0); }
+    if (s?.on) { delete ref.current.dataset.keo; traVe(); }
   };
   const bam = (e) => {
     if (e.target.closest?.('.swipe-del')) return; // chạm nút xoá: để nút làm việc của nó
-    if (vuaVuot.current) { e.stopPropagation(); return; }
-    if (open) { e.stopPropagation(); setOpen(false); } // chạm vào dòng đang mở: chỉ trả về
+    if (vuaVuot.current) { e.stopPropagation(); e.preventDefault(); }
   };
 
-  const xoa = () => {
+  function xoa() {
     const x = xoaSt.current;
     if (x.dang) return; // không xoá hai lần
     x.dang = true;
     const xong = () => { if (x.goi) return; x.goi = true; clearTimeout(x.timer); xoaRef.current(); };
     const el = ref.current;
     if (!el || giamChuyenDong()) { xong(); return; }
-    // thu chiều cao về 0 + mờ, rồi mới gọi hàm xoá
+    // dòng trượt hết ra trái, thu chiều cao về 0 + mờ, rồi mới gọi hàm xoá
+    dat(-el.getBoundingClientRect().width, 'xoa', null, true);
     const gap = parseFloat(getComputedStyle(el.parentElement || el).rowGap) || 0;
     el.style.height = el.offsetHeight + 'px';
-    el.style.overflow = 'hidden';
     void el.offsetHeight; // chốt chiều cao trước khi chạy chuyển tiếp
     el.style.transition = `height ${THOI_GIAN_XOA}ms ease, opacity 200ms ease, margin-bottom ${THOI_GIAN_XOA}ms ease`;
     el.style.height = '0px';
     el.style.opacity = '0';
     if (gap) el.style.marginBottom = -gap + 'px';
     x.timer = setTimeout(xong, THOI_GIAN_XOA);
-  };
-  // Cảm ứng: xử lý ở pointerup để chạm nhanh sau cú vuốt vẫn ăn (trình duyệt có thể không sinh click). Chuột/bàn phím dùng click.
-  const nutXuong = () => { nhanTrenNut.current = true; };
-  const nutLen = (e) => {
-    const ok = nhanTrenNut.current;
-    nhanTrenNut.current = false;
-    if (!ok || e.pointerType === 'mouse' || daKeo.current) return;
-    const r = e.currentTarget.getBoundingClientRect();
-    if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) xoa();
-  };
+  }
   const ten = `Xoá ${kind}: ${label}`;
 
   return (
-    <div ref={ref} className={'swipe' + (open ? ' armed' : '')}>
-      <div className={'swipe-body ' + className}
+    <div ref={ref} className="swipe">
+      <div className="swipe-bg" aria-hidden="true" />
+      <div ref={thanRef} className={'swipe-body ' + className}
         onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={huy} onClickCapture={bam}>
         {children}
-        <button type="button" className="swipe-del" aria-label={ten} title={ten}
-          onPointerDown={nutXuong} onPointerUp={nutLen} onClick={xoa}>
+        <button type="button" className="swipe-del" aria-label={ten} title={ten} onClick={xoa}>
           <TrashIcon size={20} />
         </button>
       </div>
@@ -204,17 +219,26 @@ const SheetCtx = createContext(null);
 export const useDongSheet = () => useContext(SheetCtx);
 const THOI_GIAN_DONG = 360; // bảng 220ms; nền mờ tắt trễ 120ms + 220ms = 340ms
 
+// Bảng chồng bảng: chỉ bảng trên cùng nhận phím Esc; khoá cuộn trang đếm theo số bảng đang mở.
+const chongSheet = [];
+let khoaDem = 0;
+let khoaTruoc = '';
+const khoaCuon = () => {
+  if (khoaDem++ === 0) { khoaTruoc = document.body.style.overflow; document.body.style.overflow = 'hidden'; }
+  return () => { if (--khoaDem === 0) document.body.style.overflow = khoaTruoc; };
+};
+
 /**
  * Bảng trượt lên (iPhone) / hộp giữa màn hình (PC).
  * Mở: nền mờ dần rồi bảng trượt lên. Đóng (Esc, chạm nền, nút Đóng trong bảng): bảng trượt xuống, nền tắt dần,
  * xong mới gọi onClose (bảng chỉ bị gỡ khỏi trang sau chuyển động).
  * Khi bàn phím iPhone hiện (visualViewport thấp hơn cửa sổ) thì khung bảng co theo phần màn hình còn thấy,
- * nên bảng nằm trên bàn phím.
+ * nên bảng nằm trên bàn phím. Bảng mở thêm trên một bảng khác thì nằm trên, đóng trước.
  */
 export function Sheet({ label, onClose, children, wide, className = '' }) {
   const wrap = useRef(null);
   const [ra, setRa] = useState(false);
-  const c = useRef({ ra: false, goi: true, fn: null, timer: null, onClose });
+  const c = useRef({ ra: false, goi: true, fn: null, timer: null, onClose, me: {} });
   c.current.onClose = onClose;
   const dong = useCallback((fn) => {
     const k = c.current;
@@ -231,11 +255,17 @@ export function Sheet({ label, onClose, children, wide, className = '' }) {
     if (k.ra && !k.goi) { k.goi = true; (k.fn || k.onClose)(); }
   }, []);
   useEffect(() => {
-    const k = (e) => e.key === 'Escape' && dong();
+    const me = c.current.me;
+    chongSheet.push(me);
+    const k = (e) => { if (e.key === 'Escape' && chongSheet[chongSheet.length - 1] === me) dong(); };
     window.addEventListener('keydown', k);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => { window.removeEventListener('keydown', k); document.body.style.overflow = prev; };
+    const mo = khoaCuon();
+    return () => {
+      window.removeEventListener('keydown', k);
+      const i = chongSheet.indexOf(me);
+      if (i >= 0) chongSheet.splice(i, 1);
+      mo();
+    };
   }, [dong]);
   useEffect(() => {
     const vv = window.visualViewport;

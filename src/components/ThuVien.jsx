@@ -1,8 +1,9 @@
-// Bảng "Thư viện viết tắt": thêm, tìm, sửa (bút chì), xoá (vuốt trái / rê chuột rồi chạm nút Xoá).
+// Bảng "Thư viện viết tắt": thêm, tìm, sửa (bút chì), xoá (vuốt trái thả qua 1/3, hoặc rê chuột rồi bấm thùng rác) + Hoàn tác.
 import { useRef, useState } from 'react';
 import { useAbbrevs } from '../hooks.js';
-import { addAbbrev, updateAbbrev, removeAbbrev } from '../lib/actions.js';
+import { addAbbrev, updateAbbrev, removeAbbrev, khoiPhucAbbrev } from '../lib/actions.js';
 import { chuanKey } from '../lib/viet-tat.js';
+import { useHoanTac } from './HoanTac.jsx';
 import { Sheet, SheetHead, SwipeRow, PencilIcon } from './ui.jsx';
 
 const boDau = (s) => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[đĐ]/g, 'd').toLowerCase();
@@ -14,6 +15,7 @@ const LOI = {
 
 export default function ThuVien({ wide, onClose }) {
   const list = useAbbrevs();
+  const hoanTac = useHoanTac();
   const [k, setK] = useState('');
   const [v, setV] = useState('');
   const [q, setQ] = useState('');
@@ -55,6 +57,16 @@ export default function ThuVien({ wide, onClose }) {
   const xoa = async (m) => {
     if (sua?.id === m.id) reset();
     await removeAbbrev(m.id);
+    hoanTac.hien({
+      nhan: 'Đã xoá: /' + m.key,
+      // Trong lúc chờ đã có mục sống cùng chữ tắt thì không khôi phục (tránh hai mục trùng)
+      lam: async () => {
+        const r = await khoiPhucAbbrev(m.id);
+        if (r.trung) return 'Đã có chữ tắt này, không khôi phục';
+        if (r.loi) return 'Không khôi phục được';
+        return undefined;
+      }
+    });
   };
 
   const qq = boDau(q.trim().replace(/^\//, ''));
@@ -113,7 +125,7 @@ export default function ThuVien({ wide, onClose }) {
           </div>
         ))}
       </div>
-      <div className="muted xsmall">Xoá một mục: vuốt dòng sang trái rồi chạm nút Xoá (máy tính: rê chuột vào dòng).</div>
+      <div className="muted xsmall">Xoá một mục: vuốt dòng sang trái, có Hoàn tác 6 giây (máy tính: rê chuột vào dòng rồi bấm thùng rác).</div>
     </Sheet>
   );
 }

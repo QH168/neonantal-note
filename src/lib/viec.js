@@ -51,6 +51,15 @@ export const themCham = (mocs, now, cuaSo = 1000) =>
 // Tên việc sau khi sửa: bỏ khoảng trắng 2 đầu. Rỗng → '' (nơi gọi không được ghi).
 export const chuanTenViec = (s) => String(s ?? '').trim();
 
+// Giờ đánh dấu xong dạng "hh:mm" theo giờ máy (cho "Đã xong lúc 09:42"). Việc cũ chưa có doneAt (null/undefined/số lạ) → '' để chỉ ghi "Đã xong".
+export const gioXong = (doneAt) => {
+  if (typeof doneAt !== 'number' || !Number.isFinite(doneAt) || doneAt <= 0) return '';
+  const d = new Date(doneAt);
+  if (Number.isNaN(d.getTime())) return '';
+  const hai = (n) => String(n).padStart(2, '0');
+  return `${hai(d.getHours())}:${hai(d.getMinutes())}`;
+};
+
 // Các khu để chọn trong bảng chi tiết việc: `zones` + (nếu việc đang ở khu cũ không có trong `zones`, vd. BM) khu đó,
 // để ô chọn khu không làm mất khu hiện tại.
 export const khuDeChon = (zones, khuHienTai) =>

@@ -13,6 +13,9 @@
    chipZero: chữ chip khu không có việc */
 .th{--okBg:#C8E6C9;--okInk:#2E7D32;--swR:#C8E6C9;--swR2:#A5D6A7;--swL:#F6D5D2;--swL2:#EFB8B2;--delInk:#A8473D;--delBg:#FBEAE8;--doneLine:#2E7D32;--doneInk:#1B5E20;--noteBg:#FBF3DF;--noteInk:#6E4E00;--noteLine:#E4C98A;--rangeBg:#EEF6FC;--rangeEnd:#CFE6F7;--rangeLine:#5BA8DA;--rangeInk:#075985;--chipZero:#6B7F91}
 .th.dark{--okBg:#A5D6A7;--okInk:#0B2410;--swR:#2F5A34;--swR2:#3F7A47;--swL:#5A2C28;--swL2:#7A3A33;--delInk:#F5C4BD;--delBg:#4C2723;--doneLine:#A5D6A7;--doneInk:#A5D6A7;--noteBg:#3A2F14;--noteInk:#F0D88F;--noteLine:#8A7432;--rangeBg:#0F2A3C;--rangeEnd:#1E4A66;--rangeLine:#5BB8EE;--rangeInk:#CBE9FB;--chipZero:#8497A8}
+/* v9 đợt 9.2 — thanh Hoàn tác: sáng = thanh tối như bảng 11; tối = mặt phẳng nổi (không dùng mảng sáng chói) */
+.th{--undoBg:#12202B;--undoInk:#FFFFFF;--undoAct:#9AD3F5;--undoLine:#12202B}
+.th.dark{--undoBg:#1F2C38;--undoInk:#E8EFF5;--undoAct:#5BB8EE;--undoLine:#3B4E60}
 
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg,#F2F7FB);color:var(--ink);font-family:'Be Vietnam Pro',system-ui,-apple-system,sans-serif;-webkit-text-size-adjust:100%}
@@ -108,12 +111,16 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .empty{padding:48px 16px;text-align:center;color:var(--muted);font-size:15px}
 
 /* dòng việc */
-.task-row{display:flex;align-items:center;gap:4px;min-height:56px;padding:0 8px 0 4px;background:var(--surface);border:1px solid var(--line);border-radius:12px}
-.task-row.compact{gap:0;padding:0 0 0 2px}
-.task-main{flex:1;min-width:0;align-self:stretch;display:flex;flex-direction:column;justify-content:center;gap:2px;padding:8px 4px;touch-action:manipulation;cursor:default}
+/* v9.2: không còn ô vuông đầu dòng; chữ sát lề trái 14px; việc đã xong: chữ --muted, không gạch ngang, tích xanh cuối dòng */
+.task-row{display:flex;align-items:center;gap:0;min-height:56px;padding:0 9px 0 14px;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.task-row.compact{padding:0 9px 0 14px}
+.task-main{flex:1;min-width:0;align-self:stretch;display:flex;flex-direction:column;justify-content:center;gap:2px;padding:8px 8px 8px 0;touch-action:manipulation;cursor:default}
 .task-main:focus-visible{outline-offset:-2px;border-radius:8px}
 .task-text{font-size:16px;line-height:1.4;font-weight:500;overflow-wrap:anywhere}
-.task-text.done,.todo-text.done,.done-text{color:var(--done);text-decoration:line-through}
+.task-text.done,.todo-text.done{color:var(--muted);text-decoration:none}
+.done-text{color:var(--done);text-decoration:line-through}
+.tick-ok{flex:none;width:26px;height:26px;margin-left:6px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--okBg);color:var(--okInk)}
+.pri-chuyen{margin-right:-6px}
 .chk{flex:none;width:44px;height:44px;padding:0;border:0;background:transparent;display:flex;align-items:center;justify-content:center}
 .chk .box{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;border:2px solid var(--box);background:var(--surface);color:var(--accentInk)}
 .chk.small .box{width:24px;height:24px;border-radius:7px}
@@ -159,8 +166,10 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .pat-note{padding-top:6px;font-size:13px;line-height:1.4;color:var(--muted);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .left-badge{flex:none;padding:3px 10px;border:1px solid var(--edge);border-radius:12px;background:var(--surface2);font-size:12px;font-weight:600;white-space:nowrap}
 .add-dashed{min-height:48px;border:1px dashed var(--box);border-radius:12px;background:transparent;color:var(--tintInk);font-size:15px;font-weight:600}
-.todo-row{display:flex;align-items:center;gap:2px;min-height:48px;padding:0 4px 0 0;background:var(--surface2);border-radius:12px}
-.todo-text{flex:1;min-width:0;padding:6px 4px;font-size:15px;line-height:1.4;font-weight:500;overflow-wrap:anywhere}
+.todo-row{display:flex;align-items:center;gap:0;min-height:48px;padding:0 9px 0 14px;background:var(--surface2);border-radius:12px}
+.todo-main{flex:1;min-width:0;align-self:stretch;display:flex;align-items:center;padding:4px 8px 4px 0;touch-action:manipulation;cursor:default}
+.todo-main:focus-visible{outline-offset:-2px;border-radius:8px}
+.todo-text{flex:1;min-width:0;font-size:15px;line-height:1.4;font-weight:500;overflow-wrap:anywhere}
 .calc-box{display:flex;flex-direction:column;gap:4px;padding:12px;border-radius:12px;background:var(--tint2);font-size:15px;line-height:1.5}
 .err-box{padding:12px;border-radius:12px;background:var(--errBg);color:var(--errInk);font-size:14px;font-weight:500}
 .status{font-size:14px;font-weight:600;color:var(--tintInk)}
@@ -208,7 +217,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 :is(.phone-app,.sheet-ph) .group-btn .small{font-size:13px}
 :is(.phone-app,.sheet-ph) .empty{font-size:15px}
 :is(.phone-app,.sheet-ph) .task-row{min-height:50px}
-:is(.phone-app,.sheet-ph) .task-main{padding:6px 4px}
+:is(.phone-app,.sheet-ph) .task-main{padding:6px 8px 6px 0}
 :is(.phone-app,.sheet-ph) .task-text{font-size:15px;line-height:1.35}
 :is(.phone-app,.sheet-ph) .pri{width:24px;height:24px;font-size:13px}
 :is(.phone-app,.sheet-ph) .pri-btn{font-size:15px}
@@ -257,7 +266,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .task-note{font-size:12.5px;line-height:1.4;color:var(--muted);white-space:pre-line;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .task-main .done+.task-note{color:var(--done)}
 /* cụm chấm nhãn ở cuối dòng: chỉ để xem (chạm vào tính như chạm thân dòng) */
-.tag-zone{flex:none;max-width:100px;align-self:stretch;padding:0 4px;display:flex;flex-wrap:wrap;align-content:center;align-items:center;justify-content:center;gap:4px;touch-action:manipulation}
+.tag-zone{flex:none;max-width:100px;align-self:stretch;padding:0;display:flex;flex-wrap:wrap;align-content:center;align-items:center;justify-content:center;gap:4px;touch-action:manipulation}
 .tag-dot{flex:none;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;letter-spacing:-.02em;background:var(--tb);color:var(--ti)}
 .tag-dot.big{width:32px;height:32px;font-size:12px}
 :is(.phone-app,.sheet-ph) .tag-dot{font-size:11px}
@@ -273,51 +282,62 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 :is(.phone-app,.sheet-ph) .cal-badge{font-size:12px}
 :is(.phone-app,.sheet-ph) .vt-chip,:is(.phone-app,.sheet-ph) .vt-k,:is(.phone-app,.sheet-ph) .vt-v,:is(.phone-app,.sheet-ph) .vt-ask{font-size:15px}
 
-/* ===== v8.4: vuốt xoá theo ngón tay + nút chỉ biểu tượng =====
-   --p (0..1) do SwipeRow ghi thẳng lên .swipe khi kéo; mọi thứ dưới đây chỉ là công thức theo --p. */
-.swipe{position:relative;--p:0;--pb:var(--p);--pd:calc(var(--p)*49px)}
-.swipe-body{position:relative;touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;transition:padding-right 220ms cubic-bezier(.2,.8,.2,1)}
-/* viền thẻ đỏ dần theo p (lớp phủ, không đổi kích thước) */
-.swipe-body::after{content:"";position:absolute;inset:0;border:1.5px solid rgba(var(--p1rgb),var(--p));border-radius:inherit;pointer-events:none;transition:border-color 220ms cubic-bezier(.2,.8,.2,1)}
-.swipe-body.task-row::after{inset:-1px}
-/* chừa chỗ bên phải cho nút, tăng dần theo p */
-.swipe-body.task-row{padding-right:calc(8px + var(--pd))}
-.swipe-body.task-row.compact{padding-right:var(--pd)}
-.swipe-body.todo-row{padding-right:calc(4px + var(--pd))}
-.swipe-body.vt-item{padding-right:calc(4px + var(--pd))}
-/* nhãn mờ dần, dịch trái, thu nhỏ */
-.swipe .swipe-tail{opacity:calc(1 - var(--p));transform:translateX(calc(var(--p)*-12px)) scale(calc(1 - .25*var(--p)));transition:opacity 220ms cubic-bezier(.2,.8,.2,1),transform 220ms cubic-bezier(.2,.8,.2,1)}
-.swipe.armed .swipe-tail{pointer-events:none}
-/* nút xoá: chỉ biểu tượng thùng rác, viền + biểu tượng --p1, không nền; lộ dần từ phải sang trái */
-.swipe-del{position:absolute;right:5px;top:50%;margin:-22px 0 0;width:44px;height:44px;box-sizing:border-box;padding:0;display:flex;align-items:center;justify-content:center;flex:none;
-  border:1.5px solid var(--p1);border-radius:12px;background:transparent;color:var(--p1);
-  border-color:rgba(var(--p1rgb),calc(.3 + .7*var(--pb)));color:rgba(var(--p1rgb),calc(.3 + .7*var(--pb)));
-  clip-path:inset(0 0 0 calc((1 - var(--pb))*100%) round 12px);opacity:calc(.25 + .75*var(--pb));pointer-events:none;
-  transition:clip-path 220ms cubic-bezier(.2,.8,.2,1),opacity 220ms cubic-bezier(.2,.8,.2,1),border-color 220ms,color 220ms,background-color 120ms,transform 120ms}
-.swipe-del svg{display:block;stroke-width:1.8}
-.swipe.armed .swipe-del{pointer-events:auto}
-.swipe-del:active{background:rgba(198,40,40,.10);transform:scale(.94)}
-.th.dark .swipe-del:active{background:rgba(239,83,80,.14)}
-/* Tab tới nút: hiện đủ ngay, chừa chỗ */
-.swipe:has(.swipe-del:focus-visible){--pb:1 !important;--pd:49px !important}
-.swipe-del:focus-visible{outline:2px solid var(--accent);outline-offset:2px;clip-path:none}
-/* đang kéo hoặc đã mở: chữ việc một dòng, cắt bằng "…" để dòng không đổi chiều cao */
-.swipe.drag .task-text,.swipe.drag .todo-text,.swipe.drag .vt-v,
-.swipe.armed .task-text,.swipe.armed .todo-text,.swipe.armed .vt-v{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-/* đang kéo: không chuyển tiếp trễ, bám ngón tay */
-.swipe.drag .swipe-body,.swipe.drag .swipe-body::after,.swipe.drag .swipe-tail,.swipe.drag .swipe-del{transition:none}
-/* PC (chuột): rê chuột vào dòng thì nút hiện đầy đủ */
+/* ===== v9.2: cử chỉ vuốt dòng (thay kiểu C) =====
+   SwipeRow ghi thẳng --dx (px) và thuộc tính data-nen / data-qua / data-hien / data-keo lên .swipe khi kéo
+   (không setState mỗi lần kéo). Nền sau dòng: xanh nhạt (vuốt phải) / đỏ phấn (vuốt trái), không chữ, không biểu tượng;
+   qua mốc 1/3: đậm một nấc. Màu nền là biến --swR/--swR2/--swL/--swL2 (có bản sáng và tối ở đầu file). */
+.swipe{position:relative;--dx:0px;border-radius:12px;overflow:hidden}
+.swipe-bg{position:absolute;inset:0;border-radius:inherit;background:var(--swR);opacity:0;pointer-events:none;transition:opacity 180ms ease}
+.swipe[data-nen="xoa"] .swipe-bg{background:var(--swL)}
+.swipe[data-nen="xong"][data-qua="1"] .swipe-bg{background:var(--swR2)}
+.swipe[data-nen="xoa"][data-qua="1"] .swipe-bg{background:var(--swL2)}
+.swipe[data-hien="1"] .swipe-bg{opacity:1}
+.swipe-body{position:relative;transform:translateX(var(--dx));touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;transition:transform 220ms cubic-bezier(.2,.8,.2,1),background-color 160ms ease}
+.swipe[data-keo="1"] .swipe-body{transition:none}
+/* nút xoá cho máy tính (rê chuột): thùng rác nền --delBg, biểu tượng --delInk, 44×44, nằm cạnh nhãn; bình thường rộng 0 (iPhone không thấy, vẫn đọc được bằng VoiceOver) */
+.swipe-del{flex:none;width:0;height:44px;margin:0;padding:0;border:0;border-radius:12px;background:var(--delBg);color:var(--delInk);display:flex;align-items:center;justify-content:center;overflow:hidden;opacity:0;pointer-events:none;transition:opacity 120ms ease}
+.swipe-del svg{display:block;flex:none;stroke-width:1.8}
+.swipe-del:active{transform:scale(.94)}
 @media (hover:hover) and (pointer:fine){
-  .swipe:hover{--pb:1;--pd:49px}
-  .swipe:hover .swipe-del{pointer-events:auto}
+  .swipe:hover .swipe-del{width:44px;margin-left:6px;opacity:1;pointer-events:auto}
 }
+/* Tab tới nút: hiện đủ ngay */
+.swipe-del:focus-visible{width:44px;margin-left:6px;opacity:1;pointer-events:auto;outline:2px solid var(--accent);outline-offset:-2px}
 /* dòng vừa chạm sáng lên một nhịp */
-.task-row{transition:background-color 160ms ease}
 .task-row.flash{background:color-mix(in srgb,var(--accent) 14%,var(--surface))}
 @media (prefers-reduced-motion:reduce){
-  .swipe-body,.swipe-body::after,.swipe .swipe-tail,.swipe-del,.task-row{transition:none !important}
+  /* bỏ trượt, giữ kết quả: kéo thì cả dòng đổi nền thay vì trượt */
+  .swipe-body,.swipe-bg,.swipe-del,.task-row{transition:none !important}
+  .swipe-body{transform:none !important}
+  .swipe[data-keo="1"][data-hien="1"][data-nen="xong"] .swipe-body{background:var(--swR)}
+  .swipe[data-keo="1"][data-hien="1"][data-nen="xong"][data-qua="1"] .swipe-body{background:var(--swR2)}
+  .swipe[data-keo="1"][data-hien="1"][data-nen="xoa"] .swipe-body{background:var(--swL)}
+  .swipe[data-keo="1"][data-hien="1"][data-nen="xoa"][data-qua="1"] .swipe-body{background:var(--swL2)}
   .sheet-backdrop,.sheet{animation:none !important}
+  .hoantac{animation:none !important}
 }
+
+/* ===== v9.2: thanh Hoàn tác (HoanTac.jsx) — nổi trên bảng dưới (z-index 50) và thanh thêm việc ===== */
+.hoantac-wrap{position:fixed;left:0;right:0;bottom:0;z-index:70;display:flex;justify-content:center;padding:0 16px calc(12px + env(safe-area-inset-bottom));pointer-events:none}
+.hoantac{pointer-events:auto;display:flex;align-items:center;gap:8px;width:100%;max-width:560px;min-height:52px;padding:4px 4px 4px 16px;border-radius:14px;border:1px solid var(--undoLine);background:var(--undoBg);color:var(--undoInk);animation:hoantacVao 200ms ease backwards}
+@keyframes hoantacVao{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.hoantac-chu{flex:1;min-width:0;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hoantac-nut{flex:none;min-width:44px;height:44px;padding:0 14px;border:0;border-radius:10px;background:transparent;color:var(--undoAct);font-size:15px;font-weight:600}
+.hoantac-nut:focus-visible{outline:2px solid var(--undoAct);outline-offset:-2px}
+
+/* ===== v9.2: bảng chi tiết việc (dòng trạng thái, chip khu vực, cử chỉ trong cài đặt) ===== */
+.trang-thai{flex:none;display:flex;align-items:center;gap:10px;min-height:48px;padding:0 2px 0 12px;border-radius:12px;background:var(--bg)}
+.trang-thai-chu{flex:1;min-width:0;font-size:15px;color:var(--muted)}
+.nut-trang-thai{flex:none;height:44px;padding:0 16px;border:1.5px solid var(--doneLine);border-radius:22px;background:var(--surface);color:var(--doneInk);font-size:15px;font-weight:600}
+.nut-trang-thai.bo{border-color:var(--edge);color:var(--ink)}
+.sheet-nhom{flex:none;display:flex;flex-direction:column;gap:6px}
+.sheet-nhan{font-size:13px;color:var(--muted)}
+.chips-sheet{display:flex;gap:6px;overflow-x:auto;margin-right:-16px;padding-right:16px}
+.cu-chi{margin:0;display:grid;grid-template-columns:124px minmax(0,1fr);row-gap:10px;column-gap:12px;font-size:15px;line-height:1.4}
+.cu-chi dt{font-weight:600}
+.cu-chi dd{margin:0;color:var(--muted)}
+.dong-nhac{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
 
 /* ===== v8.4: mở/đóng bảng ===== */
 @keyframes bdIn{from{opacity:0}to{opacity:1}}
@@ -335,23 +355,22 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .sheet-wrap.center.out .sheet{animation:boxOut 200ms ease forwards}
 
 /* ===== v8.2: bảng chi tiết việc (cao ~50% màn hình) ===== */
-.sheet.sheet-half{height:clamp(380px,53%,480px);max-height:90%;overflow:hidden;gap:10px;padding:10px 16px calc(24px + env(safe-area-inset-bottom));border-radius:22px 22px 0 0;border-top:1px solid var(--line)}
-.sheet-wrap.center .sheet.sheet-half{height:min(450px,100%);border-radius:16px;border:1px solid var(--line);padding:12px 16px 16px}
-.sheet-wrap.kb .sheet.sheet-half{height:auto;max-height:100%;flex:0 1 450px;min-height:0}
+.sheet.sheet-half{height:clamp(500px,76%,660px);max-height:90%;overflow:hidden;gap:10px;padding:10px 16px calc(24px + env(safe-area-inset-bottom));border-radius:22px 22px 0 0;border-top:1px solid var(--line)}
+.sheet-wrap.center .sheet.sheet-half{height:min(580px,100%);border-radius:16px;border:1px solid var(--line);padding:12px 16px 16px}
+.sheet-wrap.kb .sheet.sheet-half{height:auto;max-height:100%;flex:0 1 600px;min-height:0;overflow-y:auto}
+/* bảng nhỏ chi tiết việc của bé (chồng lên chi tiết bé): cao theo nội dung */
+.sheet.sheet-todo{overflow-y:auto;gap:10px;padding:10px 16px calc(24px + env(safe-area-inset-bottom));border-radius:22px 22px 0 0;border-top:1px solid var(--line)}
+.sheet-wrap.center .sheet.sheet-todo{border-radius:16px;border:1px solid var(--line);padding:12px 16px 16px}
 .sheet-grip{flex:none;align-self:center;width:40px;height:5px;border-radius:3px;background:var(--edge)}
 .sheet>.sheet-grip{margin:2px 0 -2px}
 .hr{flex:none;width:100%;height:1px;margin:0;border:0;background:var(--line)}
 .btn-half{flex:1 1 0;min-width:0}
-.sheet-r1,.sheet-r2,.sheet-r4{flex:none}
+.sheet-r1,.sheet-r4{flex:none}
 .sheet-r1{gap:6px}
 .sheet-name{flex:1;min-width:0;min-height:48px;padding:10px 10px 8px;line-height:1.3;resize:none;overflow-y:auto;font-family:inherit;border:1px solid transparent;border-bottom:2px solid var(--edge);border-radius:10px 10px 0 0;background:transparent;font-size:18px;font-weight:700;color:var(--ink)}
-.sheet-r2{gap:6px}
-.sheet-r2 .pri-pick{gap:6px}
-.sheet-zone{flex:none;width:96px;padding:0 6px;border-radius:22px}
-.sheet-sep{flex:none;width:1px;height:28px;background:var(--line)}
-.sheet-note{flex:1;min-height:0;width:100%;margin-top:4px;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--bg);font-size:16px;line-height:1.55;color:var(--ink);resize:none}
+.sheet-note{flex:1;min-height:96px;width:100%;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--bg);font-size:16px;line-height:1.55;color:var(--ink);resize:none}
 .sheet-r4{gap:8px}
-.sheet-del-task{display:flex;align-items:center;gap:6px;height:48px;padding:0 14px;border:0;border-radius:12px;background:transparent;color:var(--p1e);font-size:15px;font-weight:600}
+.sheet-del-task{display:flex;align-items:center;gap:6px;height:48px;padding:0 14px;border:0;border-radius:12px;background:transparent;color:var(--delInk);font-size:15px;font-weight:600}
 .sheet-done{width:120px;flex:none;font-size:16px}
 :is(.phone-app,.sheet-ph) .btn.sheet-done{font-size:15px}
 
@@ -382,9 +401,9 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .vt-item-wrap:last-child{border-bottom:0}
 .vt-item-wrap.on{background:var(--tint)}
 .vt-item-wrap .swipe{border-radius:0}
-.vt-item{display:flex;align-items:center;gap:8px;min-height:50px;padding:0 4px 0 12px;background:var(--surface)}
+.vt-item{display:flex;align-items:center;gap:0;min-height:50px;padding:0 4px 0 12px;background:var(--surface)}
 .vt-item-wrap.on .vt-item{background:var(--tint)}
-.vt-k{flex:none;width:70px;font-size:14px;font-weight:700;color:var(--tintInk);overflow-wrap:anywhere}
-.vt-v{flex:1;min-width:0;font-size:14px;line-height:1.35;overflow-wrap:anywhere}
+.vt-k{flex:none;width:70px;margin-right:8px;font-size:14px;font-weight:700;color:var(--tintInk);overflow-wrap:anywhere}
+.vt-v{flex:1;min-width:0;margin-right:4px;font-size:14px;line-height:1.35;overflow-wrap:anywhere}
 .vt-empty{padding:24px 16px}
 @media (hover:hover) and (pointer:fine){.vt-key{width:140px}}

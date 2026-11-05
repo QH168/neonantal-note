@@ -125,6 +125,16 @@ export default function BackupPanel({ onClose, cheDo, onDoiCheDo }) {
           <button key={k} type="button" aria-pressed={cheDo === k} onClick={() => onDoiCheDo(k)}>{nhan}</button>
         ))}
       </div>
+
+      <hr className="hr" />
+      <h3 className="bold m0">Cử chỉ</h3>
+      <dl className="cu-chi">
+        <dt>Vuốt phải</dt><dd>Đánh dấu xong</dd>
+        <dt>Vuốt trái</dt><dd>Xoá, có hoàn tác</dd>
+        <dt>Chạm 2 lần</dt><dd>Chi tiết việc: sửa, nhãn, ghi chú, bỏ đánh dấu</dd>
+        <dt>Gõ /</dt><dd>Viết tắt, ví dụ /kmdm rồi dấu cách</dd>
+      </dl>
+      <p className="m0 small muted">Dòng nhắc cử chỉ chỉ hiện 3 lần mở đầu và khi danh sách trống.</p>
     </>
   );
 }

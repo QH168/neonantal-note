@@ -1,11 +1,12 @@
 // Mục Việc: khu vực, danh sách theo khu, form thêm việc, lịch.
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { ZONES, LEGACY_ZONES } from '../db.js';
-import { addTask, toggleTask, cycleUrgency, removeTask, setTaskTags, setTaskNote, setTaskText, setTaskZone } from '../lib/actions.js';
+import { addTask, toggleTask, cycleUrgency, removeTask, khoiPhucTask, setTaskTags, setTaskNote, setTaskText, setTaskZone } from '../lib/actions.js';
 import { isoOf, parseIso } from '../lib/dates.js';
-import { TAGS, laViecMoi, batTatNhan, sapViec, khuHienThi, khuDeChon, boDemCham, themCham } from '../lib/viec.js';
+import { TAGS, laViecMoi, batTatNhan, sapViec, khuHienThi, khuDeChon, boDemCham, themCham, gioXong } from '../lib/viec.js';
 import { useVietTat } from './VietTat.jsx';
-import { CheckBtn, PriDot, PRI_NAME, Chevron, XIcon, SwipeRow, TagDot, mauNhan, Sheet, TrashIcon, DongBtn, useDongSheet } from './ui.jsx';
+import { useHoanTac } from './HoanTac.jsx';
+import { PriDot, PRI_NAME, Chevron, XIcon, SwipeRow, TagDot, TickOk, TrangThaiXong, mauNhan, Sheet, TrashIcon, DongBtn, useDongSheet } from './ui.jsx';
 
 /** Thanh khu vực: dạng cột (PC) hoặc chip vuốt ngang (iPhone). */
 export function ZoneNav({ dayTasks, active, onPick, chips }) {
@@ -39,7 +40,7 @@ function TagBtns({ tags, onToggle, label }) {
 }
 
 /** Ô tự lưu: gõ tới đâu lưu sau 0,4 giây; lưu nốt khi đóng. Trả [chữ, đổi, lưuNgay, đặtLại, bỏ]. */
-function useTuLuu(goc, luu) {
+export function useTuLuu(goc, luu) {
   const [v, setV] = useState(goc);
   const pending = useRef(null);
   const timer = useRef();
@@ -62,17 +63,23 @@ function useTuLuu(goc, luu) {
 }
 
 /**
- * Bảng "chi tiết việc" (chạm 2 lần vào việc): sửa tên, khu, nhãn, ghi chú; xoá việc. Mọi ô tự lưu.
+ * Bảng "chi tiết việc" (chạm 2 lần vào việc): sửa tên, khu, nhãn, ghi chú; đánh dấu xong / bỏ; xoá việc. Mọi ô tự lưu.
  * Việc cũ (có urgency, chưa có tags): hiện 5 nút nhãn chưa bật; bật nhãn đầu tiên thì thành kiểu mới.
  */
 function TaskDetail({ t, wide, onClose }) {
+  const hoanTac = useHoanTac();
   const [ten, doiTen, luuTen, datLaiTen, boTen] = useTuLuu(t.text, (x) => { setTaskText(t.id, x); });
   const [ghiChu, doiGhiChu, luuGhiChu, , boGhiChu] = useTuLuu(t.note || '', (x) => { setTaskNote(t.id, x); });
   const vtTen = useVietTat(ten, doiTen, { onBlur: () => { luuTen(); if (!ten.trim()) datLaiTen(t.text); } });
   const vtNote = useVietTat(ghiChu, doiGhiChu, { onBlur: luuGhiChu });
   const tags = laViecMoi(t) ? t.tags : [];
-  // Xoá việc: bảng trượt xuống trước (DongBtn), xong mới xoá và gỡ bảng.
-  const xoaViec = () => { boTen(); boGhiChu(); removeTask(t.id); onClose(); };
+  // Xoá việc: bảng trượt xuống trước (DongBtn), xong mới xoá, gỡ bảng và hiện thanh Hoàn tác.
+  const xoaViec = async () => {
+    boTen(); boGhiChu();
+    await removeTask(t.id);
+    onClose();
+    hoanTac.hien({ nhan: 'Đã xoá: ' + t.text, lam: () => khoiPhucTask(t.id) });
+  };
   return (
     <Sheet label="Chi tiết việc" onClose={onClose} wide={wide} className="sheet-half">
       <div className="row-between sheet-r1">
@@ -82,17 +89,23 @@ function TaskDetail({ t, wide, onClose }) {
         <DongBtn className="icon-btn" aria-label="Đóng" onClose={onClose}><XIcon /></DongBtn>
       </div>
       {vtTen.strip}
-      <div className="row8 sheet-r2">
-        <label htmlFor="khu-viec" className="sr-only">Khu vực</label>
-        <select id="khu-viec" className="select sheet-zone" value={t.zone} onChange={(e) => setTaskZone(t.id, e.target.value)}>
-          {khuDeChon(ZONES, t.zone).map((z) => <option key={z} value={z}>{z}</option>)}
-        </select>
-        <span className="sheet-sep" aria-hidden="true" />
+      <div className="sheet-nhom">
+        <span className="sheet-nhan" id="khu-viec-nhan">Khu vực</span>
+        <div className="chips-sheet noscroll" role="group" aria-label="Khu vực">
+          {khuDeChon(ZONES, t.zone).map((z) => (
+            <button key={z} type="button" aria-pressed={t.zone === z} className={'chip' + (t.zone === z ? ' on' : '')}
+              onClick={() => { if (t.zone !== z) setTaskZone(t.id, z); }}>{z}</button>
+          ))}
+        </div>
+      </div>
+      <div className="sheet-nhom">
+        <span className="sheet-nhan">Nhãn, chạm để bật hoặc tắt</span>
         <TagBtns tags={tags} label="Nhãn của việc" onToggle={(tag) => setTaskTags(t, batTatNhan(t.tags, tag))} />
       </div>
-      <label htmlFor="ghichu-viec" className="sr-only">Ghi chú</label>
+      <label htmlFor="ghichu-viec" className="sheet-nhan">Ghi chú</label>
       <textarea id="ghichu-viec" className="sheet-note" placeholder="Ghi chú… (gõ / để viết tắt)" {...vtNote.props} />
       {vtNote.strip}
+      <TrangThaiXong xong={!!t.done} gio={gioXong(t.doneAt)} onDanhDau={() => toggleTask(t)} onBo={() => toggleTask(t)} />
       <div className="row8 sheet-r4">
         <DongBtn className="sheet-del-task" onClose={xoaViec}><TrashIcon size={18} />Xoá việc</DongBtn>
         <span className="grow" />
@@ -103,12 +116,13 @@ function TaskDetail({ t, wide, onClose }) {
 }
 
 function TaskRow({ t, chips, onOpen }) {
+  const hoanTac = useHoanTac();
   const bodyTaps = useRef([]);
   const [sang, setSang] = useState(false); // dòng sáng lên một nhịp (~140ms) mỗi lần chạm
   const hetSang = useRef(null);
   useEffect(() => () => clearTimeout(hetSang.current), []);
   const moi = laViecMoi(t);
-  // Chạm 2 lần (trong 1 giây) vào thân dòng hoặc vùng nhãn → chi tiết việc. Ô tick là phần tử khác nên không tính.
+  // Chạm 2 lần (trong 1 giây) vào thân dòng hoặc vùng nhãn → chi tiết việc.
   const tapBody = () => {
     setSang(true);
     clearTimeout(hetSang.current);
@@ -118,10 +132,14 @@ function TaskRow({ t, chips, onOpen }) {
   };
   const tags = moi ? t.tags : [];
   const note = (t.note || '').trim();
+  // Xoá mềm rồi hiện thanh Hoàn tác (hẹn giờ 6 giây nằm ở HoanTacProvider, không ở dòng này).
+  const xoa = async () => {
+    await removeTask(t.id);
+    hoanTac.hien({ nhan: 'Đã xoá: ' + t.text, lam: () => khoiPhucTask(t.id) });
+  };
   return (
-    <SwipeRow className={'task-row' + (chips ? ' compact' : '') + (sang ? ' flash' : '')} label={t.text} onDelete={() => removeTask(t.id)}>
-      <CheckBtn done={t.done} onClick={() => toggleTask(t)}
-        label={(t.done ? 'Bỏ đánh dấu hoàn thành: ' : 'Đánh dấu hoàn thành: ') + t.text} />
+    <SwipeRow className={'task-row' + (chips ? ' compact' : '') + (sang ? ' flash' : '') + (t.done ? ' xong' : '')} label={t.text}
+      daXong={!!t.done} onDone={() => { if (!t.done) toggleTask(t); }} onDelete={xoa}>
       <div className="task-main" role="button" tabIndex={0} aria-label={'Mở chi tiết việc: ' + t.text}
         onClick={tapBody} onKeyDown={(e) => { if (e.key === 'Enter' && e.target === e.currentTarget) onOpen(t.id); }}>
         <span className={'task-text' + (t.done ? ' done' : '')}>{t.text}</span>
@@ -129,16 +147,17 @@ function TaskRow({ t, chips, onOpen }) {
       </div>
       {moi ? (
         tags.length > 0 && (
-          <div className="tag-zone swipe-tail" onClick={tapBody}>
+          <div className="tag-zone" onClick={tapBody}>
             {tags.map((x) => <TagDot key={x} tag={x} faded={t.done} />)}
           </div>
         )
       ) : (
-        <button type="button" className="icon-btn swipe-tail" onClick={() => cycleUrgency(t)}
+        <button type="button" className="icon-btn pri-chuyen" onClick={() => cycleUrgency(t)}
           aria-label={`Mức ưu tiên ${t.urgency} (${PRI_NAME[t.urgency]}), bấm để đổi`}>
           <PriDot n={t.urgency} faded={t.done} />
         </button>
       )}
+      {t.done && <TickOk />}
     </SwipeRow>
   );
 }
