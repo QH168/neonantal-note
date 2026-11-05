@@ -14,6 +14,7 @@
 - Cập nhật: Claude gửi zip → bác sĩ giải nén → GitHub Add file > Upload files → Commit. GitHub Actions chạy `npm test` rồi build.
   Không gửi lại thư mục `.github`.
 - Danh sách quyết định đã chốt: `doi-agent/QUYET_DINH_DA_CHOT.md`.
+- Thiết kế giao diện: brief `doi-agent/THIET_KE.md` + skill `.claude/skills/frontend-design/SKILL.md`; vòng chụp → nhìn → sửa: skill `.claude/skills/sua-giao-dien/SKILL.md` (dùng `scripts/chup-giao-dien.mjs`).
 
 ## 2. Khu vực tính năng
 

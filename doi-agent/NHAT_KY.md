@@ -14,6 +14,13 @@
 | 6 | Thiết kế có dòng chữ "MỚI" dưới nút "/a" nhưng chưa làm vì đè thanh tiến độ. | Lưu ý | Hỏi bác sĩ có cần dòng "MỚI" không; nếu cần thì chọn chỗ đặt khác. | Giao diện |
 | 7 | Chạm nút Xoá trong vòng ~0,5 giây sau khi vuốt có thể không ăn (trình duyệt giả lập không sinh click; trang trống cũng vậy). | Lưu ý | Bác sĩ thử trên iPhone; nếu bị thì đổi nút Xoá sang xử lý pointerup (SwipeRow, ui.jsx). | Giao diện |
 
+## 05/11/2026 — Công cụ thiết kế cho Claude (không đổi app)
+- Bác sĩ yêu cầu: bật skill frontend-design, viết design brief, và cho Claude tự chụp màn hình để sửa giao diện.
+- Đã thêm: `CLAUDE.md` (Claude tự đọc khi mở dự án); `doi-agent/THIET_KE.md` (brief + bảng chấm 8 mục);
+  skill `frontend-design` chính thức của Anthropic (giấy phép Apache 2.0) và skill `sua-giao-dien` (vòng chụp → nhìn → sửa) trong `.claude/skills/`;
+  lệnh `npm run chup`; `.gitignore` chặn ảnh chụp và bản dựng. Agent Giao diện và bản đồ đã trỏ tới các file này.
+- Mã app không đổi. Kiểm: npm test đạt; chụp thử 32 ảnh, ĐẠT.
+
 ## 29/10/2026 — v8.5 — Làm mượt đóng bảng
 - Phiếu: `doi-agent/phieu-viec/2026-10-29-v8-5-lam-muot-dong-bang.json` (bác sĩ yêu cầu làm nốt 2 ghi chú của v8.4).
 - Đã đổi (lời thường): bấm "Xoá việc" trong chi tiết việc thì bảng trượt xuống trước rồi việc mới biến mất; chạm vào danh sách khi bảng đang đóng thì không có gì xảy ra (không còn bị tính là lần chạm thứ nhất).

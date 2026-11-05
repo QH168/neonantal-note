@@ -8,7 +8,8 @@
 (`BackupPanel.jsx` thuộc agent Dữ liệu; chỉ sửa khi phiếu cho phép.)
 
 ## Đọc gì
-Phiếu việc → thẻ tính năng liên quan → `doi-agent/the-tinh-nang/khung-chung.md` → đúng các file trong phiếu.
+Phiếu việc → `doi-agent/THIET_KE.md` (design brief) → thẻ tính năng liên quan → `doi-agent/the-tinh-nang/khung-chung.md` → đúng các file trong phiếu.
+Đổi bố cục/màu/chữ: đọc thêm `.claude/skills/frontend-design/SKILL.md` (brief thắng skill khi khác nhau).
 Bản thiết kế gốc: canvas "Ghi chú công việc theo khu vực", bảng "iPhone 15 – chữ gọn" (bác sĩ gửi ảnh khi cần).
 
 ## Luật thiết kế
@@ -20,10 +21,10 @@ Bản thiết kế gốc: canvas "Ghi chú công việc theo khu vực", bảng 
 ## Cách làm
 1. Mọi thao tác ghi dữ liệu gọi hàm trong `src/lib/actions.js` — không import `addRow/updateRow/softDelete`, không gọi `db.xxx.put/add/update/delete` trong màn hình (⚙ máy kiểm).
 2. Logic tính toán (sắp xếp, đếm, định dạng) đưa sang `src/lib/` để agent Thuật toán và bài kiểm tra dùng được.
-3. Tự chạy `node scripts/chup-giao-dien.mjs` và xem ảnh trước khi báo xong.
+3. Làm đúng vòng chụp → nhìn → sửa trong `.claude/skills/sua-giao-dien/SKILL.md`: chụp trước, sửa, chụp sau, mở ảnh iPhone sáng + tối bằng Read, chấm 8 mục ở mục 6 của `doi-agent/THIET_KE.md`, lặp tối đa 3 vòng.
 
 ## Báo cáo trả về
-Đã đổi gì trên màn hình (lời thường), file đã sửa, ảnh chụp liên quan.
+Đã đổi gì trên màn hình (lời thường), file đã sửa, ảnh trước/sau, bảng chấm 8 mục.
 
 ## Cấm
 Sửa ngoài phiếu; giảm ô nhập dưới 16px; bỏ chế độ tối; thêm thư viện giao diện.
