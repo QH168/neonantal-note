@@ -35,7 +35,7 @@
 - Kỹ thuật: `src/lib/vuot.js` và `src/components/HoanTac.jsx` mới; `ui.jsx` (SwipeRow viết lại, thêm `TickOk`, `TrangThaiXong`, ngăn xếp `Sheet`); `actions.js` (`phanDoiXong`, `phanKhoiPhuc`, `khoiPhuc*`, `setPatientDone`, `setTodoText`, `clearDone` trả danh sách id); `viec.js` (`gioXong`); `Tasks.jsx`, `Exam.jsx`, `ThuVien.jsx`, `BackupPanel.jsx`, `App.jsx`, `App.css` sửa theo. `doneAt` là trường thường: không đổi CSDL, `BACKUP_VERSION` (vẫn 1), `merge.js`, `backup.js`. Bài kiểm mới trong `tests/viec.test.js` và `tests/merge.test.js`.
 - Kết quả kiểm: kiểm thử độc lập ĐẠT, không vòng sửa nào; `npm test` 100/100; script chụp ĐẠT 45 ảnh; đo an toàn dữ liệu trên bản dựng thật 52/52 đạt (dữ liệu cũ không đổi khi mở app, file sao lưu cũ nhập được, Hoàn tác trả đúng dòng). Chưa thử trên iPhone thật.
 - Thay đổi trong script chụp `scripts/chup-giao-dien.mjs`: các phép kiểm kiểu C được thay vì thiết kế đã đổi (không phải bỏ bớt kiểm). Ngưỡng khung ghi chú trong chi tiết việc đổi từ ≥35% xuống ≥30% (bảng cao hơn nhưng thêm chip khu và dòng trạng thái) và thêm điều kiện cao hơn 2 lần mọi ô khác.
-- Ảnh chuẩn chưa lưu lại, chờ bác sĩ duyệt ảnh 9.2. Các điểm cần bác sĩ quyết xem bảng "Chờ duyệt" (#1, #13, #15–#19).
+- Bác sĩ duyệt giao diện 9.2 ngày 06/11/2026; ảnh chuẩn đã lưu lại. Các điểm cần bác sĩ quyết xem bảng "Chờ duyệt" (#1, #13, #15–#19).
 - Việc tiếp theo: đợt 9.3 (ô thêm việc 1 dòng, gợi ý chip trên ô gõ viết tắt, thư viện bỏ bút chì) sau khi bác sĩ duyệt ảnh 9.2.
 
 ## 05/11/2026 — v9.1 — Màu nhãn mới, đầu trang 3 nút, bảng Sao lưu và cài đặt
