@@ -7,7 +7,6 @@
 | # | Phát hiện | Mức | Đề xuất | Agent |
 |---|---|---|---|---|
 | 1 | Cuộn dọc danh sách và vuốt trái (SwipeRow kiểu C) bằng ngón tay thật, cùng bàn phím iPhone thật với bảng chi tiết việc, chưa kiểm được bằng máy (Chromium headless) — bác sĩ thử trên iPhone. | Lưu ý | Bác sĩ thử vuốt dọc/trái và gõ trong chi tiết việc trên iPhone; nếu vướng thì giao phiếu chỉnh. | Giao diện |
-| 2 | Ảnh chuẩn `doi-agent/anh-chuan/` chưa cập nhật cho v8 và v9.1. | Lưu ý | Chờ bác sĩ duyệt ảnh v9 (ảnh v9.1 đã chụp), rồi mới chạy `--luu-chuan` để lưu bộ chuẩn mới. | Kiểm thử |
 | 3 | Ô thêm việc một dòng: gõ "/ctm" rồi Enter thì gửi luôn, không thay chữ (phiếu chỉ yêu cầu dấu cách). | Lưu ý | Hỏi bác sĩ có muốn Enter cũng thay chữ trước khi gửi không. | Giao diện |
 | 4 | Bản tối: hộp thông báo "Đã thay" nền sáng, đọc rõ nhưng sáng hơn phần còn lại. | Lưu ý | Bác sĩ xem trên máy thật; nếu chói thì chỉnh màu `--vtAct` và nền hộp. | Giao diện |
 | 5 | PC: ô lịch tháng 39×48px (có từ trước, không phải do v8.1). | Lưu ý | Phóng to ô nếu bác sĩ dùng chuột/chạm trên PC. | Giao diện |
@@ -33,8 +32,8 @@
   8. Khai báo sẵn màu trạng thái của v9 (tích xong, nền vuốt, nút xoá dịu, dải ngày trước, khoảng ngày) cho cả sáng và tối; chưa dùng, trừ màu chữ chip khu trống.
 - Kỹ thuật: `src/lib/cai-dat.js` mới (hàm thuần); `src/hooks.js` thêm `useGiaoDien`, `useLanMoApp`; `ui.jsx` thêm `mauNhan` (`TAG_COLOR` còn trong `viec.js`, giao diện không dùng); biến màu mới trong `App.css`; `BackupPanel.jsx`, `App.jsx`, `Tasks.jsx` sửa theo; `tests/luat.test.js` thêm bài kiểm v9.1. Không đổi CSDL, sao lưu, `actions.js`, `package.json`.
 - Sửa nhỏ `scripts/chup-giao-dien.mjs`: chạm vùng trống trước khi mở chi tiết việc "Gọi người nhà giường 12" (Chromium headless nuốt cú chạm đầu sau khi đóng Thư viện viết tắt). Ngoài ra script được cập nhật cho khớp: đổi sáng/tối qua bảng cài đặt, thêm ảnh iPhone cài đặt sáng/tối, kiểm 3 chế độ Sáng/Tối/Theo máy.
-- Kết quả kiểm: kiểm thử độc lập ĐẠT, không vòng sửa nào; `npm test` 83/83; script chụp ĐẠT 34 ảnh. Chưa thử trên iPhone thật. So ảnh chuẩn tự động chưa chạy (máy chụp không có `sharp`), đã so bằng mắt; ảnh chuẩn chưa lưu lại (chờ bác sĩ duyệt ảnh). Các điểm cần bác sĩ quyết xem bảng "Chờ duyệt" (#8–#14).
-- Việc tiếp theo: đợt 9.2 (cử chỉ mới) — chờ bác sĩ duyệt ảnh 9.1 và duyệt phiếu 9.2.
+- Kết quả kiểm: kiểm thử độc lập ĐẠT, không vòng sửa nào; `npm test` 83/83; script chụp ĐẠT 34 ảnh. Chưa thử trên iPhone thật. So ảnh chuẩn tự động chưa chạy (máy chụp không có `sharp`), đã so bằng mắt. Bác sĩ duyệt giao diện 9.1 ngày 05/11/2026; ảnh chuẩn đã lưu lại bằng `--luu-chuan` (34 ảnh). Các điểm cần bác sĩ quyết xem bảng "Chờ duyệt" (#8–#14).
+- Việc tiếp theo: đợt 9.2 (cử chỉ mới) — phiếu `doi-agent/phieu-viec/2026-11-05-v9-2-cu-chi-moi.json` chờ bác sĩ duyệt, chưa sửa mã.
 
 ## 05/11/2026 — Đóng gói thiết kế v9 (chưa đổi app)
 - Bác sĩ duyệt toàn bộ canvas "Ghi chú Sơ sinh v8 — thiết kế" (25 bảng): bỏ ô tick, vuốt phải/trái 1/3 để xong/xoá (có Hoàn tác), màu nhãn dịu cùng tông, thang chữ 5 bậc, đầu trang 3 nút, Sao lưu và cài đặt (Sáng/Tối/Theo máy, ngày làm việc bắt đầu 07:00), ô thêm việc 1 dòng, Khám có nút + trên dòng phòng và chi tiết bé mới, lịch ô tròn, xem lại ngày trước, tổng hợp nhiều ngày, xem 2 ngày để giao tour.
