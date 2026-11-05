@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Gõ viết tắt</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0} button,input{font-family:inherit}</style>
+</helmet>
+<div style="width: 860px; height: 844px; display: flex; gap: 80px; font-family: 'Be Vietnam Pro', system-ui, sans-serif; color: #12202B">
+
+  <figure aria-label="Đang gõ dấu / và chữ viết tắt" style="margin: 0; width: 390px; height: 844px; box-sizing: border-box; background: #F2F7FB; display: flex; flex-direction: column; overflow: hidden">
+    <div style="flex-grow: 1; padding: 14px 16px 0; display: flex; flex-direction: column; gap: 8px; overflow: hidden">
+      <div style="font-size: 13px; color: #4A5D6E">Thứ Năm, 05/11/2026</div>
+      <h1 style="margin: 0 0 6px; font-size: 20px; font-weight: 700">Việc hôm nay</h1>
+      <div style="height: 54px; border-radius: 14px; background: #FFFFFF; border: 1px solid #D6E2EC"></div>
+      <div style="height: 54px; border-radius: 14px; background: #FFFFFF; border: 1px solid #D6E2EC"></div>
+    </div>
+    <div style="padding: 10px 16px 12px; background: #FFFFFF; border-top: 1px solid #D6E2EC; display: flex; flex-direction: column; gap: 10px">
+      <div role="listbox" aria-label="Gợi ý viết tắt" style="display: flex; gap: 8px; overflow: hidden; margin-right: -16px">
+        <button type="button" role="option" aria-selected="true" style="flex-shrink: 0; height: 44px; padding: 0 14px; border: 2px solid #0B79B8; border-radius: 22px; background: #DCEFFB; color: #075985; font-size: 15px; display: flex; align-items: center; gap: 8px"><b>/kmdm</b><span>Khí máu động mạch</span></button>
+        <button type="button" role="option" aria-selected="false" style="flex-shrink: 0; height: 44px; padding: 0 14px; border: 1px solid #B4C6D6; border-radius: 22px; background: #FFFFFF; color: #12202B; font-size: 15px; display: flex; align-items: center; gap: 8px"><b style="color: #075985">/kmtm</b><span>Khí máu tĩnh mạch</span></button>
+      </div>
+      <div style="display: flex; gap: 8px">
+        <label for="vt-a" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Nội dung công việc</label>
+        <input id="vt-a" type="text" value="Xem lại /km" style="flex-grow: 1; min-width: 0; height: 44px; box-sizing: border-box; padding: 0 16px; border: 2px solid #0B79B8; border-radius: 22px; background: #FFFFFF; font-size: 16px; color: #12202B">
+        <button type="submit" aria-label="Thêm việc" style="width: 44px; height: 44px; flex-shrink: 0; border: 0; border-radius: 22px; background: #0B79B8; color: #FFFFFF; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 3v10M3 8h10"></path></svg></button>
+      </div>
+      <p style="margin: 0; font-size: 13px; line-height: 1.45; color: #4A5D6E">Gõ / rồi vài chữ: gợi ý hiện ngay trên ô gõ. Chạm một gợi ý để chèn, hoặc gõ hết rồi bấm dấu cách.</p>
+    </div>
+    <div aria-hidden="true" style="height: 291px; flex-shrink: 0; background: #CBD3DA; display: flex; align-items: center; justify-content: center; font-size: 13px; color: #2C3E4E">Bàn phím iPhone</div>
+  </figure>
+
+  <figure aria-label="Sau khi bấm dấu cách" style="margin: 0; width: 390px; height: 844px; box-sizing: border-box; background: #F2F7FB; display: flex; flex-direction: column; overflow: hidden">
+    <div style="flex-grow: 1; padding: 14px 16px 0; display: flex; flex-direction: column; gap: 8px; overflow: hidden">
+      <div style="font-size: 13px; color: #4A5D6E">Thứ Năm, 05/11/2026</div>
+      <h1 style="margin: 0 0 6px; font-size: 20px; font-weight: 700">Việc hôm nay</h1>
+      <div style="height: 54px; border-radius: 14px; background: #FFFFFF; border: 1px solid #D6E2EC"></div>
+      <div style="height: 54px; border-radius: 14px; background: #FFFFFF; border: 1px solid #D6E2EC"></div>
+    </div>
+    <div style="padding: 10px 16px 12px; background: #FFFFFF; border-top: 1px solid #D6E2EC; display: flex; flex-direction: column; gap: 10px">
+      <div role="status" style="display: flex; align-items: center; gap: 8px; padding: 4px 4px 4px 14px; border-radius: 14px; background: #12202B; color: #FFFFFF">
+        <span style="flex-grow: 1; font-size: 13px; line-height: 1.4">Đã đổi /kmdm thành Khí máu động mạch</span>
+        <button type="button" style="height: 44px; padding: 0 14px; border: 0; border-radius: 12px; background: transparent; color: #9AD3F5; font-size: 15px; font-weight: 600">Hoàn tác</button>
+      </div>
+      <div style="display: flex; gap: 8px">
+        <label for="vt-b" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Nội dung công việc</label>
+        <input id="vt-b" type="text" value="Xem lại Khí máu động mạch " style="flex-grow: 1; min-width: 0; height: 44px; box-sizing: border-box; padding: 0 16px; border: 2px solid #0B79B8; border-radius: 22px; background: #FFFFFF; font-size: 16px; color: #12202B">
+        <button type="submit" aria-label="Thêm việc" style="width: 44px; height: 44px; flex-shrink: 0; border: 0; border-radius: 22px; background: #0B79B8; color: #FFFFFF; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 3v10M3 8h10"></path></svg></button>
+      </div>
+      <p style="margin: 0; font-size: 13px; line-height: 1.45; color: #4A5D6E">Chỉ đổi khi / đứng đầu chữ, nên 1/2 hay 8/10 không bị đổi. Không phân biệt hoa thường. Dùng được ở mọi ô gõ: việc, ghi chú, việc của bé, tổng hợp.</p>
+    </div>
+    <div aria-hidden="true" style="height: 291px; flex-shrink: 0; background: #CBD3DA; display: flex; align-items: center; justify-content: center; font-size: 13px; color: #2C3E4E">Bàn phím iPhone</div>
+  </figure>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":860,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

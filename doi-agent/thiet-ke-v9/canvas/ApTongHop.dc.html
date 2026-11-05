@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Tổng hợp y lệnh</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0} button,textarea{font-family:inherit}</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #8A97A3; color: #12202B; font-family: 'Be Vietnam Pro', system-ui, sans-serif; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden">
+  <div style="flex-grow: 1; padding: 14px 16px; color: #F2F7FB; opacity: 0.8">
+    <div style="font-size: 13px">Thứ Năm, 05/11/2026</div>
+    <div style="font-size: 20px; font-weight: 700">Khám bệnh hôm nay</div>
+  </div>
+  <section role="dialog" aria-label="Tổng hợp y lệnh" style="height: 720px; flex-shrink: 0; box-sizing: border-box; background: #FFFFFF; border-radius: 22px 22px 0 0; padding: 10px 16px 24px; display: flex; flex-direction: column; gap: 12px">
+    <div style="align-self: center; width: 40px; height: 5px; border-radius: 3px; background: #D6E2EC"></div>
+    <div style="display: flex; align-items: center; justify-content: space-between">
+      <h2 style="margin: 0; font-size: 17px; font-weight: 700">Tổng hợp y lệnh</h2>
+      <button type="button" aria-label="Đóng tổng hợp" style="width: 44px; height: 44px; border: 0; background: transparent; color: #12202B; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4.5 4.5l9 9M13.5 4.5l-9 9"></path></svg></button>
+    </div>
+    <label for="th-text" style="font-size: 13px; color: #4A5D6E">Sửa được trước khi sao chép</label>
+    <textarea id="th-text" style="flex-grow: 1; box-sizing: border-box; width: 100%; margin-top: -6px; padding: 12px 14px; border: 1px solid #B4C6D6; border-radius: 14px; background: #EAF1F7; font-size: 16px; line-height: 1.5; color: #12202B; resize: none">KHÁM SÁNG 05/11/2026 - Y LỆNH
+Tuổi thai ghi là tuổi thai hiệu chỉnh hôm nay.
+Còn 2 việc ở 2 bệnh nhân.
+
+PHÒNG 1
+G01 - 36w0d - 1850 g
+- Đo bilirubin
+
+G03 - 38w4d - 2100 g
+- Tăng sữa 5 ml/cữ
+
+PHÒNG 2
+G12 - 41w3d - 3200 g - Tiếp tục y lệnh cũ</textarea>
+    <div style="display: flex; gap: 8px">
+      <button type="button" style="flex-grow: 1; height: 48px; border: 0; border-radius: 12px; background: #0B79B8; color: #FFFFFF; font-size: 15px; font-weight: 600">Sao chép</button>
+      <button type="button" style="height: 48px; padding: 0 14px; border: 1px solid #B4C6D6; border-radius: 12px; background: #FFFFFF; color: #12202B; font-size: 15px; font-weight: 600">Soạn lại</button>
+    </div>
+    <div style="font-size: 12px; color: #4A5D6E">Chữ trong khung 16 px: chạm vào để sửa, iPhone không tự phóng to nữa.</div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

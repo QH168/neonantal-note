@@ -1,0 +1,26 @@
+{
+  "ten": "v9 — áp dụng thiết kế đã duyệt trên canvas (6 đợt)",
+  "ngay": "2026-11-05",
+  "khuVuc": "Toàn app: khung chung, Việc, Khám, viết tắt, sao lưu và cài đặt",
+  "loai": "lon",
+  "canBacSiDuyet": true,
+  "daDuyet": "Bác sĩ duyệt toàn bộ canvas 'Ghi chú Sơ sinh v8 — thiết kế' ngày 05/11/2026 22:45",
+  "dacTa": "doi-agent/thiet-ke-v9/THIET_KE_V9.md",
+  "canvas": "https://claude.ai/artifact/VoCWWauYDwv66hFeK8aHJp",
+  "agent": ["dieu-phoi", "giao-dien", "thuat-toan", "du-lieu", "kiem-thu", "ghi-chep"],
+  "cachLam": "Phiếu này là kế hoạch tổng. Điều phối tách mỗi đợt thành một phiếu riêng (doi-agent/phieu-viec/2026-11-xx-v9-N-....json) với fileDuocSua cụ thể, rồi mới giao agent.",
+  "dot": [
+    { "so": "9.1", "ten": "Token, đầu trang 3 nút, bảng Sao lưu và cài đặt", "loai": "vua" },
+    { "so": "9.2", "ten": "Cử chỉ mới: vuốt phải 1/3 xong, vuốt trái 1/3 xoá + Hoàn tác, tích xanh", "loai": "lon" },
+    { "so": "9.3", "ten": "Ô thêm việc 1 dòng; viết tắt và thư viện kiểu mới", "loai": "vua" },
+    { "so": "9.4", "ten": "Khám: nút + trên dòng phòng, chi tiết bé mới", "loai": "vua" },
+    { "so": "9.5", "ten": "Lịch mới, lịch Khám, xem ngày trước, tổng hợp nhiều ngày", "loai": "lon" },
+    { "so": "9.6", "ten": "Ngày làm việc 07:00, chế độ 2 ngày, tổng hợp giao tour", "loai": "lon" }
+  ],
+  "fileDuocSua": ["doi-agent/**"],
+  "tieuChiDat": [
+    "Mỗi đợt: npm test đạt, Kiểm thử độc lập ĐẠT, ảnh iPhone sáng/tối khớp bảng canvas tương ứng",
+    "Không mất dữ liệu cũ trên iPhone; file sao lưu cũ nhập được",
+    "QUYET_DINH_DA_CHOT.md và THIET_KE.md được cập nhật theo mục 9 của đặc tả"
+  ]
+}

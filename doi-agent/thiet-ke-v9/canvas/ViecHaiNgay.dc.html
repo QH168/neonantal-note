@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Việc, xem 2 ngày</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0} button,input{font-family:inherit}</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F2F7FB; color: #12202B; font-family: 'Be Vietnam Pro', system-ui, sans-serif; display: flex; flex-direction: column; overflow: hidden">
+  <header style="padding: 14px 16px 0; display: flex; flex-direction: column; gap: 10px">
+    <div>
+      <div style="font-size: 13px; color: #4A5D6E">Hôm qua 04/11 và hôm nay 05/11</div>
+      <h1 style="margin: 0; font-size: 20px; font-weight: 700">Việc hôm nay</h1>
+    </div>
+    <div style="display: flex; padding: 4px; border-radius: 14px; background: #DDE8F1">
+      <button type="button" aria-pressed="true" style="flex-grow: 1; height: 44px; border: 0; border-radius: 11px; background: #FFFFFF; font-size: 15px; font-weight: 600; color: #12202B">Việc</button>
+      <button type="button" aria-pressed="false" style="flex-grow: 1; height: 44px; border: 0; border-radius: 11px; background: transparent; font-size: 15px; font-weight: 600; color: #4A5D6E">Khám</button>
+    </div>
+    <div role="group" aria-label="Phạm vi xem" style="align-self: flex-start; display: flex; padding: 3px; border-radius: 22px; border: 1px solid #B4C6D6; background: #FFFFFF">
+      <button type="button" aria-pressed="false" style="height: 38px; padding: 0 14px; border: 0; border-radius: 19px; background: transparent; font-size: 15px; font-weight: 600; color: #4A5D6E">Hôm nay</button>
+      <button type="button" aria-pressed="true" style="height: 38px; padding: 0 14px; border: 0; border-radius: 19px; background: #0B79B8; font-size: 15px; font-weight: 600; color: #FFFFFF">2 ngày</button>
+    </div>
+  </header>
+
+  <main style="flex-grow: 1; padding: 12px 16px 0; display: flex; flex-direction: column; gap: 8px; overflow: hidden">
+    <section aria-label="Còn từ hôm qua" style="display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 16px; background: #FBF3DF">
+      <div style="display: flex; align-items: center; gap: 8px">
+        <h2 style="margin: 0; flex-grow: 1; font-size: 15px; font-weight: 700; color: #6E4E00">Còn từ hôm qua, 2 việc</h2>
+        <button type="button" style="height: 44px; padding: 0 12px; border: 0; border-radius: 12px; background: #FFFFFF; color: #6E4E00; font-size: 13px; font-weight: 600">Dời hết sang hôm nay</button>
+      </div>
+      <div style="display: flex; align-items: center; gap: 4px; min-height: 54px; box-sizing: border-box; padding: 4px 9px 4px 14px; background: #FFFFFF; border-radius: 14px">
+        <div style="flex-grow: 1; min-width: 0">
+          <div style="font-size: 15px">Gọi người nhà giường 12</div>
+          <div style="font-size: 12px; color: #4A5D6E">04/11, HP</div>
+        </div>
+        <span style="width: 26px; height: 26px; border-radius: 13px; background: #DDE3F6; color: #2C3F86; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center">HC</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 4px; min-height: 54px; box-sizing: border-box; padding: 4px 9px 4px 14px; background: #FFFFFF; border-radius: 14px">
+        <div style="flex-grow: 1; min-width: 0">
+          <div style="font-size: 15px">Theo dõi đường huyết G05</div>
+          <div style="font-size: 12px; color: #4A5D6E">Ghi lúc 23:40 đêm qua, NICU</div>
+        </div>
+        <span style="width: 26px; height: 26px; border-radius: 13px; background: #E8DDF3; color: #573884; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center">XN</span>
+      </div>
+      <p style="margin: 0; font-size: 12px; line-height: 1.45; color: #6E4E00">Vuốt phải là xong luôn. Chạm 2 lần để dời riêng một việc.</p>
+    </section>
+
+    <h2 style="margin: 6px 0 0; display: flex; align-items: baseline; gap: 6px; font-size: 15px; font-weight: 700">NICU <span style="font-size: 13px; font-weight: 500; color: #4A5D6E">Hôm nay, còn 2/3 việc</span></h2>
+    <div style="display: flex; align-items: center; gap: 4px; min-height: 54px; box-sizing: border-box; padding: 4px 9px 4px 14px; background: #FFFFFF; border: 1px solid #D6E2EC; border-radius: 14px">
+      <div style="flex-grow: 1; min-width: 0">
+        <div style="font-size: 15px">Kháng sinh lần 2 cho G05</div>
+        <div style="font-size: 12px; color: #4A5D6E">Ghi lúc 03:10</div>
+      </div>
+      <span style="width: 26px; height: 26px; border-radius: 13px; background: #F8D7D3; color: #8C2A20; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center">NV</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 4px; min-height: 54px; box-sizing: border-box; padding: 4px 9px 4px 14px; background: #FFFFFF; border: 1px solid #D6E2EC; border-radius: 14px">
+      <div style="flex-grow: 1; min-width: 0; font-size: 15px">Xem lại khí máu giường 3</div>
+      <span style="width: 26px; height: 26px; border-radius: 13px; background: #E8DDF3; color: #573884; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center">XN</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 4px; min-height: 54px; box-sizing: border-box; padding: 4px 9px 4px 14px; background: #FFFFFF; border: 1px solid #D6E2EC; border-radius: 14px">
+      <div style="flex-grow: 1; min-width: 0; font-size: 15px; color: #4A5D6E">Ký y lệnh truyền máu</div>
+      <span role="img" aria-label="Đã xong" style="width: 26px; height: 26px; border-radius: 13px; background: #C8E6C9; color: #2E7D32; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8"></path></svg></span>
+    </div>
+  </main>
+
+  <form style="padding: 8px 16px 24px; background: #FFFFFF; border-top: 1px solid #D6E2EC; display: flex; gap: 8px">
+    <input aria-label="Nội dung công việc" type="text" placeholder="Ghi việc cần làm…" style="flex-grow: 1; min-width: 0; height: 44px; box-sizing: border-box; padding: 0 16px; border: 1px solid #B4C6D6; border-radius: 22px; background: #EAF1F7; font-size: 16px; color: #12202B">
+    <button type="submit" aria-label="Thêm việc" style="width: 44px; height: 44px; flex-shrink: 0; border: 0; border-radius: 22px; background: #0B79B8; color: #FFFFFF; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 3v10M3 8h10"></path></svg></button>
+  </form>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

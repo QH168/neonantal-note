@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Lịch Khám: chọn nhiều ngày</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0} button{font-family:inherit}</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #8A97A3; color: #12202B; font-family: 'Be Vietnam Pro', system-ui, sans-serif; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden">
+  <div style="flex-grow: 1; padding: 14px 16px; color: #F2F7FB; opacity: 0.8">
+    <div style="font-size: 13px">Thứ Năm, 05/11/2026</div>
+    <div style="font-size: 20px; font-weight: 700">Khám bệnh hôm nay</div>
+  </div>
+  <section role="dialog" aria-label="Lịch khám" style="flex-shrink: 0; box-sizing: border-box; background: #FFFFFF; border-radius: 22px 22px 0 0; padding: 10px 12px 24px; display: flex; flex-direction: column; gap: 10px">
+    <div style="align-self: center; width: 40px; height: 5px; border-radius: 3px; background: #D6E2EC"></div>
+    <div role="group" aria-label="Cách chọn ngày" style="display: flex; padding: 4px; margin: 0 4px; border-radius: 14px; background: #DDE8F1">
+      <button type="button" aria-pressed="false" style="flex-grow: 1; height: 44px; border: 0; border-radius: 11px; background: transparent; font-size: 15px; font-weight: 600; color: #4A5D6E">Xem một ngày</button>
+      <button type="button" aria-pressed="true" style="flex-grow: 1; height: 44px; border: 0; border-radius: 11px; background: #FFFFFF; font-size: 15px; font-weight: 600; color: #12202B">Tổng hợp nhiều ngày</button>
+    </div>
+    <div style="display: flex; align-items: center; gap: 4px">
+      <button type="button" aria-label="Tháng trước" style="width: 44px; height: 44px; border: 0; border-radius: 22px; background: transparent; color: #12202B; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.5L5.5 8l4.5 4.5"></path></svg></button>
+      <h2 style="margin: 0; flex-grow: 1; text-align: center; font-size: 17px; font-weight: 700">Tháng 11, 2026</h2>
+      <button type="button" aria-label="Tháng sau" style="width: 44px; height: 44px; border: 0; border-radius: 22px; background: transparent; color: #12202B; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5l4.5 4.5L6 12.5"></path></svg></button>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); text-align: center; font-size: 12px; font-weight: 600; color: #4A5D6E">
+      <span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span><span style="color: #8C2A20">CN</span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); row-gap: 2px">
+      <sc-for list="{{cells}}" as="c" hint-placeholder-count="36">
+        <button type="button" aria-label="{{c.aria}}" aria-pressed="{{c.pressed}}" style="position: relative; height: 58px; padding: 0; border: 0; background: transparent; display: flex; flex-direction: column; align-items: center; gap: 2px; visibility: {{c.vis}}">
+          <span aria-hidden="true" style="position: absolute; top: 0; height: 40px; left: {{c.bl}}; right: {{c.br}}; background: {{c.band}}"></span>
+          <span style="position: relative; width: 40px; height: 40px; box-sizing: border-box; border-radius: 20px; border: {{c.bd}}; background: {{c.bg}}; color: {{c.fg}}; font-size: 15px; font-weight: {{c.fw}}; display: flex; align-items: center; justify-content: center">{{c.d}}</span>
+          <span style="position: relative; font-size: 11px; font-weight: 600; color: #075985">{{c.n}}</span>
+        </button>
+      </sc-for>
+    </div>
+    <p style="margin: 0 6px; font-size: 12px; color: #4A5D6E">Số dưới ngày là số bé đã khám. Chạm ngày đầu rồi ngày cuối để chọn khoảng.</p>
+    <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: #E6F2FB">
+      <span style="flex-grow: 1; font-size: 15px; line-height: 1.4"><b>02/11 đến 04/11</b><br><span style="font-size: 13px; color: #4A5D6E">3 ngày, 9 lượt khám</span></span>
+      <button type="button" style="height: 44px; padding: 0 12px; border: 0; border-radius: 12px; background: transparent; color: #075985; font-size: 15px; font-weight: 600">Chọn lại</button>
+    </div>
+    <button type="button" style="height: 48px; border: 0; border-radius: 12px; background: #0B79B8; color: #FFFFFF; font-size: 15px; font-weight: 600">Xem tổng hợp 3 ngày</button>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const seen = { 2: 3, 3: 3, 4: 3, 5: 2, 1: 0 };
+    const today = 5, a = 2, b = 4;
+    const cells = [];
+    for (let i = 0; i < 6; i++) cells.push({ d: '', n: '', vis: 'hidden', bd: '0', bg: 'transparent', fg: '#12202B', fw: '500', band: 'transparent', bl: '0', br: '0', aria: '', pressed: 'false' });
+    for (let d = 1; d <= 30; d++) {
+      const n = seen[d] || 0;
+      const end = d === a || d === b, mid = d > a && d < b;
+      const future = d > today, isToday = d === today;
+      const sunday = (6 + d - 1) % 7 === 6;
+      cells.push({
+        d: String(d),
+        n: n ? n + ' bé' : '',
+        vis: 'visible',
+        bd: end ? '1.5px solid #5BA8DA' : (isToday ? '2px solid #0B79B8' : '0'),
+        bg: end ? '#CFE6F7' : 'transparent',
+        fg: end ? '#075985' : (future ? '#9FB1C1' : (sunday ? '#8C2A20' : '#12202B')),
+        fw: end || isToday ? '700' : '500',
+        band: end || mid ? '#EEF6FC' : 'transparent',
+        bl: d === a ? '50%' : '0',
+        br: d === b ? '50%' : '0',
+        aria: 'Ngày ' + d + ' tháng 11' + (n ? ', ' + n + ' bé đã khám' : '') + (end ? ', đầu hoặc cuối khoảng đã chọn' : '') + (mid ? ', trong khoảng đã chọn' : ''),
+        pressed: end || mid ? 'true' : 'false'
+      });
+    }
+    return { cells };
+  }
+}
+</script>
+</body>
+</html>

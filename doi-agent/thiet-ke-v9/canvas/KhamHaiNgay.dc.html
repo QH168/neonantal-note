@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Khám, xem 2 ngày</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0} button{font-family:inherit}</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F2F7FB; color: #12202B; font-family: 'Be Vietnam Pro', system-ui, sans-serif; display: flex; flex-direction: column; overflow: hidden">
+  <header style="padding: 14px 16px 0; display: flex; flex-direction: column; gap: 10px">
+    <div style="display: flex; align-items: center; gap: 8px">
+      <div style="flex-grow: 1; min-width: 0">
+        <div style="font-size: 13px; color: #4A5D6E">Hôm qua 04/11 và hôm nay 05/11</div>
+        <h1 style="margin: 0; font-size: 20px; font-weight: 700; white-space: nowrap">Khám bệnh hôm nay</h1>
+      </div>
+      <button type="button" aria-label="Lịch khám" style="width: 44px; height: 44px; border-radius: 22px; border: 1px solid #B4C6D6; background: #FFFFFF; color: #12202B; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4.5" width="14" height="12.5" rx="2"></rect><path d="M3 8.5h14M7 3v3M13 3v3"></path></svg></button>
+    </div>
+    <div style="display: flex; padding: 4px; border-radius: 14px; background: #DDE8F1">
+      <button type="button" aria-pressed="false" style="flex-grow: 1; height: 44px; border: 0; border-radius: 11px; background: transparent; font-size: 15px; font-weight: 600; color: #4A5D6E">Việc</button>
+      <button type="button" aria-pressed="true" style="flex-grow: 1; height: 44px; border: 0; border-radius: 11px; background: #FFFFFF; font-size: 15px; font-weight: 600; color: #12202B">Khám</button>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px">
+      <div role="group" aria-label="Phạm vi xem" style="display: flex; padding: 3px; border-radius: 22px; border: 1px solid #B4C6D6; background: #FFFFFF">
+        <button type="button" aria-pressed="false" style="height: 38px; padding: 0 14px; border: 0; border-radius: 19px; background: transparent; font-size: 15px; font-weight: 600; color: #4A5D6E">Hôm nay</button>
+        <button type="button" aria-pressed="true" style="height: 38px; padding: 0 14px; border: 0; border-radius: 19px; background: #0B79B8; font-size: 15px; font-weight: 600; color: #FFFFFF">2 ngày</button>
+      </div>
+      <span style="font-size: 13px; color: #4A5D6E">Ghép theo phòng và mã</span>
+    </div>
+    <nav aria-label="Lọc" style="display: flex; gap: 8px; overflow: hidden; margin-right: -16px">
+      <button type="button" aria-pressed="true" style="flex-shrink: 0; height: 44px; padding: 0 14px; border: 0; border-radius: 22px; background: #0B79B8; color: #FFFFFF; font-size: 15px; font-weight: 600">Tất cả 4</button>
+      <button type="button" style="flex-shrink: 0; height: 44px; padding: 0 14px; border: 1px solid #E4C98A; border-radius: 22px; background: #FBF3DF; color: #6E4E00; font-size: 15px; font-weight: 600">Mới đêm qua 1</button>
+      <button type="button" style="flex-shrink: 0; height: 44px; padding: 0 14px; border: 1px solid #B4C6D6; border-radius: 22px; background: #FFFFFF; font-size: 15px">Còn việc 2</button>
+      <button type="button" style="flex-shrink: 0; height: 44px; padding: 0 14px; border: 1px solid #B4C6D6; border-radius: 22px; background: #FFFFFF; font-size: 15px">Chưa chép 1</button>
+    </nav>
+  </header>
+
+  <main style="flex-grow: 1; padding: 12px 16px 0; display: flex; flex-direction: column; gap: 8px; overflow: hidden">
+    <h2 style="margin: 0; display: flex; align-items: baseline; gap: 6px; font-size: 15px; font-weight: 700">Phòng 1 <span style="font-size: 13px; font-weight: 500; color: #4A5D6E">3 bé</span></h2>
+
+    <article style="display: flex; flex-direction: column; gap: 8px; padding: 10px 12px 10px 14px; background: #FFFFFF; border: 1px solid #D6E2EC; border-radius: 14px">
+      <div style="display: flex; align-items: baseline; gap: 8px"><span style="font-size: 15px; font-weight: 600">G01</span><span style="font-size: 12px; color: #4A5D6E">38w1d, 1850 g</span></div>
+      <div style="display: grid; grid-template-columns: 52px minmax(0, 1fr); row-gap: 4px; font-size: 13px; line-height: 1.4">
+        <span style="color: #4A5D6E">Hôm qua</span><span>Đã khám. Còn: Đo bilirubin</span>
+        <span style="color: #4A5D6E">Hôm nay</span><span style="color: #075985; font-weight: 600">Chưa khám, đã chép việc còn lại</span>
+      </div>
+    </article>
+
+    <article style="display: flex; flex-direction: column; gap: 8px; padding: 10px 12px 10px 14px; background: #FFFFFF; border: 1.5px solid #E4C98A; border-radius: 14px">
+      <div style="display: flex; align-items: center; gap: 8px"><span style="font-size: 15px; font-weight: 600">G05</span><span style="font-size: 12px; color: #4A5D6E">34w2d, 1950 g</span><span style="margin-left: auto; padding: 3px 10px; border-radius: 12px; background: #FBF3DF; color: #6E4E00; font-size: 12px; font-weight: 600">Vào 02:30 đêm qua</span></div>
+      <div style="display: grid; grid-template-columns: 52px minmax(0, 1fr); row-gap: 4px; font-size: 13px; line-height: 1.4">
+        <span style="color: #4A5D6E">Đêm qua</span><span>Thở CPAP, kháng sinh lần đầu 03:00</span>
+        <span style="color: #4A5D6E">Hôm nay</span><span style="color: #075985; font-weight: 600">Chưa khám. Còn 2 việc</span>
+      </div>
+    </article>
+
+    <article style="display: flex; flex-direction: column; gap: 8px; padding: 10px 12px 10px 14px; background: #FFFFFF; border: 1px solid #D6E2EC; border-radius: 14px">
+      <div style="display: flex; align-items: center; gap: 8px"><span style="font-size: 15px; font-weight: 600; color: #4A5D6E">G03</span><span style="font-size: 12px; color: #4A5D6E">38w4d, 2100 g</span><span role="img" aria-label="Đã khám hôm nay" style="margin-left: auto; width: 26px; height: 26px; border-radius: 13px; background: #C8E6C9; color: #2E7D32; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8"></path></svg></span></div>
+      <div style="display: grid; grid-template-columns: 52px minmax(0, 1fr); row-gap: 4px; font-size: 13px; line-height: 1.4; color: #4A5D6E">
+        <span>Hôm qua</span><span>Đã khám, xong hết việc</span>
+        <span>Hôm nay</span><span>Đã khám, tăng 20 g</span>
+      </div>
+    </article>
+
+    <h2 style="margin: 6px 0 0; display: flex; align-items: baseline; gap: 6px; font-size: 15px; font-weight: 700">Phòng 2 <span style="font-size: 13px; font-weight: 500; color: #4A5D6E">1 bé</span></h2>
+    <article style="display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 14px; background: #FFFFFF; border: 1px dashed #B4C6D6; border-radius: 14px">
+      <div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+        <span style="font-size: 15px; font-weight: 600">G12</span>
+        <span style="font-size: 13px; color: #4A5D6E">Chỉ có hôm qua. Chưa có trong danh sách hôm nay</span>
+      </div>
+      <button type="button" style="height: 44px; padding: 0 12px; flex-shrink: 0; border: 1px solid #0B79B8; border-radius: 22px; background: #FFFFFF; color: #0B79B8; font-size: 13px; font-weight: 600">Chép sang</button>
+    </article>
+  </main>
+
+  <div style="padding: 10px 16px 24px; background: #FFFFFF; border-top: 1px solid #D6E2EC">
+    <button type="button" style="width: 100%; height: 48px; border: 0; border-radius: 12px; background: #0B79B8; color: #FFFFFF; font-size: 15px; font-weight: 600">Tổng hợp giao tour</button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

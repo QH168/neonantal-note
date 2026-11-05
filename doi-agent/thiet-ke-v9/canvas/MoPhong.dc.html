@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Mô phỏng cử chỉ</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0} button{font-family:inherit}</style>
+</helmet>
+<div style="width: 860px; height: 844px; display: flex; gap: 80px; font-family: 'Be Vietnam Pro', system-ui, sans-serif; color: #12202B">
+
+  <div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; background: #F2F7FB; display: flex; flex-direction: column; overflow: hidden">
+    <header style="padding: 14px 16px 6px">
+      <div style="font-size: 13px; color: #4A5D6E">Thứ Năm, 05/11/2026</div>
+      <h1 style="margin: 0; font-size: 20px; font-weight: 700">Việc hôm nay</h1>
+    </header>
+    <main style="padding: 8px 16px; display: flex; flex-direction: column; gap: 8px">
+      <h2 style="margin: 0; display: flex; align-items: baseline; gap: 6px; font-size: 15px; font-weight: 700">NICU <span style="font-size: 13px; font-weight: 500; color: #4A5D6E">{{leftText}}</span></h2>
+      <sc-for list="{{rows}}" as="r" hint-placeholder-count="4">
+        <div style="position: relative; height: 54px; border-radius: 14px; overflow: hidden; background: {{r.band}}">
+          <button type="button" aria-label="{{r.aria}}" onPointerDown="{{r.down}}" onPointerMove="{{r.move}}" onPointerUp="{{r.up}}" onPointerCancel="{{r.up}}" onDoubleClick="{{r.dbl}}" style="position: absolute; top: 0; left: 0; width: 100%; height: 54px; box-sizing: border-box; display: flex; align-items: center; gap: 4px; padding: {{r.pad}}; background: #FFFFFF; border: {{r.border}}; border-radius: 14px; transform: {{r.tf}}; transition: {{r.tr}}; touch-action: pan-y; user-select: none; cursor: grab; text-align: left; color: #12202B">
+            <span style="flex-grow: 1; min-width: 0; font-size: 15px; color: {{r.fg}}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.t}}</span>
+            <sc-if value="{{r.showLabs}}" hint-placeholder-val="{{true}}">
+              <sc-for list="{{r.labs}}" as="l" hint-placeholder-count="2">
+                <span style="width: 26px; height: 26px; flex-shrink: 0; border-radius: 13px; background: {{l.bg}}; color: {{l.fg}}; opacity: {{l.op}}; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center">{{l.n}}</span>
+              </sc-for>
+            </sc-if>
+            <sc-if value="{{r.done}}" hint-placeholder-val="{{false}}">
+              <span role="img" aria-label="Đã xong" style="width: 26px; height: 26px; flex-shrink: 0; margin-left: 4px; border-radius: 13px; background: #C8E6C9; color: #2E7D32; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8"></path></svg></span>
+            </sc-if>
+          </button>
+          <sc-if value="{{r.del}}" hint-placeholder-val="{{false}}">
+            <button type="button" aria-label="Xoá việc: {{r.t}}" onClick="{{r.remove}}" style="position: absolute; top: 5px; right: 5px; width: 44px; height: 44px; box-sizing: border-box; border: 1.5px solid #C62828; border-radius: 12px; background: #FFFFFF; color: #C62828; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h14M9 6V4h4v2M6 6l1 12h8l1-12M9.5 9.5v5.5M12.5 9.5v5.5"></path></svg></button>
+          </sc-if>
+        </div>
+      </sc-for>
+      <sc-if value="{{hasToast}}" hint-placeholder-val="{{false}}">
+        <div role="status" style="display: flex; align-items: center; gap: 8px; margin-top: 6px; padding: 4px 4px 4px 14px; border-radius: 14px; background: #12202B; color: #FFFFFF">
+          <span style="flex-grow: 1; font-size: 13px">{{toast}}</span>
+          <button type="button" onClick="{{undo}}" style="height: 44px; padding: 0 14px; border: 0; background: transparent; color: #9AD3F5; font-size: 15px; font-weight: 600">Hoàn tác</button>
+        </div>
+      </sc-if>
+    </main>
+
+    <sc-if value="{{sheetOpen}}" hint-placeholder-val="{{false}}">
+      <div style="position: absolute; inset: 0; background: rgba(18,32,43,0.45); display: flex; flex-direction: column; justify-content: flex-end">
+        <section role="dialog" aria-label="Chi tiết việc" style="background: #FFFFFF; border-radius: 22px 22px 0 0; padding: 10px 16px 28px; display: flex; flex-direction: column; gap: 12px">
+          <div style="align-self: center; width: 40px; height: 5px; border-radius: 3px; background: #D6E2EC"></div>
+          <div style="display: flex; align-items: center; gap: 6px">
+            <h2 style="margin: 0; flex-grow: 1; font-size: 17px; font-weight: 700">{{sheetTitle}}</h2>
+            <button type="button" aria-label="Đóng" onClick="{{closeSheet}}" style="width: 44px; height: 44px; border: 0; background: transparent; color: #12202B; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4.5 4.5l9 9M13.5 4.5l-9 9"></path></svg></button>
+          </div>
+          <div style="min-height: 72px; padding: 12px 14px; border: 1px solid #D6E2EC; border-radius: 14px; background: #F2F7FB; font-size: 15px; color: #4A5D6E">Ghi chú… (gõ / để viết tắt)</div>
+          <div style="display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 4px 0 12px; border-radius: 12px; background: #F2F7FB">
+            <span style="flex-grow: 1; font-size: 15px; color: #4A5D6E">{{sheetStatus}}</span>
+            <button type="button" onClick="{{toggleSheet}}" style="height: 44px; padding: 0 16px; border: 1.5px solid #2E7D32; border-radius: 22px; background: #FFFFFF; color: #1B5E20; font-size: 15px; font-weight: 600">{{sheetBtn}}</button>
+          </div>
+        </section>
+      </div>
+    </sc-if>
+  </div>
+
+  <aside style="width: 390px; padding-top: 20px; display: flex; flex-direction: column; gap: 16px">
+    <h2 style="margin: 0; font-size: 20px; font-weight: 700">Thử cử chỉ</h2>
+    <p style="margin: 0; font-size: 15px; line-height: 1.55; color: #2C3E4E">Bấm Play rồi dùng chuột kéo một dòng bên trái. Kéo sang phải quá 1/3 dòng rồi thả để đánh dấu xong. Kéo sang trái quá 1/3 rồi thả để xoá, có nút hoàn tác. Nhấp đúp vào dòng để mở chi tiết và bỏ đánh dấu.</p>
+
+    <div role="status" aria-live="polite" style="display: flex; flex-direction: column; gap: 10px; padding: 16px; border-radius: 16px; background: #FFFFFF; border: 1px solid #D6E2EC">
+      <span style="font-size: 13px; color: #4A5D6E">Đang kéo</span>
+      <div style="position: relative; height: 10px; border-radius: 5px; background: #EAF1F7">
+        <div style="position: absolute; left: 0; top: 0; height: 10px; width: {{meterW}}; border-radius: 5px; background: {{meterC}}"></div>
+        <div style="position: absolute; left: 33.3%; top: -4px; height: 18px; border-left: 2px solid #2E7D32"></div>
+      </div>
+      <span style="font-size: 17px; font-weight: 700">{{hint}}</span>
+      <span style="font-size: 13px; color: #4A5D6E">{{last}}</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <button type="button" onClick="{{playRight}}" style="height: 48px; border: 0; border-radius: 12px; background: #0B79B8; color: #FFFFFF; font-size: 15px; font-weight: 600">Phát mẫu: vuốt phải để xong</button>
+      <button type="button" onClick="{{playLeft}}" style="height: 48px; border: 1px solid #B4C6D6; border-radius: 12px; background: #FFFFFF; color: #12202B; font-size: 15px; font-weight: 600">Phát mẫu: vuốt trái để xoá</button>
+      <button type="button" onClick="{{reset}}" style="height: 48px; border: 0; border-radius: 12px; background: transparent; color: #075985; font-size: 15px; font-weight: 600">Đặt lại</button>
+    </div>
+  </aside>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":860,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = this.initial();
+    this.drag = null;
+  }
+  initial() {
+    return {
+      rows: [
+        { id: 'a', t: 'Xem lại khí máu giường 3', labs: ['NV', 'XN'], done: false, del: false, gone: false },
+        { id: 'b', t: 'Hội chẩn ngoại', labs: ['BM', 'HC'], done: false, del: false, gone: false },
+        { id: 'c', t: 'Cập nhật cân nặng', labs: ['CK'], done: false, del: false, gone: false },
+        { id: 'd', t: 'Ký y lệnh truyền máu', labs: ['NV'], done: true, del: false, gone: false }
+      ],
+      dx: {}, dragId: null, sheet: null, toast: '', lastGone: null,
+      last: 'Chưa có thao tác nào.'
+    };
+  }
+  componentWillUnmount() { (this.timers || []).forEach(clearTimeout); }
+  later(fn, ms) { this.timers = this.timers || []; this.timers.push(setTimeout(fn, ms)); }
+  W() { return 358; }
+  patch(id, ch) { this.setState((s) => ({ rows: s.rows.map((r) => (r.id === id ? { ...r, ...ch } : r)) })); }
+  setDx(id, v) { this.setState((s) => ({ dx: { ...s.dx, [id]: v } })); }
+  release(id) {
+    const d = this.state.dx[id] || 0;
+    const row = this.state.rows.find((r) => r.id === id);
+    this.drag = null;
+    this.setState({ dragId: null });
+    this.setDx(id, 0);
+    if (!row) return;
+    if (d >= this.W() / 3 && !row.done) {
+      this.patch(id, { done: true, del: false });
+      this.setState({ last: 'Đã xong: ' + row.t + '. Dòng xuống cuối nhóm.' });
+    } else if (d <= -this.W() / 3) {
+      this.patch(id, { gone: true, del: false });
+      this.setState({ toast: 'Đã xoá: ' + row.t, lastGone: id, last: 'Đã xoá: ' + row.t + '. Bấm Hoàn tác nếu lỡ tay.' });
+    } else {
+      this.setState((s) => ({ rows: s.rows.map((r) => ({ ...r, del: false })) }));
+      if (d !== 0) this.setState({ last: row.done && d > 0 ? 'Việc đã xong: muốn bỏ đánh dấu thì nhấp đúp để mở chi tiết.' : 'Thả trước mốc 1/3: dòng trở về, không đổi gì.' });
+    }
+  }
+  handlers(r) {
+    return {
+      down: (e) => {
+        try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) {}
+        this.drag = { id: r.id, x0: e.clientX };
+        this.setState({ dragId: r.id });
+      },
+      move: (e) => {
+        if (!this.drag || this.drag.id !== r.id) return;
+        let d = e.clientX - this.drag.x0;
+        if (r.done && d > 0) d = d * 0.25;
+        if (d < 0) d = Math.max(d, -this.W() * 0.9);
+        d = Math.min(d, this.W() * 0.9);
+        this.setDx(r.id, d);
+      },
+      up: () => { if (this.drag && this.drag.id === r.id) this.release(r.id); },
+      dbl: () => this.setState({ sheet: r.id }),
+      remove: () => {
+        this.patch(r.id, { gone: true, del: false });
+        this.setState({ toast: 'Đã xoá: ' + r.t, lastGone: r.id, last: 'Đã xoá: ' + r.t + '.' });
+      }
+    };
+  }
+  renderVals() {
+    const s = this.state;
+    const W = this.W();
+    const COL = { NV: ['#F8D7D3', '#8C2A20'], BM: ['#F7E6B8', '#6E4E00'], CK: ['#D3EAF0', '#1B5566'], HC: ['#DDE3F6', '#2C3F86'], XN: ['#E8DDF3', '#573884'] };
+    const live = s.rows.filter((r) => !r.gone);
+    const ordered = live.filter((r) => !r.done).concat(live.filter((r) => r.done));
+    const rows = ordered.map((r) => {
+      const d = s.dx[r.id] || 0;
+      const h = this.handlers(r);
+      return {
+        t: r.t, done: r.done, del: r.del,
+        showLabs: !r.del,
+        labs: r.labs.map((n) => ({ n, bg: COL[n][0], fg: COL[n][1], op: r.done ? '0.55' : '1' })),
+        band: d > 0 ? (d >= W / 3 && !r.done ? '#A5D6A7' : '#C8E6C9') : (d < 0 ? (d <= -W / 3 ? '#EFB8B2' : '#F6D5D2') : '#F2F7FB'),
+        tf: 'translateX(' + d + 'px)',
+        tr: s.dragId === r.id ? 'none' : 'transform 260ms ease',
+        border: r.del ? '1.5px solid #C62828' : '1px solid #D6E2EC',
+        pad: r.del ? '4px 56px 4px 14px' : '4px 9px 4px 14px',
+        fg: r.done ? '#4A5D6E' : '#12202B',
+        aria: r.t + (r.done ? ', đã xong' : '') + '. Kéo sang phải để xong, sang trái để xoá, nhấp đúp để mở chi tiết',
+        ...h
+      };
+    });
+    const id = s.dragId || Object.keys(s.dx).find((k) => s.dx[k]);
+    const d = id ? (s.dx[id] || 0) : 0;
+    const pct = Math.round((Math.abs(d) / W) * 100);
+    let hint = 'Chưa kéo';
+    if (d > 0) hint = d >= W / 3 ? 'Qua 1/3: thả tay là xong, iPhone rung nhẹ' : 'Kéo phải ' + pct + '%: chưa tới 1/3';
+    if (d < 0) hint = d <= -W / 3 ? 'Qua 1/3: thả tay là xoá, có hoàn tác' : 'Kéo trái ' + pct + '%: chưa tới 1/3';
+    const sheetRow = s.rows.find((r) => r.id === s.sheet);
+    const left = live.filter((r) => !r.done).length;
+    return {
+      rows,
+      leftText: 'Còn ' + left + '/' + live.length + ' việc',
+      hint, last: s.last,
+      meterW: Math.min(100, pct) + '%',
+      meterC: d < 0 ? (d <= -W / 3 ? '#C2574C' : '#EBA59D') : (d >= W / 3 ? '#2E7D32' : '#81C784'),
+      hasToast: !!s.toast, toast: s.toast,
+      undo: () => { if (s.lastGone) this.patch(s.lastGone, { gone: false }); this.setState({ toast: '', lastGone: null, last: 'Đã hoàn tác xoá.' }); },
+      sheetOpen: !!sheetRow,
+      sheetTitle: sheetRow ? sheetRow.t : '',
+      sheetStatus: sheetRow && sheetRow.done ? 'Đã xong' : 'Chưa xong',
+      sheetBtn: sheetRow && sheetRow.done ? 'Bỏ đánh dấu xong' : 'Hoàn thành',
+      toggleSheet: () => { if (!sheetRow) return; this.patch(sheetRow.id, { done: !sheetRow.done }); this.setState({ sheet: null, last: (sheetRow.done ? 'Đã bỏ đánh dấu: ' : 'Đã xong: ') + sheetRow.t + '.' }); },
+      closeSheet: () => this.setState({ sheet: null }),
+      playRight: () => {
+        const r = this.state.rows.find((x) => !x.done && !x.gone);
+        if (!r) { this.setState({ last: 'Không còn việc chưa xong. Bấm Đặt lại.' }); return; }
+        this.setDx(r.id, 60);
+        this.later(() => this.setDx(r.id, 140), 450);
+        this.later(() => this.release(r.id), 1100);
+      },
+      playLeft: () => {
+        const r = this.state.rows.find((x) => !x.done && !x.gone);
+        if (!r) { this.setState({ last: 'Không còn việc để thử. Bấm Đặt lại.' }); return; }
+        this.setDx(r.id, -60);
+        this.later(() => this.setDx(r.id, -140), 450);
+        this.later(() => this.release(r.id), 1100);
+      },
+      reset: () => { (this.timers || []).forEach(clearTimeout); this.timers = []; this.drag = null; this.setState(this.initial()); }
+    };
+  }
+}
+</script>
+</body>
+</html>

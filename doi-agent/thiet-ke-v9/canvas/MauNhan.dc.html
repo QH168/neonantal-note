@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Màu nhãn mới</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0} button{font-family:inherit}</style>
+</helmet>
+<div style="width: 860px; height: 844px; box-sizing: border-box; padding: 30px; background: #F2F7FB; color: #12202B; font-family: 'Be Vietnam Pro', system-ui, sans-serif; display: flex; flex-direction: column; gap: 18px">
+  <div style="display: flex; flex-direction: column; gap: 6px">
+    <h2 style="margin: 0; font-size: 20px; font-weight: 700">Nhãn cùng tông: nền nhạt, chữ đậm cùng màu</h2>
+    <p style="margin: 0; font-size: 15px; line-height: 1.55; color: #2C3E4E; max-width: 70ch">Nền nhãn hạ xuống tông phấn, chữ dùng chính màu đó nhưng đậm. Năm nhãn nhìn cùng một họ màu, không chói khi đặt cạnh nhau, chữ vẫn rõ (tương phản chữ trên nền từ 6:1 trở lên). CK chuyển sang xanh lơ để khác hẳn tích xanh lá của việc đã xong.</p>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 70px 120px 120px 150px minmax(0, 1fr); align-items: center; row-gap: 12px; column-gap: 16px; font-size: 13px">
+    <span style="color: #4A5D6E">Nhãn</span><span style="color: #4A5D6E">Hiện tại</span><span style="color: #4A5D6E">Mới, sáng</span><span style="color: #4A5D6E">Mới, tối</span><span style="color: #4A5D6E">Nút chọn nhãn: tắt, bật</span>
+
+    <span style="font-size: 15px; font-weight: 700">NV</span>
+    <span style="width: 30px; height: 30px; border-radius: 15px; background: #C62828; color: #FFFFFF; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center">NV</span>
+    <span style="width: 30px; height: 30px; border-radius: 15px; background: #F8D7D3; color: #8C2A20; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center">NV</span>
+    <span style="display: flex; padding: 6px; border-radius: 10px; background: #17212B; width: fit-content"><span style="width: 30px; height: 30px; border-radius: 15px; background: #4C2723; color: #F5C4BD; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center">NV</span></span>
+    <span style="display: flex; gap: 8px"><span style="width: 44px; height: 44px; box-sizing: border-box; border-radius: 22px; border: 1.5px solid #D6E2EC; background: #FFFFFF; color: #8C2A20; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center">NV</span><span style="width: 44px; height: 44px; box-sizing: border-box; border-radius: 22px; border: 2px solid #8C2A20; background: #F8D7D3; color: #8C2A20; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center">NV</span></span>
+
+    <span style="font-size: 15px; font-weight: 700">BM</span>
+    <span style="width: 30px; height: 30px; border-radius: 15px; background: #F2B90F; color: #12202B; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center">BM</span>
+    <span style="width: 30px; height: 30px; border-radius: 15px; background: #F7E6B8; color: #6E4E00; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center">BM</span>
+    <span style="display: flex; padding: 6px; border-radius: 10px; background: #17212B; width: fit-content"><span style="width: 30px; height: 30px; border-radius: 15px; background: #4A3B15; color: #F0D88F; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center">BM</span></span>
+    <span style="display: flex; gap: 8px"><span style="width: 44px; height: 44px; box-sizing: border-box; border-radius: 22px; border: 1.5px solid #D6E2EC; background: #FFFFFF; color: #6E4E00; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center">BM</span><span style="width: 44px; height: 44px; box-sizing: border-box; border-radius: 22px; border: 2px solid #6E4E00; background: #F7E6B8; color: #6E4E00; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center">BM</span></span>
+
+    <span style="font-size: 15px; font-weight: 700">CK</span>
+    <span style="width: 30px; height: 30px; border-radius: 15px; background: #2E7D32; color: #FFFFFF; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center">CK</span>
+    <span style="width: 30px; height: 30px; border-radius: 15px; background: #D3EAF0; color: #1B5566; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center">CK</span>
+    <span style="display: flex; padding: 6px; border-radius: 10px; background: #17212B; width: fit-content"><span style="width: 30px; height: 30px; border-radius: 15px; background: #173A44; color: #A9D8E5; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center">CK</span></span>
+    <span style="display: flex; gap: 8px"><span style="width: 44px; height: 44px; box-sizing: border-box; border-radius: 22px; border: 1.5px solid #D6E2EC; background: #FFFFFF; color: #1B5566; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center">CK</span><span style="width: 44px; height: 44px; box-sizing: border-box; border-radius: 22px; border: 2px solid #1B5566; background: #D3EAF0; color: #1B5566; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center">CK</span></span>
+
+    <span style="font-size: 15px; font-weight: 700">HC</span>
+    <span style="width: 30px; height: 30px; border-radius: 15px; background: #1A3FA6; color: #FFFFFF; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center">HC</span>
+    <span style="width: 30px; height: 30px; border-radius: 15px; background: #DDE3F6; color: #2C3F86; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center">HC</span>
+    <span style="display: flex; padding: 6px; border-radius: 10px; background: #17212B; width: fit-content"><span style="width: 30px; height: 30px; border-radius: 15px; background: #232D52; color: #BFCBF3; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center">HC</span></span>
+    <span style="display: flex; gap: 8px"><span style="width: 44px; height: 44px; box-sizing: border-box; border-radius: 22px; border: 1.5px solid #D6E2EC; background: #FFFFFF; color: #2C3F86; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center">HC</span><span style="width: 44px; height: 44px; box-sizing: border-box; border-radius: 22px; border: 2px solid #2C3F86; background: #DDE3F6; color: #2C3F86; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center">HC</span></span>
+
+    <span style="font-size: 15px; font-weight: 700">XN</span>
+    <span style="width: 30px; height: 30px; border-radius: 15px; background: #7B3FA0; color: #FFFFFF; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center">XN</span>
+    <span style="width: 30px; height: 30px; border-radius: 15px; background: #E8DDF3; color: #573884; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center">XN</span>
+    <span style="display: flex; padding: 6px; border-radius: 10px; background: #17212B; width: fit-content"><span style="width: 30px; height: 30px; border-radius: 15px; background: #34284A; color: #D8C7EF; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center">XN</span></span>
+    <span style="display: flex; gap: 8px"><span style="width: 44px; height: 44px; box-sizing: border-box; border-radius: 22px; border: 1.5px solid #D6E2EC; background: #FFFFFF; color: #573884; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center">XN</span><span style="width: 44px; height: 44px; box-sizing: border-box; border-radius: 22px; border: 2px solid #573884; background: #E8DDF3; color: #573884; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center">XN</span></span>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-top: auto">
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <span style="font-size: 13px; color: #4A5D6E">Trong danh sách, giao diện sáng</span>
+      <div style="display: flex; align-items: center; gap: 4px; min-height: 54px; box-sizing: border-box; padding: 4px 9px 4px 14px; background: #FFFFFF; border: 1px solid #D6E2EC; border-radius: 14px">
+        <span style="flex-grow: 1; font-size: 15px">Xem lại khí máu giường 3</span>
+        <span style="width: 26px; height: 26px; border-radius: 13px; background: #F8D7D3; color: #8C2A20; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center">NV</span>
+        <span style="width: 26px; height: 26px; border-radius: 13px; background: #E8DDF3; color: #573884; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center">XN</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 4px; min-height: 54px; box-sizing: border-box; padding: 4px 9px 4px 14px; background: #FFFFFF; border: 1px solid #D6E2EC; border-radius: 14px">
+        <span style="flex-grow: 1; font-size: 15px">Hội chẩn ngoại</span>
+        <span style="width: 26px; height: 26px; border-radius: 13px; background: #F7E6B8; color: #6E4E00; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center">BM</span>
+        <span style="width: 26px; height: 26px; border-radius: 13px; background: #DDE3F6; color: #2C3F86; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center">HC</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 4px; min-height: 54px; box-sizing: border-box; padding: 4px 9px 4px 14px; background: #FFFFFF; border: 1px solid #D6E2EC; border-radius: 14px">
+        <span style="flex-grow: 1; font-size: 15px; color: #4A5D6E">Cập nhật cân nặng</span>
+        <span style="width: 26px; height: 26px; border-radius: 13px; background: #D3EAF0; color: #1B5566; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; opacity: 0.55">CK</span>
+        <span role="img" aria-label="Đã xong" style="width: 26px; height: 26px; margin-left: 4px; border-radius: 13px; background: #C8E6C9; color: #2E7D32; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8"></path></svg></span>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 16px; background: #0E151C; color: #E8EFF5">
+      <span style="font-size: 13px; color: #9FB1C1">Giao diện tối</span>
+      <div style="display: flex; align-items: center; gap: 4px; min-height: 54px; box-sizing: border-box; padding: 4px 9px 4px 14px; background: #17212B; border: 1px solid #2A3948; border-radius: 14px">
+        <span style="flex-grow: 1; font-size: 15px">Xem lại khí máu giường 3</span>
+        <span style="width: 26px; height: 26px; border-radius: 13px; background: #4C2723; color: #F5C4BD; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center">NV</span>
+        <span style="width: 26px; height: 26px; border-radius: 13px; background: #34284A; color: #D8C7EF; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center">XN</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 4px; min-height: 54px; box-sizing: border-box; padding: 4px 9px 4px 14px; background: #17212B; border: 1px solid #2A3948; border-radius: 14px">
+        <span style="flex-grow: 1; font-size: 15px">Hội chẩn ngoại</span>
+        <span style="width: 26px; height: 26px; border-radius: 13px; background: #4A3B15; color: #F0D88F; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center">BM</span>
+        <span style="width: 26px; height: 26px; border-radius: 13px; background: #232D52; color: #BFCBF3; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center">HC</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 4px; min-height: 54px; box-sizing: border-box; padding: 4px 9px 4px 14px; background: #17212B; border: 1px solid #2A3948; border-radius: 14px">
+        <span style="flex-grow: 1; font-size: 15px; color: #9FB1C1">Cập nhật cân nặng</span>
+        <span style="width: 26px; height: 26px; border-radius: 13px; background: #173A44; color: #A9D8E5; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; opacity: 0.55">CK</span>
+        <span role="img" aria-label="Đã xong" style="width: 26px; height: 26px; margin-left: 4px; border-radius: 13px; background: #A5D6A7; color: #0B2410; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8"></path></svg></span>
+      </div>
+    </div>
+  </div>
+  <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #4A5D6E">Nút chọn nhãn khi tắt: nền trắng, chữ màu của nhãn. Khi bật: nền nhạt và viền đậm cùng màu, nên vẫn biết đang bật dù nhìn nhanh.</p>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":860,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

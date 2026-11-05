@@ -14,6 +14,10 @@
 | 6 | Thiết kế có dòng chữ "MỚI" dưới nút "/a" nhưng chưa làm vì đè thanh tiến độ. | Lưu ý | Hỏi bác sĩ có cần dòng "MỚI" không; nếu cần thì chọn chỗ đặt khác. | Giao diện |
 | 7 | Chạm nút Xoá trong vòng ~0,5 giây sau khi vuốt có thể không ăn (trình duyệt giả lập không sinh click; trang trống cũng vậy). | Lưu ý | Bác sĩ thử trên iPhone; nếu bị thì đổi nút Xoá sang xử lý pointerup (SwipeRow, ui.jsx). | Giao diện |
 
+## 05/11/2026 — Đóng gói thiết kế v9 (chưa đổi app)
+- Bác sĩ duyệt toàn bộ canvas "Ghi chú Sơ sinh v8 — thiết kế" (25 bảng): bỏ ô tick, vuốt phải/trái 1/3 để xong/xoá (có Hoàn tác), màu nhãn dịu cùng tông, thang chữ 5 bậc, đầu trang 3 nút, Sao lưu và cài đặt (Sáng/Tối/Theo máy, ngày làm việc bắt đầu 07:00), ô thêm việc 1 dòng, Khám có nút + trên dòng phòng và chi tiết bé mới, lịch ô tròn, xem lại ngày trước, tổng hợp nhiều ngày, xem 2 ngày để giao tour.
+- Thêm `doi-agent/thiet-ke-v9/` (đặc tả + bản sao canvas) và phiếu kế hoạch `2026-11-05-v9-ke-hoach.json`. Chưa sửa file nào trong `src/`.
+
 ## 05/11/2026 — Công cụ thiết kế cho Claude (không đổi app)
 - Bác sĩ yêu cầu: bật skill frontend-design, viết design brief, và cho Claude tự chụp màn hình để sửa giao diện.
 - Đã thêm: `CLAUDE.md` (Claude tự đọc khi mở dự án); `doi-agent/THIET_KE.md` (brief + bảng chấm 8 mục);

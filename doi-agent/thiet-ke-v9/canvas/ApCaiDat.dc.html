@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Sao lưu và cài đặt</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0} button{font-family:inherit}</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #8A97A3; color: #12202B; font-family: 'Be Vietnam Pro', system-ui, sans-serif; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden">
+  <section role="dialog" aria-label="Sao lưu và cài đặt" style="height: 824px; box-sizing: border-box; background: #FFFFFF; border-radius: 22px 22px 0 0; padding: 10px 16px 24px; display: flex; flex-direction: column; gap: 14px">
+    <div style="align-self: center; width: 40px; height: 5px; border-radius: 3px; background: #D6E2EC"></div>
+    <div style="display: flex; align-items: center; justify-content: space-between">
+      <h2 style="margin: 0; font-size: 17px; font-weight: 700">Sao lưu và cài đặt</h2>
+      <button type="button" aria-label="Đóng" style="width: 44px; height: 44px; border: 0; background: transparent; color: #12202B; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4.5 4.5l9 9M13.5 4.5l-9 9"></path></svg></button>
+    </div>
+
+    <h3 style="margin: 0; font-size: 15px; font-weight: 700">Sao lưu lên OneDrive</h3>
+    <p style="margin: -6px 0 0; font-size: 13px; line-height: 1.5; color: #9A5B00">Lần xuất gần nhất: 03/11/2026 21:40. Nên xuất bản sao lưu hôm nay.</p>
+    <div style="display: flex; gap: 8px">
+      <button type="button" style="flex-grow: 1; height: 48px; border: 0; border-radius: 12px; background: #0B79B8; color: #FFFFFF; font-size: 15px; font-weight: 600">Xuất sao lưu</button>
+      <button type="button" style="flex-grow: 1; height: 48px; border: 1px solid #B4C6D6; border-radius: 12px; background: #FFFFFF; color: #12202B; font-size: 15px; font-weight: 600">Nhập từ file</button>
+    </div>
+
+    <div style="height: 1px; background: #D6E2EC; margin: 2px 0"></div>
+
+    <h3 style="margin: 0; font-size: 15px; font-weight: 700">Giao diện</h3>
+    <div role="group" aria-label="Giao diện" style="display: flex; padding: 4px; border-radius: 14px; background: #DDE8F1">
+      <button type="button" aria-pressed="true" style="flex-grow: 1; height: 44px; border: 0; border-radius: 11px; background: #FFFFFF; font-size: 15px; font-weight: 600; color: #12202B">Sáng</button>
+      <button type="button" aria-pressed="false" style="flex-grow: 1; height: 44px; border: 0; border-radius: 11px; background: transparent; font-size: 15px; font-weight: 600; color: #4A5D6E">Tối</button>
+      <button type="button" aria-pressed="false" style="flex-grow: 1; height: 44px; border: 0; border-radius: 11px; background: transparent; font-size: 15px; font-weight: 600; color: #4A5D6E">Theo máy</button>
+    </div>
+
+    <div style="height: 1px; background: #D6E2EC; margin: 2px 0"></div>
+
+    <h3 style="margin: 0; font-size: 15px; font-weight: 700">Ngày làm việc</h3>
+    <div style="display: flex; align-items: center; gap: 10px; margin-top: -4px">
+      <label for="cd-start" style="flex-grow: 1; font-size: 15px">Ngày làm việc bắt đầu lúc</label>
+      <select id="cd-start" style="width: 104px; height: 44px; padding: 0 10px; border: 1px solid #B4C6D6; border-radius: 12px; background: #EAF1F7; font-family: inherit; font-size: 16px; font-weight: 600; color: #12202B"><option>00:00</option><option>06:00</option><option selected>07:00</option><option>08:00</option></select>
+    </div>
+    <p style="margin: -4px 0 0; font-size: 13px; line-height: 1.5; color: #4A5D6E">Việc và bé ghi từ 00:00 đến 06:59 được tính vào ca trực của ngày hôm trước. Chọn 00:00 nếu muốn tính theo ngày lịch.</p>
+
+    <div style="height: 1px; background: #D6E2EC; margin: 2px 0"></div>
+
+    <h3 style="margin: 0; font-size: 15px; font-weight: 700">Cử chỉ</h3>
+    <dl style="margin: 0; display: grid; grid-template-columns: 124px minmax(0, 1fr); row-gap: 10px; column-gap: 12px; font-size: 15px; line-height: 1.4">
+      <dt style="font-weight: 600">Vuốt phải</dt><dd style="margin: 0; color: #4A5D6E">Đánh dấu xong</dd>
+      <dt style="font-weight: 600">Vuốt trái</dt><dd style="margin: 0; color: #4A5D6E">Xoá, có hoàn tác</dd>
+      <dt style="font-weight: 600">Chạm 2 lần</dt><dd style="margin: 0; color: #4A5D6E">Chi tiết việc: sửa, nhãn, ghi chú, bỏ đánh dấu</dd>
+      <dt style="font-weight: 600">Gõ /</dt><dd style="margin: 0; color: #4A5D6E">Viết tắt, ví dụ /kmdm rồi dấu cách</dd>
+    </dl>
+    <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #4A5D6E">Dòng nhắc cử chỉ chỉ hiện 3 lần mở đầu và khi danh sách trống.</p>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

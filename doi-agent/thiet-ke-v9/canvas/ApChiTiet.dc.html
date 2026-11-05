@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Chi tiết việc</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0} button,input,textarea{font-family:inherit}</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #8A97A3; color: #12202B; font-family: 'Be Vietnam Pro', system-ui, sans-serif; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden">
+  <div style="flex-grow: 1; padding: 14px 16px; color: #F2F7FB; opacity: 0.8">
+    <div style="font-size: 13px">Thứ Năm, 05/11/2026</div>
+    <div style="font-size: 20px; font-weight: 700">Việc hôm nay</div>
+  </div>
+  <section role="dialog" aria-label="Chi tiết việc" style="height: 640px; flex-shrink: 0; box-sizing: border-box; background: #FFFFFF; border-radius: 22px 22px 0 0; padding: 10px 16px 24px; display: flex; flex-direction: column; gap: 12px">
+    <div style="align-self: center; width: 40px; height: 5px; border-radius: 3px; background: #D6E2EC"></div>
+    <div style="display: flex; align-items: center; gap: 6px">
+      <label for="ac-text" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Nội dung việc</label>
+      <input id="ac-text" type="text" value="Hội chẩn ngoại" style="flex-grow: 1; min-width: 0; height: 48px; box-sizing: border-box; padding: 0 10px; border: 0; border-bottom: 2px solid #B4C6D6; background: transparent; font-size: 17px; font-weight: 700; color: #12202B">
+      <button type="button" aria-label="Đóng" style="width: 44px; height: 44px; flex-shrink: 0; border: 0; background: transparent; color: #12202B; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4.5 4.5l9 9M13.5 4.5l-9 9"></path></svg></button>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <span style="font-size: 13px; color: #4A5D6E">Khu vực</span>
+      <div role="group" aria-label="Khu vực" style="display: flex; gap: 6px; overflow: hidden; margin-right: -16px">
+        <button type="button" aria-pressed="true" style="flex-shrink: 0; height: 44px; padding: 0 14px; border: 0; border-radius: 22px; background: #0B79B8; color: #FFFFFF; font-size: 15px; font-weight: 600">NICU</button>
+        <button type="button" aria-pressed="false" style="flex-shrink: 0; height: 44px; padding: 0 14px; border: 1px solid #B4C6D6; border-radius: 22px; background: #FFFFFF; font-size: 15px">CT</button>
+        <button type="button" aria-pressed="false" style="flex-shrink: 0; height: 44px; padding: 0 14px; border: 1px solid #B4C6D6; border-radius: 22px; background: #FFFFFF; font-size: 15px">KAN</button>
+        <button type="button" aria-pressed="false" style="flex-shrink: 0; height: 44px; padding: 0 14px; border: 1px solid #B4C6D6; border-radius: 22px; background: #FFFFFF; font-size: 15px">PS-PM</button>
+        <button type="button" aria-pressed="false" style="flex-shrink: 0; height: 44px; padding: 0 14px; border: 1px solid #B4C6D6; border-radius: 22px; background: #FFFFFF; font-size: 15px">Ngoại Trú</button>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <span style="font-size: 13px; color: #4A5D6E">Nhãn, chạm để bật hoặc tắt</span>
+      <div role="group" aria-label="Nhãn" style="display: flex; gap: 8px">
+        <button type="button" aria-pressed="false" aria-label="Nhãn NV" style="width: 44px; height: 44px; border-radius: 22px; border: 1.5px solid #D6E2EC; background: #FFFFFF; color: #8C2A20; font-size: 13px; font-weight: 700">NV</button>
+        <button type="button" aria-pressed="true" aria-label="Nhãn BM" style="width: 44px; height: 44px; border-radius: 22px; border: 2px solid #6E4E00; background: #F7E6B8; color: #6E4E00; font-size: 13px; font-weight: 700">BM</button>
+        <button type="button" aria-pressed="false" aria-label="Nhãn CK" style="width: 44px; height: 44px; border-radius: 22px; border: 1.5px solid #D6E2EC; background: #FFFFFF; color: #1B5566; font-size: 13px; font-weight: 700">CK</button>
+        <button type="button" aria-pressed="true" aria-label="Nhãn HC" style="width: 44px; height: 44px; border-radius: 22px; border: 2px solid #2C3F86; background: #DDE3F6; color: #2C3F86; font-size: 13px; font-weight: 700">HC</button>
+        <button type="button" aria-pressed="false" aria-label="Nhãn XN" style="width: 44px; height: 44px; border-radius: 22px; border: 1.5px solid #D6E2EC; background: #FFFFFF; color: #573884; font-size: 13px; font-weight: 700">XN</button>
+      </div>
+    </div>
+
+    <label for="ac-note" style="font-size: 13px; color: #4A5D6E">Ghi chú</label>
+    <textarea id="ac-note" placeholder="Ghi chú… (gõ / để viết tắt)" style="flex-grow: 1; box-sizing: border-box; width: 100%; margin-top: -6px; padding: 12px 14px; border: 1px solid #D6E2EC; border-radius: 14px; background: #F2F7FB; font-size: 16px; line-height: 1.55; color: #12202B; resize: none">Hẹn 14h, mang phim X-quang.
+Báo ngoại trước 13h30.</textarea>
+
+    <div style="display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 4px 0 12px; border-radius: 12px; background: #F2F7FB">
+      <span style="flex-grow: 1; font-size: 15px; color: #4A5D6E">Chưa xong</span>
+      <button type="button" style="height: 44px; padding: 0 16px; border: 1.5px solid #2E7D32; border-radius: 22px; background: #FFFFFF; color: #1B5E20; font-size: 15px; font-weight: 600">Hoàn thành</button>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 8px">
+      <button type="button" style="height: 48px; padding: 0 12px; border: 0; border-radius: 12px; background: transparent; color: #A8473D; display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 600"><svg width="18" height="18" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h14M9 6V4h4v2M6 6l1 12h8l1-12M9.5 9.5v5.5M12.5 9.5v5.5"></path></svg>Xoá việc</button>
+      <span style="flex-grow: 1"></span>
+      <button type="button" style="width: 120px; height: 48px; border: 0; border-radius: 12px; background: #0B79B8; color: #FFFFFF; font-size: 15px; font-weight: 600">Xong</button>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

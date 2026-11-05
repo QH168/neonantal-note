@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Khám: xem lại ngày trước</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0} button{font-family:inherit}</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F2F7FB; color: #12202B; font-family: 'Be Vietnam Pro', system-ui, sans-serif; display: flex; flex-direction: column; overflow: hidden">
+  <header style="padding: 14px 16px 0; display: flex; flex-direction: column; gap: 10px">
+    <div style="display: flex; align-items: center; gap: 8px">
+      <div style="flex-grow: 1; min-width: 0">
+        <div style="font-size: 13px; color: #4A5D6E">Thứ Tư, 04/11/2026</div>
+        <h1 style="margin: 0; font-size: 20px; font-weight: 700; white-space: nowrap">Khám ngày 04/11</h1>
+      </div>
+      <button type="button" aria-label="Thư viện viết tắt" style="width: 44px; height: 44px; border-radius: 22px; border: 1px solid #B4C6D6; background: #FFFFFF; color: #0B79B8; font-size: 15px; font-weight: 700">/a</button>
+      <button type="button" aria-label="Sao lưu và cài đặt" style="width: 44px; height: 44px; border-radius: 22px; border: 1px solid #B4C6D6; background: #FFFFFF; color: #12202B; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15.5H5.2a3.2 3.2 0 0 1-.4-6.4A4.8 4.8 0 0 1 14.2 8a3.8 3.8 0 0 1 .8 7.5H14"></path><path d="M10 17V10.5M7.6 12.8 10 10.4l2.4 2.4"></path></svg></button>
+      <button type="button" aria-label="Lịch khám" style="width: 44px; height: 44px; box-sizing: border-box; border-radius: 22px; border: 2px solid #0B79B8; background: #DCEFFB; color: #075985; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4.5" width="14" height="12.5" rx="2"></rect><path d="M3 8.5h14M7 3v3M13 3v3"></path></svg></button>
+    </div>
+    <div style="display: flex; padding: 4px; border-radius: 14px; background: #DDE8F1">
+      <button type="button" aria-pressed="false" style="flex-grow: 1; height: 44px; border: 0; border-radius: 11px; background: transparent; font-size: 15px; font-weight: 600; color: #4A5D6E">Việc</button>
+      <button type="button" aria-pressed="true" style="flex-grow: 1; height: 44px; border: 0; border-radius: 11px; background: #FFFFFF; font-size: 15px; font-weight: 600; color: #12202B">Khám</button>
+    </div>
+    <div role="status" style="display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 14px; border-radius: 14px; background: #FBF3DF; color: #6E4E00">
+      <span style="flex-grow: 1; font-size: 13px; line-height: 1.4; font-weight: 600">Đang xem ngày trước. Chỉ xem, không sửa.</span>
+      <button type="button" style="height: 44px; padding: 0 14px; border: 0; border-radius: 12px; background: #FFFFFF; color: #12202B; font-size: 15px; font-weight: 600">Về hôm nay</button>
+    </div>
+  </header>
+
+  <main style="flex-grow: 1; padding: 14px 16px 0; display: flex; flex-direction: column; gap: 8px; overflow: hidden">
+    <h2 style="margin: 0; display: flex; align-items: baseline; gap: 6px; font-size: 15px; font-weight: 700">Phòng 1 <span style="font-size: 13px; font-weight: 500; color: #4A5D6E">Đã khám 2/2</span></h2>
+    <div style="display: flex; align-items: center; gap: 8px; min-height: 60px; box-sizing: border-box; padding: 8px 9px 8px 14px; background: #FFFFFF; border: 1px solid #D6E2EC; border-radius: 14px">
+      <div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+        <span style="font-size: 15px; font-weight: 600">G01</span>
+        <span style="font-size: 12px; color: #4A5D6E">38w0d hôm đó, 1850 g</span>
+        <span style="font-size: 13px; color: #4A5D6E">Đo bilirubin, chưa xong</span>
+      </div>
+      <span role="img" aria-label="Đã khám" style="width: 26px; height: 26px; flex-shrink: 0; border-radius: 13px; background: #C8E6C9; color: #2E7D32; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8"></path></svg></span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px; min-height: 60px; box-sizing: border-box; padding: 8px 9px 8px 14px; background: #FFFFFF; border: 1px solid #D6E2EC; border-radius: 14px">
+      <div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+        <span style="font-size: 15px; font-weight: 600">G03</span>
+        <span style="font-size: 12px; color: #4A5D6E">38w3d hôm đó, 2080 g</span>
+        <span style="font-size: 13px; color: #4A5D6E">Tăng sữa 5 ml/cữ, chưa xong</span>
+      </div>
+      <span role="img" aria-label="Đã khám" style="width: 26px; height: 26px; flex-shrink: 0; border-radius: 13px; background: #C8E6C9; color: #2E7D32; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8"></path></svg></span>
+    </div>
+    <h2 style="margin: 6px 0 0; display: flex; align-items: baseline; gap: 6px; font-size: 15px; font-weight: 700">Phòng 2 <span style="font-size: 13px; font-weight: 500; color: #4A5D6E">Đã khám 1/1</span></h2>
+    <div style="display: flex; align-items: center; gap: 8px; min-height: 54px; box-sizing: border-box; padding: 8px 9px 8px 14px; background: #FFFFFF; border: 1px solid #D6E2EC; border-radius: 14px">
+      <div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+        <span style="font-size: 15px; font-weight: 600">G12</span>
+        <span style="font-size: 12px; color: #4A5D6E">43w3d hôm đó, 3200 g</span>
+      </div>
+      <span role="img" aria-label="Đã khám" style="width: 26px; height: 26px; flex-shrink: 0; border-radius: 13px; background: #C8E6C9; color: #2E7D32; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8"></path></svg></span>
+    </div>
+    <p style="margin: 4px 0 0; font-size: 13px; line-height: 1.5; color: #4A5D6E">Chạm vào bé để xem chi tiết ngày đó. Không có nút thêm bé, không vuốt được, để tránh sửa nhầm hồ sơ cũ.</p>
+  </main>
+
+  <div style="padding: 10px 16px 24px; background: #FFFFFF; border-top: 1px solid #D6E2EC; display: flex; gap: 8px">
+    <button type="button" style="flex-grow: 1; height: 48px; border: 0; border-radius: 12px; background: #0B79B8; color: #FFFFFF; font-size: 15px; font-weight: 600">Chép sang hôm nay</button>
+    <button type="button" style="flex-grow: 1; height: 48px; border: 1px solid #B4C6D6; border-radius: 12px; background: #FFFFFF; color: #12202B; font-size: 15px; font-weight: 600">Tổng hợp ngày này</button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
