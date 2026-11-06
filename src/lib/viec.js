@@ -60,6 +60,19 @@ export const gioXong = (doneAt) => {
   return `${hai(d.getHours())}:${hai(d.getMinutes())}`;
 };
 
+// Khu mặc định của việc mới theo chip đang lọc: chip là một khu trong `zones` thì lấy khu đó;
+// "Tất cả" hoặc khu cũ (vd. BM, không có trong `zones`) thì về khu đầu của `zones`.
+export const khuMacDinh = (khuLoc, zones) => (zones.includes(khuLoc) ? khuLoc : zones[0]);
+
+// Luật khi con trỏ rời ô thêm việc (iPhone). `chu` = chữ trong ô; `khuLoc` = chip đang lọc;
+// `khuHienTai`, `nhanHienTai` = khu và nhãn việc mới đang chọn.
+// Ô còn chữ (kể cả chỉ khoảng trắng thì tính là trống): vẫn bung, giữ nguyên khu và nhãn.
+// Ô trống: thu lại, nhãn về trống, khu về theo chip đang lọc — để việc sau không mang nhãn hay khu đang bị ẩn.
+export const khiRoiOThemViec = ({ chu, khuLoc, khuHienTai, nhanHienTai }, zones) =>
+  chuanTenViec(chu) !== ''
+    ? { thuLai: false, khu: khuHienTai, nhan: nhanHienTai }
+    : { thuLai: true, khu: khuMacDinh(khuLoc, zones), nhan: [] };
+
 // Các khu để chọn trong bảng chi tiết việc: `zones` + (nếu việc đang ở khu cũ không có trong `zones`, vd. BM) khu đó,
 // để ô chọn khu không làm mất khu hiện tại.
 export const khuDeChon = (zones, khuHienTai) =>

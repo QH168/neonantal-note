@@ -3,6 +3,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { createPortal } from 'react-dom';
 import { TAGS } from '../lib/viec.js';
 import { huongCuChi, doDich, quaMoc, nenHien, ketQuaKhiTha } from '../lib/vuot.js';
+import { theoDoiBanPhim } from '../hooks.js';
 
 const S = { fill: 'none', stroke: 'currentColor', strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true };
 
@@ -18,8 +19,8 @@ export const CalIcon = () => (
 export const CloudIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" strokeWidth="1.7" {...S}><path d="M6 15.5H5.2a3.2 3.2 0 0 1-.4-6.4A4.8 4.8 0 0 1 14.2 8a3.8 3.8 0 0 1 .8 7.5H14" /><path d="M10 17V10.5M7.6 12.8 10 10.4l2.4 2.4" /></svg>
 );
-export const PencilIcon = ({ size = 17 }) => (
-  <svg width={size} height={size} viewBox="0 0 18 18" strokeWidth="1.6" {...S}><path d="M11.5 3.5l3 3-8 8H3.5v-3z" /></svg>
+export const PlusIcon = ({ size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" strokeWidth="2" {...S}><path d="M8 3v10M3 8h10" /></svg>
 );
 export const Chevron = ({ dir = 'right', size = 16, style }) => {
   const d = { right: 'M6 3.5l4.5 4.5L6 12.5', down: 'M4 6l4 4 4-4', left: 'M10 3.5L5.5 8l4.5 4.5' }[dir];
@@ -224,8 +225,8 @@ const chongSheet = [];
 let khoaDem = 0;
 let khoaTruoc = '';
 const khoaCuon = () => {
-  if (khoaDem++ === 0) { khoaTruoc = document.body.style.overflow; document.body.style.overflow = 'hidden'; }
-  return () => { if (--khoaDem === 0) document.body.style.overflow = khoaTruoc; };
+  if (khoaDem++ === 0) { khoaTruoc = document.body.style.overflow; document.body.style.overflow = 'hidden'; document.body.classList.add('co-bang'); }
+  return () => { if (--khoaDem === 0) { document.body.style.overflow = khoaTruoc; document.body.classList.remove('co-bang'); } };
 };
 
 /**
@@ -267,26 +268,20 @@ export function Sheet({ label, onClose, children, wide, className = '' }) {
       mo();
     };
   }, [dong]);
-  useEffect(() => {
-    const vv = window.visualViewport;
+  useEffect(() => { // cách tính bàn phím dùng chung với thanh thêm việc và thanh Hoàn tác (hooks.js)
     const el = wrap.current;
-    if (!vv || !el) return undefined;
-    const khop = () => {
-      const bp = window.innerHeight - vv.height - vv.offsetTop;
-      if (vv.scale <= 1.01 && (bp > 80 || vv.offsetTop > 0)) {
+    if (!el) return undefined;
+    return theoDoiBanPhim((k) => {
+      if (k) {
         el.classList.add('kb');
-        el.style.top = vv.offsetTop + 'px';
+        el.style.top = k.top + 'px';
         el.style.bottom = 'auto';
-        el.style.height = vv.height + 'px';
+        el.style.height = k.height + 'px';
       } else {
         el.classList.remove('kb');
         el.style.top = ''; el.style.bottom = ''; el.style.height = '';
       }
-    };
-    khop();
-    vv.addEventListener('resize', khop);
-    vv.addEventListener('scroll', khop);
-    return () => { vv.removeEventListener('resize', khop); vv.removeEventListener('scroll', khop); };
+    });
   }, []);
   // Vẽ thẳng vào <body>: trên Safari iPhone, bảng nằm trong vùng cuộn sẽ bị phần đầu/thanh dưới che.
   return createPortal(

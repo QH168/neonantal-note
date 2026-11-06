@@ -8,7 +8,6 @@
 |---|---|---|---|---|
 | 1 | Cuộn dọc danh sách và cử chỉ mới (vuốt phải/trái 1/3 trên Việc, việc của bé, thư viện) bằng ngón tay thật, cùng bàn phím iPhone thật với bảng chi tiết việc, chưa kiểm được bằng máy (Chromium headless) — bác sĩ thử trên iPhone. | Lưu ý | Bác sĩ thử cuộn dọc, vuốt phải/trái và gõ trong chi tiết việc trên iPhone; nếu vướng thì giao phiếu chỉnh. | Giao diện |
 | 3 | Ô thêm việc một dòng: gõ "/ctm" rồi Enter thì gửi luôn, không thay chữ (phiếu chỉ yêu cầu dấu cách). | Lưu ý | Hỏi bác sĩ có muốn Enter cũng thay chữ trước khi gửi không. | Giao diện |
-| 4 | Bản tối: hộp thông báo "Đã thay" nền sáng, đọc rõ nhưng sáng hơn phần còn lại. | Lưu ý | Bác sĩ xem trên máy thật; nếu chói thì chỉnh màu `--vtAct` và nền hộp. | Giao diện |
 | 5 | PC: ô lịch tháng 39×48px (có từ trước, không phải do v8.1). | Lưu ý | Phóng to ô nếu bác sĩ dùng chuột/chạm trên PC. | Giao diện |
 | 8 | Chữ chip khu trống `#6B7F91` do đặc tả chốt đo 4,14:1 trên trắng và 3,84:1 trên nền trang, dưới 4,5:1. | Lưu ý | Đề xuất đổi `--chipZero` (sáng) sang `#5E7183` (5,04:1 trên trắng, 4,67:1 trên nền trang). Hỏi bác sĩ. | Giao diện |
 | 9 | Dòng nhắc cử chỉ hiện cả khi danh sách của ngày trống, kể cả sau 3 lần mở đầu (đúng chữ đặc tả mục 2.3, khác hành vi cũ là ẩn khi trống). | Lưu ý | Hỏi bác sĩ giữ theo đặc tả hay chỉ hiện trong 3 lần mở đầu. | Giao diện |
@@ -17,11 +16,33 @@
 | 12 | Chromium headless nuốt cú chạm đầu tiên sau khi đóng Thư viện viết tắt (script chụp đã vòng qua bằng cách chạm vùng trống trước). | Lưu ý | Bác sĩ thử trên iPhone: đóng Thư viện viết tắt rồi chạm 2 lần vào một việc, xem có bị mất cú chạm đầu không. | Giao diện |
 | 13 | Màu nền vuốt trái qua mốc ở bản tối `--swL2` `#7A3A33` chỉ 1,92:1 so với bề mặt và 2,17:1 so với nền trang; bước từ `--swL` sang `--swL2` là 1,36:1, nhìn thấy nhưng nhẹ. Giữ vì đó không phải chữ và dòng đang chuyển động kèm theo. | Lưu ý | Hỏi bác sĩ: nếu khó nhận ra mốc ở bản tối thì làm đậm `--swL2` hoặc thêm dấu hiệu khác. | Giao diện |
 | 14 | Ở màn 320px, huy hiệu số việc quá hạn đè nhẹ lên góc nút lịch. | Lưu ý | Chỉnh vị trí huy hiệu nếu bác sĩ dùng máy nhỏ; không ảnh hưởng iPhone 15. | Giao diện |
-| 15 | Thanh Hoàn tác che đáy màn hình trong 6 giây: trên tab Việc che nút "Thêm việc"; trong chi tiết bé che nút "Hoàn tất khám". | Lưu ý | Đợt 9.3 (ô thêm việc 1 dòng) sẽ giảm phần che ở tab Việc. Hỏi bác sĩ sau khi dùng thật xem có vướng không. | Giao diện |
-| 16 | Thanh Hoàn tác dùng `position: fixed`, không theo `visualViewport`: khi bàn phím iPhone đang mở có thể che thanh trong khi hẹn giờ 6 giây vẫn chạy. Chưa thử trên máy thật. | Lưu ý | Nếu bác sĩ gặp, cho thanh co theo `visualViewport` như `Sheet`. | Giao diện |
 | 17 | Vuốt chéo nghiêng ngang (tới 45° so với phương ngang, đã đo thử ở khoảng 35°) vẫn tính là vuốt (`huongCuChi` trong `src/lib/vuot.js`), nên có thể vô tình xong hoặc xoá khi cuộn bằng ngón cái. | Lưu ý | Bác sĩ thử cuộn bằng ngón cái trên iPhone; nếu vướng thì siết góc trong `src/lib/vuot.js`. | Giao diện |
 | 18 | iPhone không rung khi qua mốc 1/3 vì Safari không hỗ trợ `navigator.vibrate`; chỉ đổi màu nền. | Lưu ý | Chấp nhận (không có cách khác trên Safari); nhắc bác sĩ để khỏi tưởng lỗi. | Giao diện |
 | 19 | Dòng trạng thái "Đã xong lúc hh:mm" trong chi tiết chỉ có chữ xám; canvas có tích xanh và chữ xanh. Lệch nhỏ so với thiết kế. | Lưu ý | Chỉnh màu và thêm tích xanh nếu bác sĩ muốn. | Giao diện |
+| 20 | Trong bảng chi tiết bé (tab Khám), thanh Hoàn tác vẫn che nút "Hoàn tất khám" trong 6 giây (trên tab Việc thanh đã nằm trên ô thêm việc nên không còn che). | Lưu ý | Xem lại ở đợt 9.4 (làm lại chi tiết bé). | Giao diện |
+| 21 | Lọc khu BM cũ rồi thêm việc: việc mới vào khu mặc định (khu đầu của danh sách), không hiện dưới bộ lọc BM. Giống trước 9.3. | Lưu ý | Chấp nhận, hoặc hỏi bác sĩ có muốn việc thêm lúc đang lọc BM hiện luôn ở BM không. | Giao diện |
+| 22 | Ô thêm việc đã có chữ, đã chọn khu, rồi chạm chip lọc khác ở trên: khu của form tự đổi theo chip mới, nhãn giữ. | Lưu ý | Hỏi bác sĩ có muốn khu đã chọn tay được giữ không. | Giao diện |
+| 23 | Đổi sang tab Khám rồi quay về: chữ đang gõ dở trong ô thêm việc bị mất. | Lưu ý | Hỏi bác sĩ có muốn giữ chữ gõ dở không. | Giao diện |
+| 24 | Chạm lại vào ô thêm việc đúng lúc ô đang thu lại (khoảng ~80ms): cú chạm có thể trượt, không tạo việc, không có nhãn ẩn. | Lưu ý | Chấp nhận; bác sĩ thử trên iPhone, nếu gặp nhiều thì chỉnh thời gian hoãn. | Giao diện |
+| 25 | Chạm vào chip, nhãn, "+", Hoàn tác khi bàn phím iPhone thật đang mở: bàn phím có tụt không và thanh thêm việc có sát trên bàn phím không, chưa kiểm được (chỉ thử bằng `visualViewport` giả). | Lưu ý | Bác sĩ thử trên iPhone; nếu vướng thì giao phiếu chỉnh. | Giao diện |
+
+## 06/11/2026 — v9.3 — Ô thêm việc 1 dòng, viết tắt và thư viện kiểu mới
+- Phiếu: `doi-agent/phieu-viec/2026-11-06-v9-3-o-them-viec-viet-tat.json` (đợt 3/6 của v9; đặc tả `doi-agent/thiet-ke-v9/THIET_KE_V9.md` mục 4.1, 6, 9). Bác sĩ quyết thêm ngày 06/11/2026: thanh "Đã đổi … thành …" giữ 6 giây (thay ~4 giây).
+- Đã đổi (lời thường):
+  1. Ô thêm việc trên iPhone chỉ còn một dòng: ô tròn "Ghi việc cần làm…" và nút tròn "+". Bỏ ô chọn khu, bỏ chữ "Nhãn (chọn được nhiều):", bỏ nút chữ "Thêm việc". Máy tính giữ form cũ.
+  2. Chạm vào ô thì bung hàng chip khu và hàng 5 nút nhãn ngay trên bàn phím. Chạm chip, nhãn hay "+" không làm mất bàn phím. Thêm xong, con trỏ vẫn ở trong ô để gõ tiếp.
+  3. Rời ô mà ô trống thì thu lại; lúc đó nhãn về trống và khu về theo chip đang lọc, nên việc sau không mang nhãn hay khu đang bị ẩn. Còn chữ trong ô thì vẫn bung.
+  4. Gợi ý viết tắt là hàng chip 44px ngay trên ô gõ, vuốt ngang được; bỏ chữ "Gợi ý (chạm để chèn):". Sau khi thay chữ hiện thanh tối "Đã đổi /key thành nội dung" + "Hoàn tác", giữ 6 giây; bản tối không còn hộp sáng chói.
+  5. Thư viện viết tắt: hàng thêm mới có nút tròn "+", ô tìm tròn, dòng đếm "n mục"; bỏ nút bút chì, chạm 2 lần vào dòng để sửa (máy tính nhấp đúp; Tab rồi Enter cũng mở sửa).
+  6. Thanh Hoàn tác khi xoá nay nằm ngay trên ô thêm việc, không che; bàn phím iPhone mở thì thanh theo bàn phím.
+- Kỹ thuật: `src/hooks.js` thêm `khungBanPhim`, `theoDoiBanPhim`, `useBanPhim` (một chỗ tính bàn phím, `Sheet`, ô thêm việc và thanh Hoàn tác dùng chung); `src/lib/viec.js` thêm `khuMacDinh`, `khiRoiOThemViec` (luật thuần, có bài kiểm); `ui.jsx` thêm `PlusIcon` (xoá hàm bút chì cũ); `Tasks.jsx`, `VietTat.jsx`, `ThuVien.jsx`, `HoanTac.jsx`, `App.jsx`, `App.css` sửa theo; `tests/viec.test.js`, `tests/luat.test.js` thêm bài kiểm. Không đổi CSDL, sao lưu, `actions.js`, `package.json`.
+- Kết quả kiểm: kiểm thử độc lập ĐẠT sau 2 vòng sửa; `npm test` 108/108; script chụp ĐẠT 56 ảnh.
+  - Vòng 1: thanh Hoàn tác xoá che trọn ô thêm việc; nay nằm ngay trên ô.
+  - Vòng 2: chạm "Hoàn tác" khi ô đang bung và trống bị trượt vì ô thu lại ngay dưới ngón tay; nay việc thu lại hoãn tới sau khi nhấc ngón, và script dùng cú chạm thật.
+- Chưa thử trên iPhone thật; `visualViewport` giả không phải bàn phím thật. Ảnh chuẩn chưa lưu lại, chờ bác sĩ duyệt ảnh 9.3.
+- Không làm: không hiện dòng chú thích nhỏ dưới hàng nhãn và dưới ô gõ ở bảng 15b và bảng 5 (đặc tả không yêu cầu, chỗ trên bàn phím chật); đã báo bác sĩ.
+- Dọn "Chờ duyệt": bỏ #4 (hộp "Đã thay" sáng ở bản tối, đã hết), #15 và #16 (thanh Hoàn tác che ô thêm việc; bàn phím che thanh, đã xử lý); giữ ý còn lại ở #20. Thêm #20–#25.
+- Việc tiếp theo: đợt 9.4 (Khám: nút "+" trên dòng phòng, đã khám bằng vuốt phải, chi tiết bé mới) sau khi bác sĩ duyệt ảnh 9.3.
 
 ## 06/11/2026 — v9.2 — Cử chỉ mới: vuốt phải xong, vuốt trái xoá, Hoàn tác
 - Phiếu: `doi-agent/phieu-viec/2026-11-05-v9-2-cu-chi-moi.json` (đợt 2/6 của v9; bác sĩ duyệt phiếu và cả 4 đề xuất ngày 05/11/2026; đặc tả `doi-agent/thiet-ke-v9/THIET_KE_V9.md`).

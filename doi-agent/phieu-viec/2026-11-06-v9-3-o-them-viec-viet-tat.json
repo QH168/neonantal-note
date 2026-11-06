@@ -1,0 +1,59 @@
+{
+  "ten": "v9 đợt 9.3 — Ô thêm việc 1 dòng; viết tắt và thư viện kiểu mới",
+  "ngay": "2026-11-06",
+  "khuVuc": "Việc, Viết tắt",
+  "loai": "vua",
+  "canBacSiDuyet": false,
+  "keHoachTong": "doi-agent/phieu-viec/2026-11-05-v9-ke-hoach.json",
+  "dacTa": "doi-agent/thiet-ke-v9/THIET_KE_V9.md (mục 4.1, mục 6, mục 9)",
+  "bangCanvas": ["15a ApViec (ô thêm việc)", "15b ApGo", "5 VietTat", "6 ThuVien"],
+  "agent": ["giao-dien", "kiem-thu", "ghi-chep"],
+  "bacSiDaQuyet": [
+    "Thanh Hoàn tác sau khi thay chữ viết tắt giữ 6 giây, thống nhất với xoá (bác sĩ quyết 06/11/2026). Thay quyết định cũ ~4 giây."
+  ],
+  "fileDuocSua": [
+    "src/components/Tasks.jsx",
+    "src/components/VietTat.jsx",
+    "src/components/ThuVien.jsx",
+    "src/components/HoanTac.jsx",
+    "src/components/ui.jsx",
+    "src/App.jsx",
+    "src/App.css",
+    "src/hooks.js",
+    "src/lib/viec.js",
+    "tests/viec.test.js",
+    "tests/viet-tat.test.js",
+    "tests/luat.test.js",
+    "scripts/chup-giao-dien.mjs"
+  ],
+  "viecCanLam": [
+    "Ô thêm việc iPhone (15a): một dòng gồm ô tròn 'Ghi việc cần làm…' và nút tròn '+' 44px, aria-label 'Thêm việc'. Bỏ ô chọn khu ở thanh này, bỏ chữ 'Nhãn (chọn được nhiều):', bỏ nút chữ 'Thêm việc'.",
+    "Chạm vào ô gõ (15b): bung hàng chip khu vực và hàng 5 nút nhãn ngay dưới ô, trên bàn phím. Chip khu mặc định theo chip đang lọc như cũ. Nhãn chọn nhiều, bỏ trống được. Chip khu vuốt ngang được, nút có aria-pressed.",
+    "Chạm chip, nút nhãn hoặc '+' không được làm mất bàn phím và không làm ô thu lại. Sau khi thêm: giữ con trỏ trong ô để gõ tiếp, ô chữ về trống.",
+    "Thu lại khi rời ô mà ô chữ trống. Còn chữ thì vẫn bung. QUAN TRỌNG: khi thu lại, nhãn đang chọn về trống và khu về theo chip đang lọc, để việc sau không mang nhãn hoặc khu đang bị ẩn. Đặt luật này thành hàm thuần trong src/lib/viec.js, có bài kiểm tra.",
+    "Khi bàn phím iPhone mở, thanh thêm việc phải nằm sát trên bàn phím, theo visualViewport như Sheet. Xem Sheet trong ui.jsx để dùng chung cách làm.",
+    "Thanh Hoàn tác xoá (HoanTac.jsx) cũng theo visualViewport, để bàn phím không che (NHAT_KY Chờ duyệt #16).",
+    "Máy tính giữ form thêm việc hiện có, không đổi bố cục.",
+    "Gợi ý viết tắt (bảng 5): hàng chip 44px ngay trên ô gõ, vuốt ngang được, chip đầu viền xanh và nền nhạt là gợi ý tốt nhất. Bỏ chữ 'Gợi ý (chạm để chèn):'. Chữ dài cắt bằng dấu ba chấm. Áp cho mọi ô dùng useVietTat.",
+    "Sau khi thay chữ: thanh tối ngay trên ô gõ 'Đã đổi /kmdm thành Khí máu động mạch' + nút 'Hoàn tác' ≥44px, giữ 6 giây. Tối đa 2 dòng, nội dung dài cắt bằng dấu ba chấm. Bản tối không còn hộp sáng chói (NHAT_KY Chờ duyệt #4), dùng --undoBg, --undoInk, --undoAct.",
+    "Thư viện (bảng 6): hàng thêm mới Viết tắt | Đổi thành | nút tròn '+' 44px, aria-label 'Thêm vào thư viện'; ô tìm tròn 'Tìm theo chữ viết tắt hoặc nội dung'; dòng đếm 'n mục' bên trái, 'Được sao lưu cùng dữ liệu' bên phải.",
+    "Thư viện: bỏ nút bút chì, xoá PencilIcon nếu không còn nơi dùng. Chạm 2 lần vào dòng để sửa (dùng themCham, boDemCham). Máy tính nhấp đúp được; dòng tới được bằng Tab và Enter mở sửa, aria-label 'Sửa /key'. Khi đang sửa: đổ lên hàng trên, hiện 'Đang sửa /key', 'Lưu thay đổi', 'Huỷ sửa'.",
+    "Thư viện: dòng chú thích cuối theo canvas: 'Chạm 2 lần vào dòng để sửa. Vuốt trái quá 1/3 rồi thả để xoá, có hoàn tác.' Giữ nguyên hỏi ghi đè khi trùng chữ tắt.",
+    "Sửa scripts/chup-giao-dien.mjs cho khớp; thêm ảnh: iphone-o-them-thu-gon, iphone-o-them-bung, iphone-goi-y, iphone-da-doi-hoan-tac (cả tối), iphone-thu-vien (cả tối), iphone-thu-vien-dang-sua; thử bung, thu lại, nhãn về trống khi thu lại, thêm liên tiếp nhiều việc, giữ focus, 6 giây, Hoàn tác trả đúng chữ, chạm 2 lần sửa thư viện."
+  ],
+  "khongLam": [
+    "Không hiện dòng chú thích nhỏ dưới hàng nhãn và dưới ô gõ trong bảng 15b và bảng 5, vì đặc tả không yêu cầu và chỗ trên bàn phím chật. Báo lại cho bác sĩ.",
+    "Không đổi luật thay chữ: chỉ thay khi gõ dấu cách; '8/10', '1/2' không đổi. Enter chưa thay chữ, chờ bác sĩ quyết (NHAT_KY Chờ duyệt #3).",
+    "Ô thêm việc của bé trong chi tiết bé: thuộc 9.4.",
+    "Không đổi hàm thuần trong src/lib/viet-tat.js, không đổi src/db.js, src/lib/actions.js, src/lib/backup.js, src/lib/merge.js, package.json. Không thêm thư viện npm.",
+    "Không chạy --luu-chuan khi bác sĩ chưa duyệt. Không commit, không push."
+  ],
+  "tieuChiDat": [
+    "npm test đạt; không nới bài cũ",
+    "Kiểm thử độc lập ĐẠT; ảnh iPhone sáng/tối khớp bảng 15a, 15b, 5, 6",
+    "Việc mới có đúng khu và nhãn đang thấy trên màn hình; không có nhãn ẩn",
+    "Gõ /kmdm + dấu cách ở mọi ô vẫn thay đúng; Hoàn tác 6 giây trả đúng chữ và đúng vị trí con trỏ",
+    "Thư viện: thêm, ghi đè, sửa bằng chạm 2 lần, xoá có Hoàn tác đều đúng; không có đường nào bị mất so với bút chì"
+  ],
+  "ghiChu": "Bàn phím iPhone thật không kiểm được bằng máy, cần bác sĩ thử: thanh thêm việc sát bàn phím, chạm chip không tụt bàn phím."
+}

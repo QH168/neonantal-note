@@ -32,6 +32,40 @@ export function useWide(minWidth = 900) {
   return wide;
 }
 
+/**
+ * Bàn phím iPhone có đang mở không, và phần màn hình còn thấy nằm ở đâu. Dùng chung cho bảng dưới (Sheet),
+ * thanh thêm việc và thanh Hoàn tác — một chỗ tính duy nhất.
+ * `vv` = window.visualViewport, `innerH` = window.innerHeight (tham số để thử bằng visualViewport giả).
+ * Trả null khi không có bàn phím (hoặc đang phóng to); ngược lại { top, height, duoi }:
+ * top/height = khung còn thấy; duoi = khoảng từ đáy khung còn thấy tới đáy cửa sổ (chính là chiều cao bàn phím).
+ */
+export function khungBanPhim(vv, innerH) {
+  if (!vv) return null;
+  const duoi = innerH - vv.height - vv.offsetTop;
+  if (vv.scale <= 1.01 && (duoi > 80 || vv.offsetTop > 0)) return { top: vv.offsetTop, height: vv.height, duoi: Math.max(0, duoi) };
+  return null;
+}
+
+/** Gọi `khop(khung | null)` ngay và mỗi khi bàn phím mở/đóng/cuộn. Trả hàm gỡ. Không có visualViewport thì chỉ gọi khop(null). */
+export function theoDoiBanPhim(khop) {
+  const vv = typeof window !== 'undefined' ? window.visualViewport : null;
+  if (!vv) { khop(null); return () => {}; }
+  const chay = () => khop(khungBanPhim(vv, window.innerHeight));
+  chay();
+  vv.addEventListener('resize', chay);
+  vv.addEventListener('scroll', chay);
+  return () => { vv.removeEventListener('resize', chay); vv.removeEventListener('scroll', chay); };
+}
+
+/** Khung bàn phím dạng state (null khi không mở). Chỉ vẽ lại khi giá trị đổi. */
+export function useBanPhim() {
+  const [khung, setKhung] = useState(null);
+  useEffect(() => theoDoiBanPhim((k) => setKhung((cu) => (
+    (!cu && !k) || (cu && k && cu.top === k.top && cu.height === k.height && cu.duoi === k.duoi) ? cu : k
+  ))), []);
+  return khung;
+}
+
 const HE_TOI = '(prefers-color-scheme: dark)';
 
 /**

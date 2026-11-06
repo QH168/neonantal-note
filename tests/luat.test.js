@@ -234,3 +234,55 @@ test('v9.1: iPhone không còn cỡ chữ 12,5 / 13,5 / 14 / 18 (thang 5 bậc);
   assert.deepEqual(loi, [], loi.join('; '));
   assert.match(css, /\.task-note\{font-size:12\.5px/, 'PC giữ cỡ chữ cũ của ghi chú');
 });
+
+// ===== v9 đợt 9.3: ô thêm việc 1 dòng, viết tắt, thư viện =====
+test('v9.3: cách tính bàn phím (visualViewport) chỉ có một chỗ, dùng chung cho Sheet, thanh thêm việc và thanh Hoàn tác', () => {
+  const hooks = read('src/hooks.js');
+  assert.match(hooks, /export function khungBanPhim\(/);
+  assert.match(hooks, /export function theoDoiBanPhim\(/);
+  assert.match(hooks, /export function useBanPhim\(/);
+  assert.match(read('src/components/ui.jsx'), /theoDoiBanPhim\(/);
+  assert.match(read('src/components/Tasks.jsx'), /useBanPhim\(/);
+  assert.match(read('src/components/HoanTac.jsx'), /useBanPhim\(/);
+  // không ai khác tự nghe visualViewport
+  for (const f of SRC.filter((x) => /\.jsx?$/.test(x) && x !== 'src/hooks.js')) {
+    assert.doesNotMatch(read(f).replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, ''), /visualViewport/, f + ' tự tính bàn phím, phải dùng hooks.js');
+  }
+});
+
+test('v9.3: viết tắt — thanh "Đã đổi … thành …" giữ 6 giây, bỏ chữ "Gợi ý (chạm để chèn):", nút không làm mất bàn phím', () => {
+  const vt = read('src/components/VietTat.jsx');
+  assert.match(vt, /THOI_GIAN_BAO = 6000/);
+  assert.doesNotMatch(vt, /Gợi ý \(chạm để chèn\)/);
+  assert.match(vt, /Đã đổi \/\{bao\.key\} thành \{bao\.ketQua\.noiDung\}/);
+  // nút gợi ý và Hoàn tác đều có preventDefault ở pointerdown và mousedown
+  assert.equal((vt.match(/onPointerDown=\{giuFocus\} onMouseDown=\{giuFocus\}/g) || []).length, 2);
+  // thanh dùng màu --undo*, không còn hộp sáng chói của --badge / --vtAct
+  const css = read('src/App.css').replace(/\/\*[\s\S]*?\*\//g, '');
+  const toast = /\.vt-toast\{([^}]*)\}/.exec(css)[1];
+  assert.match(toast, /var\(--undoBg\)/);
+  assert.match(toast, /var\(--undoInk\)/);
+  assert.doesNotMatch(toast, /--badge/);
+  assert.match(/\.vt-undo\{([^}]*)\}/.exec(css)[1], /var\(--undoAct\)/);
+});
+
+test('v9.3: ô thêm việc iPhone — nút "+" aria-label "Thêm việc", nhãn ô giữ nguyên, không còn nút chữ / chữ "Nhãn (chọn được nhiều)" / ô chọn khu ở thanh dưới', () => {
+  const t = read('src/components/Tasks.jsx');
+  assert.match(t, /aria-label="Thêm việc"/);
+  assert.match(t, /Nội dung công việc/);
+  assert.doesNotMatch(t, /Nhãn \(chọn được nhiều\)/);
+  assert.match(t, /khiRoiOThemViec\(/); // luật thu lại là hàm thuần trong src/lib/viec.js
+  assert.match(t, /chuanTenViec\(draftRef\.current\)/); // không tạo việc rỗng, không thêm trùng khi bấm liền
+  assert.doesNotMatch(read('src/lib/viec.js'), /from ['"]react['"]|document\.|window\./);
+});
+
+test('v9.3: thư viện viết tắt — không còn bút chì; dòng mở sửa bằng chạm 2 lần / Enter; PencilIcon đã xoá', () => {
+  const tv = read('src/components/ThuVien.jsx');
+  assert.doesNotMatch(tv, /PencilIcon/);
+  assert.match(tv, /boDemCham\(c\.mocs, 2\)/);
+  assert.match(tv, /aria-label=\{'Sửa \/' \+ m\.key\}/);
+  assert.match(tv, /aria-label="Thêm vào thư viện"/);
+  assert.match(tv, /placeholder="Tìm theo chữ viết tắt hoặc nội dung"/);
+  assert.match(tv, /Chạm 2 lần vào dòng để sửa\. Vuốt trái quá 1\/3 rồi thả để xoá, có hoàn tác\./);
+  for (const f of SRC) assert.doesNotMatch(read(f), /PencilIcon/, f + ' còn PencilIcon');
+});

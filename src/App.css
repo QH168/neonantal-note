@@ -134,10 +134,15 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 /* form thêm việc */
 .task-form-pc{display:flex;flex-direction:column;gap:4px}
 .task-form-bar{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding-top:8px;border-top:1px solid var(--line)}
-.task-form-ph{flex:none;display:flex;flex-direction:column;gap:8px;padding:10px 16px calc(12px + env(safe-area-inset-bottom));background:var(--surface);border-top:1px solid var(--line)}
-.task-form-ph .input{min-height:48px}
-.task-form-ph .select{width:96px;min-height:48px}
-.task-form-ph .btn{min-height:48px}
+.task-form-ph{flex:none;position:relative;z-index:40;display:flex;flex-direction:column;gap:10px;padding:10px 16px calc(12px + env(safe-area-inset-bottom));background:var(--surface);border-top:1px solid var(--line)}
+.task-form-ph.kb{padding-bottom:10px} /* bàn phím mở: thanh đã được đẩy lên sát bàn phím (Tasks.jsx, theo visualViewport) */
+.tf-row{display:flex;align-items:center;gap:8px}
+.tf-in{flex:1;min-width:0;height:44px;padding:0 16px;border:1px solid var(--edge);border-radius:22px;background:var(--surface2);font-size:16px;color:var(--ink)}
+.tf-in:focus{outline:none;border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);background:var(--surface)}
+.tf-plus{flex:none;width:44px;height:44px;padding:0;border:0;border-radius:22px;background:var(--accent);color:var(--accentInk);display:flex;align-items:center;justify-content:center}
+.tf-plus:active{transform:scale(.94)}
+.task-form-ph .pri-pick{gap:8px}
+.tf-zones{gap:6px}
 
 /* lịch */
 .cal{padding:8px 8px 12px;background:var(--surface);border:1px solid var(--line);border-radius:16px;display:flex;flex-direction:column;gap:6px}
@@ -255,9 +260,6 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .pri-btn.nv{font-size:14px;letter-spacing:-.02em}
 :is(.phone-app,.sheet-ph) .pri.nv{font-size:10px}
 :is(.phone-app,.sheet-ph) .pri-btn.nv{font-size:13px}
-/* iPhone: 5 nút ưu tiên + "Thêm việc" vừa một hàng */
-:is(.phone-app,.sheet-ph) .task-form-ph .pri-pick{gap:4px}
-:is(.phone-app,.sheet-ph) .task-form-ph .btn.primary{white-space:nowrap;padding:0 10px}
 
 /* ===== v8 đợt 1: nhãn loại việc, ghi chú, vuốt-để-xoá ===== */
 .ink{color:var(--ink)}
@@ -318,7 +320,10 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 }
 
 /* ===== v9.2: thanh Hoàn tác (HoanTac.jsx) — nổi trên bảng dưới (z-index 50) và thanh thêm việc ===== */
-.hoantac-wrap{position:fixed;left:0;right:0;bottom:0;z-index:70;display:flex;justify-content:center;padding:0 16px calc(12px + env(safe-area-inset-bottom));pointer-events:none}
+.hoantac-wrap{position:fixed;left:0;right:0;bottom:var(--kb,0px);z-index:70;display:flex;justify-content:center;padding:0 16px calc(12px + env(safe-area-inset-bottom));pointer-events:none}
+.hoantac-wrap.kb{padding-bottom:12px}
+/* Tab Việc iPhone, không có bảng nào mở: thanh Hoàn tác nằm ngay TRÊN thanh thêm việc (chiều cao đo thật, --tf-cao), không che ô gõ, "+", chip, nhãn */
+html.co-form-viec body:not(.co-bang) .hoantac-wrap{bottom:calc(var(--kb,0px) + var(--tf-cao) + 8px);padding-bottom:0} /* bàn phím mở: HoanTac.jsx đặt bottom = chiều cao bàn phím */
 .hoantac{pointer-events:auto;display:flex;align-items:center;gap:8px;width:100%;max-width:560px;min-height:52px;padding:4px 4px 4px 16px;border-radius:14px;border:1px solid var(--undoLine);background:var(--undoBg);color:var(--undoInk);animation:hoantacVao 200ms ease backwards}
 @keyframes hoantacVao{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .hoantac-chu{flex:1;min-width:0;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -380,30 +385,41 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 /* iPhone: 3 nút trên đầu (/a, đám mây, lịch), mỗi nút 44px */
 :is(.phone-app,.sheet-ph) .ph-head .row8.none{gap:8px}
 /* dải gợi ý + thông báo "Đã thay" đặt ngay cạnh ô gõ */
-.vt-strip{display:flex;flex-direction:column;gap:6px}
-.vt-sug{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px;border-radius:12px;background:var(--surface);border:1px solid var(--line)}
-.vt-sug-t{width:100%;font-size:12px;color:var(--muted)}
-.vt-chip{max-width:100%;min-height:44px;padding:0 14px;border-radius:22px;border:1px solid var(--edge);background:var(--surface);color:var(--ink);font-size:14px;display:flex;align-items:center;overflow:hidden;white-space:nowrap}
+.vt-strip{display:flex;flex-direction:column;gap:8px}
+.vt-sug{display:flex;flex-wrap:nowrap;align-items:center;gap:8px;min-height:44px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}
+:is(.phone-app,.sheet-ph) .vt-sug{margin-right:-16px;padding-right:16px} /* hàng chip vuốt ngang được, chạm lề phải màn hình */
+.vt-chip{flex:none;max-width:min(78vw,300px);min-height:44px;padding:0 14px;border-radius:22px;border:1px solid var(--edge);background:var(--surface);color:var(--ink);font-size:14px;display:flex;align-items:center;gap:8px;overflow:hidden;white-space:nowrap}
 .vt-chip:first-of-type{border:2px solid var(--accent);background:var(--tint);color:var(--tintInk)}
-.vt-chip-k{flex:none;font-weight:700}
-.vt-chip-v{margin-left:6px;min-width:0;overflow:hidden;text-overflow:ellipsis;font-weight:500}
-.vt-toast{display:flex;align-items:center;gap:8px;min-height:52px;padding:4px 8px 4px 12px;border-radius:12px;background:var(--badge);color:var(--badgeInk);font-size:13px}
-.vt-undo{flex:none;min-width:44px;min-height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--vtAct);background:transparent;color:var(--vtAct);font-size:13px;font-weight:600}
+.vt-chip-k{flex:none;font-weight:700;color:var(--tintInk)}
+.vt-chip-v{min-width:0;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+.vt-toast{display:flex;align-items:center;gap:8px;min-height:52px;padding:4px 4px 4px 14px;border-radius:14px;border:1px solid var(--undoLine);background:var(--undoBg);color:var(--undoInk);font-size:13px}
+.vt-toast-chu{flex:1;min-width:0;line-height:1.4;overflow:hidden;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2} /* tối đa 2 dòng, dài thì cắt bằng dấu ba chấm */
+.vt-undo{flex:none;min-width:44px;height:44px;padding:0 14px;border-radius:12px;border:0;background:transparent;color:var(--undoAct);font-size:13px;font-weight:600}
+.vt-undo:focus-visible{outline:2px solid var(--undoAct);outline-offset:-2px}
+:is(.phone-app,.sheet-ph) .vt-undo{font-size:15px}
 /* thư viện viết tắt */
 .sheet.vt-sheet{height:90%}
 .sheet-wrap.center .sheet.vt-sheet{height:min(720px,100%)}
-.vt-form{display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:14px;background:var(--tint2)}
-.vt-key{flex:none;width:104px}
-.vt-in{background:var(--surface)}
+.vt-form{display:flex;flex-direction:column;gap:8px}
+.vt-form.sua{padding:10px;border-radius:14px;background:var(--tint2)}
+.vt-form.sua .vt-in{background:var(--surface)}
+.vt-form-row{align-items:flex-end}
+.vt-plus{flex:none;width:44px;height:44px;padding:0;border:0;border-radius:22px;background:var(--accent);color:var(--accentInk);display:flex;align-items:center;justify-content:center}
+.vt-plus:active{transform:scale(.94)}
+.vt-tim{padding:0 16px;border-radius:22px;background:var(--surface)}
+.vt-dem{align-items:baseline}
+.vt-chu-thich{line-height:1.45}
+.vt-key{flex:none;width:96px}
 .vt-ask{display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-radius:12px;background:var(--surface);border:2px solid var(--warn);font-size:14px;line-height:1.4}
-.vt-list{flex:1;min-height:120px;overflow-y:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:14px;display:flex;flex-direction:column}
-.vt-item-wrap{border-bottom:1px solid var(--line)}
-.vt-item-wrap:last-child{border-bottom:0}
+.vt-list{flex:1;min-height:120px;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:6px}
+.vt-item-wrap{flex:none;border-radius:14px;overflow:hidden;background:var(--bg)}
 .vt-item-wrap.on{background:var(--tint)}
-.vt-item-wrap .swipe{border-radius:0}
-.vt-item{display:flex;align-items:center;gap:0;min-height:50px;padding:0 4px 0 12px;background:var(--surface)}
+.vt-item-wrap .swipe{border-radius:14px}
+.vt-item{display:flex;align-items:center;gap:0;min-height:50px;padding:0;background:var(--bg)}
+.vt-hang{flex:1;min-width:0;display:flex;align-items:center;gap:8px;min-height:50px;padding:4px 10px 4px 14px;touch-action:manipulation;cursor:pointer;border-radius:14px}
+.vt-hang:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .vt-item-wrap.on .vt-item{background:var(--tint)}
-.vt-k{flex:none;width:70px;margin-right:8px;font-size:14px;font-weight:700;color:var(--tintInk);overflow-wrap:anywhere}
-.vt-v{flex:1;min-width:0;margin-right:4px;font-size:14px;line-height:1.35;overflow-wrap:anywhere}
+.vt-k{flex:none;width:64px;font-size:14px;font-weight:700;color:var(--tintInk);overflow-wrap:anywhere}
+.vt-v{flex:1;min-width:0;font-size:14px;line-height:1.35;overflow-wrap:anywhere}
 .vt-empty{padding:24px 16px}
 @media (hover:hover) and (pointer:fine){.vt-key{width:140px}}

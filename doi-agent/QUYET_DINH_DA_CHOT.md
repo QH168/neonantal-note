@@ -32,6 +32,7 @@
   - "Xoá việc" trong chi tiết việc và "Xoá việc đã xong" đều có Hoàn tác 6 giây; Hoàn tác "Xoá việc đã xong" trả lại TẤT CẢ việc vừa xoá (bác sĩ quyết 05/11/2026). Thanh ghi "Đã xoá n việc đã xong — Hoàn tác".
   - Hoàn tác xoá chữ tắt (thư viện viết tắt): nếu trong lúc chờ đã có mục sống cùng chữ tắt thì không khôi phục và báo "Đã có chữ tắt này, không khôi phục" (để không có hai mục trùng).
   - `doneAt`: đánh dấu xong ghi giờ, bỏ đánh dấu về rỗng (áp dụng cho việc, việc của bé, bé đã khám); chi tiết hiện "Đã xong lúc hh:mm". Việc cũ không có giờ chỉ ghi "Đã xong". Không đổi CSDL hay định dạng sao lưu. ⚙ (merge.test.js, viec.test.js)
+- Ô thêm việc trên iPhone (bác sĩ duyệt 05/11/2026, v9.3; thay "ô chọn khu + dòng 'Nhãn (chọn được nhiều):' + nút chữ 'Thêm việc'" ở thanh dưới): thu gọn là một dòng gồm ô tròn "Ghi việc cần làm…" và nút tròn "+" 44px; chạm vào ô thì bung hàng chip khu vực (mặc định theo chip đang lọc) và hàng 5 nút nhãn (chọn nhiều, bỏ trống được) ngay trên bàn phím. Thu lại khi rời ô mà ô trống; khi thu lại nhãn về trống và khu về theo chip đang lọc, để việc sau không mang nhãn hay khu đang bị ẩn; còn chữ thì vẫn bung. Thanh Hoàn tác xoá nằm ngay trên ô thêm việc, không che. Máy tính giữ form cũ. ⚙ (viec.test.js: khuMacDinh, khiRoiOThemViec; luat.test.js v9.3)
 - Dữ liệu cũ giữ nguyên hiển thị kiểu cũ: việc cũ vẫn hiện số 1–4/NV (NV cũ tím) và chạm để đổi vòng như trước. Việc cũ mà gắn nhãn mới trong chi tiết việc thì chuyển sang kiểu mới (urgency vẫn giữ trong dữ liệu); không gắn thì giữ số cũ.
 - Lịch tháng có số việc chưa xong mỗi ngày; nút "Xoá việc đã xong"; dòng "Khám: còn x việc" (bấm chuyển sang Khám).
 
@@ -46,8 +47,10 @@
 ## Viết tắt (bác sĩ duyệt 28/10/2026)
 - ⚙ Gõ "/chữ tắt" rồi dấu cách ở mọi ô gõ chữ (thêm việc, tên và ghi chú việc, việc của bé, ghi chú của bé, khung Tổng hợp y lệnh) → tự thay bằng nội dung; không phân biệt hoa/thường. (viet-tat.test.js)
 - ⚙ Luật không đổi: "8/10", "1/2", "x/kmdm" (không đứng đầu từ) và key không có trong thư viện giữ nguyên. (viet-tat.test.js)
-- Gõ "/km" hiện tối đa 4 gợi ý, chạm để chèn; sau khi thay có "Đã thay /key" và nút Hoàn tác khoảng 4 giây. ⚙ (viet-tat.test.js: gợi ý, chèn, hoàn tác)
-- Nút "/a" trên đầu mở "Thư viện viết tắt": thêm (key trùng thì hỏi ghi đè), sửa bằng bút chì (sẽ thay ở đợt 9.3 theo THIET_KE_V9 mục 9: chạm 2 lần để sửa; hiện vẫn là bút chì), tìm (gõ không dấu cũng ra), vuốt trái để xoá. (bác sĩ duyệt 05/11/2026, v9.2) Thư viện chỉ vuốt trái: qua 1/3 là xoá, có Hoàn tác 6 giây (thay xoá kiểu C của 29/10/2026); không vuốt phải. Bút chì vẫn còn tới đợt 9.3.
+- Gõ "/km" hiện tối đa 4 gợi ý, chạm để chèn. ⚙ (viet-tat.test.js: gợi ý, chèn, hoàn tác)
+  - Gợi ý hiện thành hàng chip 44px ngay trên ô gõ, vuốt ngang được; chip đầu viền xanh là gợi ý tốt nhất (bác sĩ duyệt 05/11/2026, v9.3). Thay "Gợi ý (chạm để chèn):" cũ.
+  - Sau khi thay chữ: thanh "Đã đổi /key thành nội dung" + nút Hoàn tác, giữ 6 giây (bác sĩ quyết 06/11/2026, v9.3; thay "Đã thay /key" và Hoàn tác ~4 giây của 28/10/2026, thống nhất với thanh Hoàn tác khi xoá). ⚙ (luat.test.js v9.3)
+- Nút "/a" trên đầu mở "Thư viện viết tắt": thêm (key trùng thì hỏi ghi đè), sửa bằng cách chạm 2 lần vào dòng, tìm (gõ không dấu cũng ra), vuốt trái để xoá. (bác sĩ duyệt 05/11/2026, v9.2) Thư viện chỉ vuốt trái: qua 1/3 là xoá, có Hoàn tác 6 giây (thay xoá kiểu C của 29/10/2026); không vuốt phải. (bác sĩ duyệt 05/11/2026, v9.3) Thư viện không còn nút bút chì: chạm 2 lần vào dòng để sửa (thay "sửa bằng bút chì"); hàng thêm mới có nút tròn "+".
 - ⚙ 13 mục mẫu tự thêm một lần duy nhất; mục bác sĩ đã xoá không quay lại; bác sĩ tự thêm mục khác. (viet-tat.test.js: bộ mẫu 13 mục)
 - ⚙ Thư viện được sao lưu cùng dữ liệu (bảng `abbrevs` trong `DATA_TABLES`); file sao lưu cũ vẫn nhập được, `BACKUP_VERSION` giữ 1. (merge.test.js, luat.test.js luật 2b)
 

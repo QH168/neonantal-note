@@ -4,6 +4,7 @@
 // Hẹn giờ 6 giây nằm ở đây, KHÔNG nằm trên dòng đã xoá, nên dòng bị gỡ khỏi trang không làm hỏng thanh.
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useBanPhim } from '../hooks.js';
 
 export const THOI_GIAN_HOAN_TAC = 6000;
 const THOI_GIAN_TIN = 4000; // thông báo kết quả sau khi bấm Hoàn tác (vd. "Đã có chữ tắt này, không khôi phục")
@@ -15,6 +16,7 @@ export const useHoanTac = () => useContext(Ctx);
 
 export function HoanTacProvider({ children }) {
   const [muc, setMuc] = useState(null); // { id, nhan, lam } hoặc { id, tin }
+  const banPhim = useBanPhim(); // bàn phím iPhone mở thì thanh nằm ngay trên bàn phím, không bị che
   const timer = useRef(null);
   const dem = useRef(0);
   const lenLich = useCallback((id, ms) => {
@@ -48,11 +50,11 @@ export function HoanTacProvider({ children }) {
     <Ctx.Provider value={value}>
       {children}
       {typeof document !== 'undefined' && createPortal(
-        <div className="hoantac-wrap" role="status" aria-live="polite" aria-atomic="true">
+        <div className={'hoantac-wrap' + (banPhim ? ' kb' : '')} style={banPhim ? { '--kb': banPhim.duoi + 'px' } : undefined} role="status" aria-live="polite" aria-atomic="true">
           {muc && (
             <div className="hoantac" key={muc.id}>
               <span className="hoantac-chu">{muc.tin || muc.nhan}</span>
-              {muc.lam && <button type="button" className="hoantac-nut" onClick={hoanTac}>Hoàn tác</button>}
+              {muc.lam && <button type="button" className="hoantac-nut" onPointerDown={(e) => e.preventDefault()} onMouseDown={(e) => e.preventDefault()} onClick={hoanTac}>Hoàn tác</button>}
             </div>
           )}
         </div>,

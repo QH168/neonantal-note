@@ -1,10 +1,11 @@
-// Bảng "Thư viện viết tắt": thêm, tìm, sửa (bút chì), xoá (vuốt trái thả qua 1/3, hoặc rê chuột rồi bấm thùng rác) + Hoàn tác.
+// Bảng "Thư viện viết tắt": thêm, tìm, sửa (chạm 2 lần vào dòng), xoá (vuốt trái thả qua 1/3, hoặc rê chuột rồi bấm thùng rác) + Hoàn tác.
 import { useRef, useState } from 'react';
 import { useAbbrevs } from '../hooks.js';
 import { addAbbrev, updateAbbrev, removeAbbrev, khoiPhucAbbrev } from '../lib/actions.js';
 import { chuanKey } from '../lib/viet-tat.js';
 import { useHoanTac } from './HoanTac.jsx';
-import { Sheet, SheetHead, SwipeRow, PencilIcon } from './ui.jsx';
+import { boDemCham, themCham } from '../lib/viec.js';
+import { Sheet, SheetHead, SwipeRow, PlusIcon } from './ui.jsx';
 
 const boDau = (s) => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[đĐ]/g, 'd').toLowerCase();
 
@@ -24,6 +25,7 @@ export default function ThuVien({ wide, onClose }) {
   const [hoi, setHoi] = useState(null);     // { muc, text } khi key trùng, chờ bác sĩ chọn ghi đè
   const [tin, setTin] = useState('');
   const keyRef = useRef(null);
+  const cham = useRef({ id: null, mocs: [] }); // chạm 2 lần vào cùng một dòng (trong 1 giây) thì sửa
 
   const reset = () => { setK(''); setV(''); setSua(null); setLoi(''); setHoi(null); };
   const nhapK = (e) => { setK(e.target.value); setLoi(''); setHoi(null); setTin(''); };
@@ -54,6 +56,13 @@ export default function ThuVien({ wide, onClose }) {
     setSua(m); setK('/' + m.key); setV(m.text); setLoi(''); setHoi(null); setTin('');
     setTimeout(() => keyRef.current?.focus(), 0);
   };
+  // Chạm dòng: lần thứ hai trong 1 giây vào CÙNG dòng thì sửa (cùng luật chạm 2 lần của tab Việc). Nhấp đúp chuột cũng tính.
+  const chamDong = (m) => {
+    const c = cham.current;
+    c.mocs = themCham(c.id === m.id ? c.mocs : [], Date.now());
+    c.id = m.id;
+    if (boDemCham(c.mocs, 2)) { cham.current = { id: null, mocs: [] }; batDauSua(m); }
+  };
   const xoa = async (m) => {
     if (sua?.id === m.id) reset();
     await removeAbbrev(m.id);
@@ -76,18 +85,19 @@ export default function ThuVien({ wide, onClose }) {
     <Sheet label="Thư viện viết tắt" onClose={onClose} wide={wide} className="vt-sheet">
       <SheetHead title="Thư viện viết tắt" onClose={onClose} closeLabel="Đóng thư viện" />
 
-      <form onSubmit={gui} className="vt-form" aria-label={sua ? 'Sửa viết tắt' : 'Thêm viết tắt'}>
+      <form onSubmit={gui} className={'vt-form' + (sua ? ' sua' : '')} aria-label={sua ? 'Sửa viết tắt' : 'Thêm viết tắt'}>
         {sua && <div className="bold">Đang sửa /{sua.key}</div>}
         <div className="row8 vt-form-row">
           <label className="field vt-key">
-            <span className="muted xsmall">Viết tắt</span>
+            <span className="muted small">Viết tắt</span>
             <input ref={keyRef} type="text" className="input vt-in" value={k} onChange={nhapK} placeholder="/hcn"
               autoComplete="off" autoCapitalize="none" autoCorrect="off" spellCheck={false} />
           </label>
           <label className="field grow">
-            <span className="muted xsmall">Đổi thành</span>
+            <span className="muted small">Đổi thành</span>
             <input type="text" className="input vt-in" value={v} onChange={nhapV} placeholder="Hội chẩn ngoại khoa" autoComplete="off" />
           </label>
+          {!sua && <button type="submit" className="vt-plus" aria-label="Thêm vào thư viện"><PlusIcon /></button>}
         </div>
         {loi && <div className="err-box" role="alert">{loi}</div>}
         {hoi && (
@@ -99,33 +109,40 @@ export default function ThuVien({ wide, onClose }) {
             </div>
           </div>
         )}
-        <div className="row8">
-          <button type="submit" className="btn primary grow">{sua ? 'Lưu thay đổi' : 'Thêm vào thư viện'}</button>
-          {sua && <button type="button" className="btn" onClick={reset}>Huỷ sửa</button>}
-        </div>
+        {sua && (
+          <div className="row8">
+            <button type="submit" className="btn primary grow">Lưu thay đổi</button>
+            <button type="button" className="btn" onClick={reset}>Huỷ sửa</button>
+          </div>
+        )}
         {tin && <div className="status" role="status">{tin}</div>}
       </form>
 
       <label className="field">
         <span className="sr-only">Tìm viết tắt</span>
-        <input type="search" className="input" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Tìm…" autoComplete="off" />
+        <input type="search" className="input vt-tim" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Tìm theo chữ viết tắt hoặc nội dung" autoComplete="off" />
       </label>
 
-      <div className="muted xsmall">Có {list.length} mục. Sửa, xoá, thêm tuỳ ý. Thư viện được sao lưu cùng dữ liệu.</div>
+      <div className="row-between muted small vt-dem"><span>{list.length} mục</span><span>Được sao lưu cùng dữ liệu</span></div>
 
       <div className="vt-list" role="list" aria-label="Danh sách viết tắt">
         {hien.length === 0 && <div className="empty vt-empty">{list.length ? 'Không có mục nào khớp.' : 'Thư viện đang trống.'}</div>}
         {hien.map((m) => (
           <div role="listitem" key={m.id} className={'vt-item-wrap' + (sua?.id === m.id ? ' on' : '')}>
             <SwipeRow kind="viết tắt" label={'/' + m.key} className="vt-item" onDelete={() => xoa(m)}>
-              <span className="vt-k">/{m.key}</span>
-              <span className="vt-v">{m.text}</span>
-              <button type="button" className="icon-btn muted" aria-label={'Sửa /' + m.key} onClick={() => batDauSua(m)}><PencilIcon /></button>
+              <div className="vt-hang" role="button" tabIndex={0} aria-label={'Sửa /' + m.key}
+                onClick={() => chamDong(m)} onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target === e.currentTarget) { e.preventDefault(); batDauSua(m); } }}>
+                <span className="vt-k">/{m.key}</span>
+                <span className="vt-v">{m.text}</span>
+              </div>
             </SwipeRow>
           </div>
         ))}
       </div>
-      <div className="muted xsmall">Xoá một mục: vuốt dòng sang trái, có Hoàn tác 6 giây (máy tính: rê chuột vào dòng rồi bấm thùng rác).</div>
+      <div className="muted small vt-chu-thich">
+        Chạm 2 lần vào dòng để sửa. Vuốt trái quá 1/3 rồi thả để xoá, có hoàn tác.
+        {wide && ' Máy tính: nhấp đúp để sửa, rê chuột vào dòng rồi bấm thùng rác để xoá.'}
+      </div>
     </Sheet>
   );
 }

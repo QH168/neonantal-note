@@ -207,7 +207,7 @@ function AppChinh() {
             <TaskGroups chips dayTasks={dayTasks} active={active} collapsed={collapsed} onToggle={toggleIn(setCollapsed)} />
             {clearDoneBtn}
           </main>
-          <TaskForm variant="ph" date={viewDate} zone={newZone} setZone={setNewZone} tags={newTags} setTags={setNewTags} />
+          <TaskForm variant="ph" date={viewDate} zone={newZone} setZone={setNewZone} tags={newTags} setTags={setNewTags} khuLoc={active} />
         </>
       ) : (
         <main className="ph-main exam">

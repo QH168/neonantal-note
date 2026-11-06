@@ -3,10 +3,11 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { ZONES, LEGACY_ZONES } from '../db.js';
 import { addTask, toggleTask, cycleUrgency, removeTask, khoiPhucTask, setTaskTags, setTaskNote, setTaskText, setTaskZone } from '../lib/actions.js';
 import { isoOf, parseIso } from '../lib/dates.js';
-import { TAGS, laViecMoi, batTatNhan, sapViec, khuHienThi, khuDeChon, boDemCham, themCham, gioXong } from '../lib/viec.js';
+import { TAGS, laViecMoi, batTatNhan, sapViec, khuHienThi, khuDeChon, boDemCham, themCham, gioXong, chuanTenViec, khiRoiOThemViec } from '../lib/viec.js';
+import { useBanPhim } from '../hooks.js';
 import { useVietTat } from './VietTat.jsx';
 import { useHoanTac } from './HoanTac.jsx';
-import { PriDot, PRI_NAME, Chevron, XIcon, SwipeRow, TagDot, TickOk, TrangThaiXong, mauNhan, Sheet, TrashIcon, DongBtn, useDongSheet } from './ui.jsx';
+import { PriDot, PRI_NAME, Chevron, XIcon, SwipeRow, TagDot, TickOk, TrangThaiXong, mauNhan, Sheet, TrashIcon, PlusIcon, DongBtn, useDongSheet } from './ui.jsx';
 
 /** Thanh khu vực: dạng cột (PC) hoặc chip vuốt ngang (iPhone). */
 export function ZoneNav({ dayTasks, active, onPick, chips }) {
@@ -28,11 +29,12 @@ export function ZoneNav({ dayTasks, active, onPick, chips }) {
 }
 
 /** 5 nút nhãn bật/tắt độc lập (dùng ở form thêm việc và bảng chi tiết việc). */
-function TagBtns({ tags, onToggle, label }) {
+function TagBtns({ tags, onToggle, label, giuConTro: giu = false }) {
   return (
     <div className="pri-pick" role="group" aria-label={label}>
       {TAGS.map((tag) => (
         <button key={tag} type="button" aria-label={`Nhãn ${tag}`} aria-pressed={tags.includes(tag)} onClick={() => onToggle(tag)}
+          onPointerDown={giu ? giuConTro : undefined} onMouseDown={giu ? giuConTro : undefined}
           className="pri-btn tag-btn" style={mauNhan(tag)}>{tag}</button>
       ))}
     </div>
@@ -195,40 +197,125 @@ export function TaskGroups({ dayTasks, active, collapsed, onToggle, chips }) {
   );
 }
 
-/** Form thêm việc. variant 'pc' = khung trên đầu; 'ph' = thanh dưới cùng iPhone. */
-export function TaskForm({ variant, date, zone, setZone, tags, setTags }) {
+/** Chạm nút trong thanh thêm việc không được làm ô gõ mất con trỏ (bàn phím iPhone tụt xuống). */
+const giuConTro = (e) => e.preventDefault();
+
+/**
+ * Form thêm việc. variant 'pc' = khung trên đầu (giữ bố cục cũ); 'ph' = thanh dưới cùng iPhone (bảng 15a, 15b):
+ * một dòng gồm ô tròn + nút tròn "+"; chạm vào ô gõ thì bung hàng chip khu vực và hàng 5 nút nhãn ngay dưới ô, trên bàn phím.
+ * `khuLoc` = chip khu đang lọc ở trên (để biết khu mặc định khi thu lại).
+ */
+export function TaskForm({ variant, date, zone, setZone, tags, setTags, khuLoc = 'all' }) {
+  const ph = variant === 'ph';
   const [draft, setDraft] = useState('');
-  const vt = useVietTat(draft, setDraft);
+  const draftRef = useRef('');            // chữ mới nhất, để thêm liên tiếp nhanh không bao giờ tạo trùng
+  const datDraft = (x) => { draftRef.current = x; setDraft(x); };
+  const [mo, setMo] = useState(false);    // iPhone: đang bung hàng khu vực và nhãn
+  const formRef = useRef(null);
+  const trongForm = useRef(false);        // đang chạm bên trong form: cú blur sinh ra từ đó không được thu lại
+  const hetChamTimer = useRef(null);
+  const moi = useRef({});                 // giá trị mới nhất cho các trình nghe sự kiện
+  moi.current = { mo, zone, tags, khuLoc };
+  const banPhim = useBanPhim();           // cách tính dùng chung với Sheet và thanh Hoàn tác (hooks.js)
+
+  // Rời ô: ô trống thì thu lại, nhãn về trống, khu về theo chip đang lọc (luật thuần khiRoiOThemViec trong src/lib/viec.js).
+  const roiO = () => {
+    const m = moi.current;
+    if (!ph || !m.mo) return;
+    const r = khiRoiOThemViec({ chu: draftRef.current, khuLoc: m.khuLoc, khuHienTai: m.zone, nhanHienTai: m.tags }, ZONES);
+    if (!r.thuLai) return;
+    setMo(false); setTags(r.nhan); setZone(r.khu);
+    if (draftRef.current) datDraft('');
+  };
+  // Thu lại KHÔNG làm ngay ở pointerdown/blur: bố cục đổi dưới ngón tay thì cú chạm trượt sang phần tử khác (nhất là thanh Hoàn tác
+  // và các dòng nằm đáy). Hoãn tới sau pointerup/blur ~80ms, tức sau cú click; chạm lại vào form trong lúc chờ thì huỷ.
+  const thuTimer = useRef(null);
+  const choNgoai = useRef(false);         // đang giữ ngón ở NGOÀI form (khi ô bung): thu lại khi nhấc ngón
+  const lenThu = () => {
+    clearTimeout(thuTimer.current);
+    thuTimer.current = setTimeout(() => {
+      if (trongForm.current) return;
+      const truoc = moi.current.mo;
+      roiO();
+      if (truoc && !draftRef.current && document.activeElement === inputRef.current) inputRef.current.blur(); // thu lại thì bỏ cả con trỏ
+    }, 80);
+  };
+  const vt = useVietTat(draft, datDraft, {
+    onBlur: (e) => {
+      // blur do chạm nút trong form (chip, nhãn, "+", gợi ý) hoặc trong thanh Hoàn tác thì không thu lại; chỉ thu khi chạm/rời ra ngoài
+      if (trongForm.current || (e.relatedTarget && (formRef.current?.contains(e.relatedTarget) || e.relatedTarget.closest?.('.hoantac-wrap')))) return;
+      lenThu();
+    }
+  });
+  const inputRef = vt.props.ref;
+
+  useEffect(() => {
+    if (!ph) return undefined;
+    const hetCham = () => {
+      clearTimeout(hetChamTimer.current);
+      hetChamTimer.current = setTimeout(() => { trongForm.current = false; }, 400);
+      if (choNgoai.current) { choNgoai.current = false; lenThu(); }
+    };
+    window.addEventListener('pointerup', hetCham);
+    window.addEventListener('pointercancel', hetCham);
+    return () => { window.removeEventListener('pointerup', hetCham); window.removeEventListener('pointercancel', hetCham); clearTimeout(hetChamTimer.current); clearTimeout(thuTimer.current); };
+  }, [ph]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Đang bung: chạm vào form hoặc thanh Hoàn tác thì không thu lại; chạm ra ngoài thì thu lại SAU khi nhấc ngón (kể cả khi ô đã mất con trỏ vì lý do khác)
+  useEffect(() => {
+    if (!ph || !mo) return undefined;
+    const xuong = (e) => {
+      if (!formRef.current) return;
+      const t = e.target;
+      if (formRef.current.contains(t)) { clearTimeout(thuTimer.current); choNgoai.current = false; return; }
+      if (t.closest?.('.hoantac-wrap')) { trongForm.current = true; clearTimeout(hetChamTimer.current); clearTimeout(thuTimer.current); choNgoai.current = false; return; }
+      trongForm.current = false; // chạm ngoài: cờ 'đang chạm trong form' của lần chạm trước không còn đúng
+      clearTimeout(hetChamTimer.current);
+      choNgoai.current = true;
+    };
+    document.addEventListener('pointerdown', xuong, true);
+    return () => document.removeEventListener('pointerdown', xuong, true);
+  }, [ph, mo]);
+  // Đo chiều cao thật của thanh thêm việc để thanh Hoàn tác xoá nằm ngay trên nó (CSS: html.co-form-viec, biến --tf-cao)
+  useEffect(() => {
+    const f = formRef.current;
+    if (!ph || !f) return undefined;
+    const root = document.documentElement;
+    const do_ = () => root.style.setProperty('--tf-cao', Math.round(f.getBoundingClientRect().height) + 'px');
+    do_();
+    root.classList.add('co-form-viec');
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(do_) : null;
+    ro?.observe(f);
+    return () => { ro?.disconnect(); root.classList.remove('co-form-viec'); root.style.removeProperty('--tf-cao'); };
+  }, [ph]);
+
   const submit = async (e) => {
     e.preventDefault();
-    const text = draft.trim();
-    if (!text) return;
-    setDraft('');
+    const text = chuanTenViec(draftRef.current);
+    if (!text) { if (ph) inputRef.current?.focus(); return; } // nút "+" khi ô trống: không tạo việc rỗng
+    datDraft('');
+    if (ph) inputRef.current?.focus();                        // giữ con trỏ để gõ tiếp
     await addTask({ date, zone, text, tags });
   };
-  const tagBtns = <TagBtns tags={tags} label="Nhãn của việc mới" onToggle={(tag) => setTags(batTatNhan(tags, tag))} />;
-  const zoneSel = (
-    <>
-      <label htmlFor={variant + '-zone'} className="sr-only">Khu vực</label>
-      <select id={variant + '-zone'} value={zone} onChange={(e) => setZone(e.target.value)} className="select">
-        {ZONES.map((z) => <option key={z} value={z}>{z}</option>)}
-      </select>
-    </>
-  );
+  const tagBtns = <TagBtns tags={tags} label="Nhãn của việc mới" giuConTro={ph} onToggle={(tag) => setTags(batTatNhan(tags, tag))} />;
   const input = (
     <>
       <label htmlFor={variant + '-draft'} className="sr-only">Nội dung công việc</label>
       <input id={variant + '-draft'} type="text" {...vt.props}
-        placeholder="Ghi chú việc cần làm…" autoComplete="off" className={variant === 'pc' ? 'bare-input' : 'input grow'} />
+        onFocus={(e) => { vt.props.onFocus(e); if (ph) setMo(true); }}
+        onClick={(e) => { vt.props.onClick(e); if (ph) setMo(true); }} // đang có con trỏ mà chưa bung (vd. ô vừa thu lại) thì chạm lại sẽ bung
+        placeholder={ph ? 'Ghi việc cần làm…' : 'Ghi chú việc cần làm…'} autoComplete="off" className={ph ? 'tf-in' : 'bare-input'} />
     </>
   );
-  if (variant === 'pc') {
+  if (!ph) {
     return (
       <form onSubmit={submit} className="card task-form-pc">
         {vt.strip}
         {input}
         <div className="task-form-bar">
-          {zoneSel}
+          <label htmlFor="pc-zone" className="sr-only">Khu vực</label>
+          <select id="pc-zone" value={zone} onChange={(e) => setZone(e.target.value)} className="select">
+            {ZONES.map((z) => <option key={z} value={z}>{z}</option>)}
+          </select>
           <div className="row8"><span className="muted small">Nhãn</span>{tagBtns}</div>
           <span className="grow" />
           <button type="submit" className="btn primary">Thêm việc</button>
@@ -237,15 +324,28 @@ export function TaskForm({ variant, date, zone, setZone, tags, setTags }) {
     );
   }
   return (
-    <form onSubmit={submit} className="task-form-ph">
+    <form ref={formRef} onSubmit={submit} className={'task-form-ph' + (mo ? ' mo' : '') + (banPhim ? ' kb' : '')}
+      style={banPhim ? { transform: `translateY(${-banPhim.duoi}px)` } : undefined}
+      onPointerDownCapture={() => { trongForm.current = true; clearTimeout(hetChamTimer.current); }}>
       {vt.strip}
-      <div className="row8">{input}{zoneSel}</div>
-      <div className="muted xsmall">Nhãn (chọn được nhiều):</div>
-      <div className="row8">{tagBtns}<button type="submit" className="btn primary grow">Thêm việc</button></div>
+      <div className="tf-row">
+        {input}
+        <button type="submit" className="tf-plus" aria-label="Thêm việc" onPointerDown={giuConTro} onMouseDown={giuConTro}><PlusIcon /></button>
+      </div>
+      {mo && (
+        <>
+          <div className="chips-sheet noscroll tf-zones" role="group" aria-label="Khu vực">
+            {ZONES.map((z) => (
+              <button key={z} type="button" aria-pressed={zone === z} className={'chip' + (zone === z ? ' on' : '')}
+                onPointerDown={giuConTro} onMouseDown={giuConTro} onClick={() => setZone(z)}>{z}</button>
+            ))}
+          </div>
+          {tagBtns}
+        </>
+      )}
     </form>
   );
 }
-
 /** Lịch tháng: số dưới mỗi ngày là số việc chưa xong. */
 export function Calendar({ tasks, viewDate, today, month, setMonth, onPick, onClose }) {
   const dongSheet = useDongSheet(); // trong bảng: đóng có chuyển động

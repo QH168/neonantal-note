@@ -16,7 +16,8 @@ export function VietTatProvider({ children }) {
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
-const THOI_GIAN_BAO = 4000;
+// Thanh Đã đổi … thành … + Hoàn tác giữ 6 giây, thống nhất với thanh Hoàn tác khi xoá (bác sĩ quyết 06/11/2026; trước đây ~4 giây).
+const THOI_GIAN_BAO = 6000;
 
 /**
  * Hook cho một ô gõ (input hoặc textarea).
@@ -93,27 +94,28 @@ export function useVietTat(value, setValue, opts = {}) {
   const coTheHoan = bao && hoanTac(value, bao.ketQua) !== null;
   const giuFocus = (e) => e.preventDefault(); // chạm nút không làm mất bàn phím iPhone
 
+  // Dải gợi ý (hàng chip 44px, vuốt ngang được) và thanh tối `Đã đổi … thành …` + Hoàn tác.
+  // Đặt NGOÀI mọi thẻ label. Nút dùng preventDefault ở pointerdown/mousedown để chạm không làm mất bàn phím;
+  // preventDefault ở đây không cản vuốt ngang hàng chip (cuộn do touch-action của hàng quyết định, không phải sự kiện này).
   const strip = (gy.length > 0 || coTheHoan) ? (
     <div className="vt-strip">
       {gy.length > 0 && (
-        <div className="vt-sug" role="group" aria-label="Gợi ý viết tắt">
-          <span className="vt-sug-t">Gợi ý (chạm để chèn):</span>
+        <div className="vt-sug noscroll" role="group" aria-label="Gợi ý viết tắt">
           {gy.map((g) => (
             <button key={g.key} type="button" className="vt-chip" onPointerDown={giuFocus} onMouseDown={giuFocus} onClick={() => chen(g)}>
-              <span className="vt-chip-k">/{g.key}</span><span className="vt-chip-v">· {g.text}</span>
+              <span className="vt-chip-k">/{g.key}</span><span className="vt-chip-v">{g.text}</span>
             </button>
           ))}
         </div>
       )}
       {coTheHoan && (
         <div className="vt-toast" role="status">
-          <span className="grow">Đã thay /{bao.key}</span>
+          <span className="vt-toast-chu">Đã đổi /{bao.key} thành {bao.ketQua.noiDung}</span>
           <button type="button" className="vt-undo" onPointerDown={giuFocus} onMouseDown={giuFocus} onClick={hoan}>Hoàn tác</button>
         </div>
       )}
     </div>
   ) : null;
-
   const props = {
     ref, value, onChange,
     onSelect: theoDoiCaret, onKeyUp: theoDoiCaret, onClick: theoDoiCaret,

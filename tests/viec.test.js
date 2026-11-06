@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { TAGS, TAG_COLOR, laViecMoi, chuanHoaTags, batTatNhan, soSanhViec, sapViec, khuHienThi, boDemCham, themCham, chuanTenViec, khuDeChon } from '../src/lib/viec.js';
+import { TAGS, TAG_COLOR, laViecMoi, chuanHoaTags, batTatNhan, soSanhViec, sapViec, khuHienThi, boDemCham, themCham, chuanTenViec, khuDeChon, khuMacDinh, khiRoiOThemViec } from '../src/lib/viec.js';
 
 test('TAGS và màu', () => {
   assert.deepEqual(TAGS, ['NV', 'BM', 'CK', 'HC', 'XN']);
@@ -194,4 +194,33 @@ test('gioXong: "hh:mm" theo giờ máy; việc cũ chưa có doneAt thì rỗng 
   assert.equal(gioXong(new Date(2026, 9, 21, 0, 5).getTime()), '00:05');
   assert.equal(gioXong(new Date(2026, 9, 21, 23, 59).getTime()), '23:59');
   for (const v of [undefined, null, 0, NaN, 'x', -5]) assert.equal(gioXong(v), '');
+});
+
+test('khuMacDinh: chip là một khu thì lấy khu đó; Tất cả hoặc khu cũ thì về khu đầu', () => {
+  const Z = ['NICU', 'CT', 'KAN', 'HP'];
+  assert.equal(khuMacDinh('KAN', Z), 'KAN');
+  assert.equal(khuMacDinh('all', Z), 'NICU');
+  assert.equal(khuMacDinh('BM', Z), 'NICU'); // khu cũ không có ở chip thêm mới
+});
+
+test('khiRoiOThemViec: ô còn chữ thì vẫn bung và giữ khu, nhãn', () => {
+  const Z = ['NICU', 'CT', 'KAN'];
+  const r = khiRoiOThemViec({ chu: 'Siêu âm tim', khuLoc: 'all', khuHienTai: 'KAN', nhanHienTai: ['NV', 'XN'] }, Z);
+  assert.deepEqual(r, { thuLai: false, khu: 'KAN', nhan: ['NV', 'XN'] });
+});
+
+test('khiRoiOThemViec: ô trống thì thu lại, nhãn về trống, khu về theo chip đang lọc', () => {
+  const Z = ['NICU', 'CT', 'KAN'];
+  assert.deepEqual(khiRoiOThemViec({ chu: '', khuLoc: 'CT', khuHienTai: 'KAN', nhanHienTai: ['HC'] }, Z), { thuLai: true, khu: 'CT', nhan: [] });
+  assert.deepEqual(khiRoiOThemViec({ chu: '', khuLoc: 'all', khuHienTai: 'KAN', nhanHienTai: ['HC'] }, Z), { thuLai: true, khu: 'NICU', nhan: [] });
+  assert.deepEqual(khiRoiOThemViec({ chu: '', khuLoc: 'BM', khuHienTai: 'KAN', nhanHienTai: [] }, Z), { thuLai: true, khu: 'NICU', nhan: [] });
+});
+
+test('khiRoiOThemViec: chỉ có khoảng trắng tính là trống; không đổi mảng nhãn gốc', () => {
+  const Z = ['NICU', 'CT'];
+  const nhan = ['BM'];
+  const r = khiRoiOThemViec({ chu: '   ', khuLoc: 'CT', khuHienTai: 'NICU', nhanHienTai: nhan }, Z);
+  assert.equal(r.thuLai, true);
+  assert.deepEqual(nhan, ['BM']);
+  assert.notEqual(r.nhan, nhan);
 });
