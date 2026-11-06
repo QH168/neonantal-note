@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from './db.js';
-import { todayIso } from './lib/dates.js';
+import { p2, todayIso } from './lib/dates.js';
 import { KHOA_CHE_DO, KHOA_LAN_MO, docCheDo, laToi, tangLanMo } from './lib/cai-dat.js';
 import { sapBe } from './lib/thu-tu.js';
+import { phongChoXem } from './lib/tong-hop.js';
 
 const alive = (r) => !r.deleted;
 
@@ -155,6 +156,55 @@ export function useAppData(today) {
   for (const k in todosByPid) todosByPid[k].sort((a, b) => (a.order || 0) - (b.order || 0) || (a.createdAt || 0) - (b.createdAt || 0));
 
   return { ready, tasks: tasks || [], rooms: rooms || [], patients: patients || [], todosByPid, prev: prev || { date: null, count: 0 }, roomUse: roomUse || {}, lastExport };
+}
+
+const KHOANG_TRONG = { ready: true, patients: [], todosByPid: {}, rooms: [] };
+
+/**
+ * CHỈ ĐỌC (v9.5): bé và việc của một khoảng ngày [tu, den] (cả hai đầu), dùng chỉ mục examDate và patientId.
+ * tu hoặc den là null → chưa truy vấn gì, trả về rỗng.
+ * Trả { ready, patients (đã sapBe), todosByPid, rooms }; rooms = phongChoXem(mọi phòng, bé): phòng còn sống,
+ * rồi phòng đã xoá có bé, rồi phòng không tìm thấy — nên không bé nào bị mất khi xem.
+ * Không ghi gì vào CSDL.
+ */
+export function useBeKhoang(tu, den) {
+  const kq = useLiveQuery(async () => {
+    if (!tu || !den) return null;
+    const [a, b] = tu <= den ? [tu, den] : [den, tu];
+    const patients = sapBe(await db.exam_patients.where('examDate').between(a, b, true, true).filter(alive).toArray());
+    const todosByPid = {};
+    if (patients.length) {
+      const todos = await db.patient_todos.where('patientId').anyOf(patients.map((p) => p.id)).filter(alive).toArray();
+      for (const t of todos) (todosByPid[t.patientId] ||= []).push(t);
+      for (const k in todosByPid) todosByPid[k].sort((x, y) => (x.order || 0) - (y.order || 0) || (x.createdAt || 0) - (y.createdAt || 0));
+    }
+    const rooms = phongChoXem(await db.rooms.toArray(), patients);
+    return { ready: true, patients, todosByPid, rooms };
+  }, [tu, den]);
+  if (!tu || !den) return KHOANG_TRONG;
+  return kq || { ...KHOANG_TRONG, ready: false };
+}
+
+/** CHỈ ĐỌC: bé và việc của MỘT ngày (xem ngày trước). Cùng giá trị trả về với useBeKhoang. */
+export function useBeNgay(iso) {
+  return useBeKhoang(iso, iso);
+}
+
+/**
+ * CHỈ ĐỌC: số bé đã khám (done = true) theo từng ngày của một tháng, cho lịch Khám.
+ * Truy vấn theo chỉ mục examDate trong tháng, không đọc cả bảng. thang là 1..12.
+ * Trả { ready, daKham: { 'YYYY-MM-DD': n } }.
+ */
+export function useDaKhamThang(nam, thang) {
+  const kq = useLiveQuery(async () => {
+    const dau = `${nam}-${p2(thang)}-01`, cuoi = `${nam}-${p2(thang)}-31`;
+    const out = {};
+    await db.exam_patients.where('examDate').between(dau, cuoi, true, true)
+      .filter((p) => alive(p) && p.done === true)
+      .each((p) => { out[p.examDate] = (out[p.examDate] || 0) + 1; });
+    return out;
+  }, [nam, thang]);
+  return { ready: !!kq, daKham: kq || {} };
 }
 
 /** Danh sách viết tắt còn sống, xếp theo key; undefined-an toàn (chưa tải xong thì []). */

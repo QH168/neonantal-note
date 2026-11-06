@@ -69,7 +69,7 @@ export function calcAge(p, now = new Date()) {
  * @param patients  bệnh nhân hôm nay
  * @param todosByPid { [patientId]: todo[] } (đã sắp thứ tự)
  */
-export function buildSummary({ rooms, patients, todosByPid, now = new Date() }) {
+export function buildSummary({ rooms, patients, todosByPid, now = new Date(), ngayTruoc = false }) {
   const dateStr = p2(now.getDate()) + '/' + p2(now.getMonth() + 1) + '/' + now.getFullYear();
   let nTodo = 0, nPat = 0;
   const blocks = [];
@@ -92,10 +92,12 @@ export function buildSummary({ rooms, patients, todosByPid, now = new Date() }) 
     });
     blocks.push(rb.join('\n'));
   });
-  if (!blocks.length) return 'KHÁM SÁNG ' + dateStr + '\nChưa có bệnh nhân trong danh sách hôm nay.';
+  if (!blocks.length) return 'KHÁM SÁNG ' + dateStr + '\nChưa có bệnh nhân trong danh sách ' + (ngayTruoc ? 'ngày này.' : 'hôm nay.');
   return [
     'KHÁM SÁNG ' + dateStr + ' - Y LỆNH',
-    'Tuổi thai ghi là tuổi thai hiệu chỉnh hôm nay.',
+    ngayTruoc
+      ? 'Tuổi thai ghi là tuổi thai hiệu chỉnh ngày ' + p2(now.getDate()) + '/' + p2(now.getMonth() + 1) + '.'
+      : 'Tuổi thai ghi là tuổi thai hiệu chỉnh hôm nay.',
     nTodo > 0 ? 'Còn ' + nTodo + ' việc ở ' + nPat + ' bệnh nhân.' : 'Không có việc mới, tiếp tục y lệnh cũ.',
     '',
     blocks.join('\n\n')

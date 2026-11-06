@@ -42,6 +42,8 @@
 - Chuỗi số liệu nối bằng dấu chấm giữa như `25w0d · 1850 g` là **cách ghi lâm sàng đã duyệt**, giữ nguyên (skill coi đây là "dấu hiệu AI" — ở app này thì không).
 - Chữ viết tắt nhãn viết hoa (NV, BM, CK, HC, XN, NICU) là **tên riêng**, giữ nguyên.
 
+- **Lịch và xem ngày trước** (v9.5, chờ bác sĩ duyệt ảnh 9.5): lịch ô tròn ở cả tab Việc và tab Khám; dải khoảng ngày dùng `--rangeBg`, `--rangeLine`, `--rangeInk`; dải vàng ngày trước dùng `--noteBg`, `--noteInk`. Ngày trước chỉ xem, không có nút "+" và không vuốt. Quyết định của Điều phối, xem `doi-agent/QUYET_DINH_DA_CHOT.md` mục "Lịch và xem ngày trước".
+
 ## 4. Cấm
 
 - Gradient trang trí, bóng đổ đậm, hiệu ứng kính mờ, viền phát sáng.

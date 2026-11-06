@@ -81,3 +81,47 @@ test('6 ví dụ đã thống nhất (tính ngày 21/10/2026)', () => {
     assert.deepEqual(calcAge({ dob, ga }, now), { days, pma }, dob + ' ' + ga);
   }
 });
+
+test('v9.5: buildSummary không truyền ngayTruoc cho văn bản y như cũ từng chữ', () => {
+  const rooms = [{ id: 'r1', name: 'Phòng 1' }, { id: 'r2', name: 'Phòng 2' }];
+  const patients = [
+    { id: 'a', roomId: 'r1', code: 'Giường 1', dob: '0810', ga: '346', wt: '1850', note: 'Theo dõi cân' },
+    { id: 'b', roomId: 'r1', code: 'Giường 3', dob: '', ga: '', wt: '' }
+  ];
+  const todosByPid = { a: [{ text: 'Cân bé', done: true }, { text: 'Cập nhật y lệnh', done: false }] };
+  // Bản cũ, ghi tay từng chữ (20/10/2026: sinh 08/10 = 12 ngày tuổi, 244 + 12 = 256 = 36w4d)
+  const CU = [
+    'KHÁM SÁNG 20/10/2026 - Y LỆNH',
+    'Tuổi thai ghi là tuổi thai hiệu chỉnh hôm nay.',
+    'Còn 1 việc ở 1 bệnh nhân.',
+    '',
+    'PHÒNG 1',
+    'Giường 1 - 36w4d - 1850 g',
+    '- Cập nhật y lệnh',
+    'Ghi chú: Theo dõi cân',
+    '',
+    'Giường 3 - Tiếp tục y lệnh cũ'
+  ].join('\n');
+  assert.equal(buildSummary({ rooms, patients, todosByPid, now: NOW }), CU);
+  assert.equal(buildSummary({ rooms, patients, todosByPid, now: NOW, ngayTruoc: false }), CU);
+  assert.equal(buildSummary({ rooms, patients: [], todosByPid: {}, now: NOW }),
+    'KHÁM SÁNG 20/10/2026\nChưa có bệnh nhân trong danh sách hôm nay.');
+});
+
+test('v9.5: buildSummary ngayTruoc: true đổi đúng dòng hai và câu danh sách trống', () => {
+  const rooms = [{ id: 'r1', name: 'Phòng 1' }];
+  const patients = [{ id: 'a', roomId: 'r1', code: 'Giường 1', dob: '0810', ga: '346', wt: '1850', note: '' }];
+  const todosByPid = { a: [{ text: 'Cập nhật y lệnh', done: false }] };
+  const ngay = new Date(2026, 10, 3); // 03/11/2026: sinh 08/10 = 23 + 3 = 26 ngày tuổi; 244 + 26 = 270 = 38w4d
+  assert.equal(buildSummary({ rooms, patients, todosByPid, now: ngay, ngayTruoc: true }), [
+    'KHÁM SÁNG 03/11/2026 - Y LỆNH',
+    'Tuổi thai ghi là tuổi thai hiệu chỉnh ngày 03/11.',
+    'Còn 1 việc ở 1 bệnh nhân.',
+    '',
+    'PHÒNG 1',
+    'Giường 1 - 38w4d - 1850 g',
+    '- Cập nhật y lệnh'
+  ].join('\n'));
+  assert.equal(buildSummary({ rooms, patients: [], todosByPid: {}, now: ngay, ngayTruoc: true }),
+    'KHÁM SÁNG 03/11/2026\nChưa có bệnh nhân trong danh sách ngày này.');
+});

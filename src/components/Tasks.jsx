@@ -1,11 +1,13 @@
 // Mục Việc: khu vực, danh sách theo khu, form thêm việc, lịch.
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { ZONES, LEGACY_ZONES } from '../db.js';
 import { addTask, toggleTask, cycleUrgency, removeTask, khoiPhucTask, setTaskTags, setTaskNote, setTaskText, setTaskZone } from '../lib/actions.js';
-import { isoOf, parseIso } from '../lib/dates.js';
+import { parseIso } from '../lib/dates.js';
+import { demViecChuaXong, ngaySotGanNhat } from '../lib/lich.js';
 import { TAGS, laViecMoi, batTatNhan, sapViec, khuHienThi, khuDeChon, boDemCham, themCham, gioXong, chuanTenViec, khiRoiOThemViec } from '../lib/viec.js';
 import { useBanPhim } from '../hooks.js';
 import { useVietTat } from './VietTat.jsx';
+import { KhungLich } from './Lich.jsx';
 import { useHoanTac } from './HoanTac.jsx';
 import { PriDot, PRI_NAME, Chevron, XIcon, SwipeRow, TagDot, TickOk, TrangThaiXong, mauNhan, Sheet, TrashIcon, PlusIcon, DongBtn, useDongSheet } from './ui.jsx';
 
@@ -348,52 +350,38 @@ export function TaskForm({ variant, date, zone, setZone, tags, setTags, khuLoc =
     </form>
   );
 }
-/** Lịch tháng: số dưới mỗi ngày là số việc chưa xong. */
-export function Calendar({ tasks, viewDate, today, month, setMonth, onPick, onClose }) {
-  const dongSheet = useDongSheet(); // trong bảng: đóng có chuyển động
-  const dong = onClose && (dongSheet ? () => dongSheet(onClose) : onClose);
-  const { y, m } = month;
-  const lead = (new Date(y, m, 1).getDay() + 6) % 7;
-  const dim = new Date(y, m + 1, 0).getDate();
-  const leftByDay = {};
-  for (const t of tasks) if (!t.done) leftByDay[t.date] = (leftByDay[t.date] || 0) + 1;
-  const overdue = tasks.filter((t) => t.date < today && !t.done).length;
-  const cells = [];
-  for (let i = 0; i < lead; i++) cells.push(<span key={'e' + i} />);
-  for (let d = 1; d <= dim; d++) {
-    const iso = isoOf(new Date(y, m, d));
-    const left = leftByDay[iso] || 0;
-    const sel = iso === viewDate;
-    const isT = iso === today;
-    cells.push(
-      <button key={iso} type="button" onClick={() => { onPick(iso); dong?.(); }}
-        className={'cal-cell' + (sel ? ' sel' : '') + (isT && !sel ? ' today' : '')}
-        aria-label={`Ngày ${d} tháng ${m + 1}` + (left ? `, còn ${left} việc chưa xong` : ', không có việc chưa xong') + (isT ? ', hôm nay' : '')}>
-        <span className="cal-day">{d}</span>
-        <span className={'cal-badge' + (left ? ' has' : '')}>{left || ''}</span>
-      </button>
-    );
-  }
-  const go = (delta) => {
-    const d = new Date(y, m + delta, 1);
-    setMonth({ y: d.getFullYear(), m: d.getMonth() });
+/**
+ * Lịch tab Việc (v9.5, bảng 16c). Số dưới ngày = việc chưa xong: ngày từ hôm nay trở đi nền xanh nhạt, ngày đã qua còn sót nền vàng nhạt.
+ * "Còn sót n việc ở các ngày trước" bấm được → ngày gần nhất còn sót (ngaySotGanNhat); hết sót thì ẩn. "Về hôm nay" luôn có.
+ * `inline` = đặt thẳng trong trang (PC); không thì nằm trong bảng dưới (iPhone), chọn xong tự đóng.
+ */
+export function LichViec({ tasks, viewDate, today, month, setMonth, onPick, onClose, inline = false }) {
+  const dongSheet = useDongSheet();
+  const dem = useMemo(() => demViecChuaXong(tasks), [tasks]);
+  const sot = ngaySotGanNhat(tasks, today);
+  const soSot = Object.entries(dem).reduce((s, [iso, n]) => (iso < today ? s + n : s), 0);
+  const roi = () => { if (onClose) (dongSheet ? dongSheet(onClose) : onClose()); };
+  const chon = (iso) => { onPick(iso); roi(); };
+  const denNgay = (iso) => { setMonth(monthOf(iso)); chon(iso); };
+  const soDuoi = (iso) => {
+    const n = dem[iso] || 0;
+    return n ? { chu: String(n), loai: iso < today ? 'sot' : 'xanh', aria: `, còn ${n} việc chưa xong` } : { chu: '', loai: '', aria: ', không có việc chưa xong' };
   };
   return (
-    <section aria-label="Lịch công việc" className="cal">
-      <div className="row-between">
-        <button type="button" className="icon-btn" aria-label="Tháng trước" onClick={() => go(-1)}><Chevron dir="left" size={18} /></button>
-        <div className="cal-title">Tháng {m + 1}/{y}</div>
-        <div className="row0">
-          <button type="button" className="icon-btn" aria-label="Tháng sau" onClick={() => go(1)}><Chevron size={18} /></button>
-          {dong && <button type="button" className="icon-btn" aria-label="Đóng lịch" onClick={dong}><XIcon /></button>}
-        </div>
+    <KhungLich month={month} setMonth={setMonth} today={today} chon={viewDate} onPick={chon} dem={soDuoi} onClose={onClose}
+      inline={inline} label="Lịch công việc">
+      <div className="lich-chu-giai">
+        <span><i className="lich-mau xanh" aria-hidden="true" />Việc chưa xong</span>
+        <span><i className="lich-mau sot" aria-hidden="true" />Ngày đã qua, còn sót</span>
       </div>
-      <div className="cal-grid cal-wd">{['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].map((w) => <span key={w}>{w}</span>)}</div>
-      <div className="cal-grid">{cells}</div>
-      <div className="muted xsmall pad6">Số dưới mỗi ngày là số việc chưa hoàn thành.</div>
-      <div className="bold pad6">Chưa xong ở các ngày trước: {overdue}</div>
-    </section>
+      {sot && (
+        <button type="button" className="lich-sot" onClick={() => denNgay(sot)}>
+          <span className="grow left-text">Còn sót {soSot} việc ở các ngày trước</span>
+          <Chevron size={16} />
+        </button>
+      )}
+      <button type="button" className="lich-nay-nut" onClick={() => denNgay(today)}>Về hôm nay</button>
+    </KhungLich>
   );
 }
-
 export const monthOf = (iso) => { const d = parseIso(iso); return { y: d.getFullYear(), m: d.getMonth() }; };

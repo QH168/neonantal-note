@@ -7,7 +7,6 @@
 | # | Phát hiện | Mức | Đề xuất | Agent |
 |---|---|---|---|---|
 | 1 | Cuộn dọc danh sách và cử chỉ mới (vuốt phải/trái 1/3 trên Việc, việc của bé, thư viện) bằng ngón tay thật, cùng bàn phím iPhone thật với bảng chi tiết việc, chưa kiểm được bằng máy (Chromium headless) — bác sĩ thử trên iPhone. | Lưu ý | Bác sĩ thử cuộn dọc, vuốt phải/trái và gõ trong chi tiết việc trên iPhone; nếu vướng thì giao phiếu chỉnh. | Giao diện |
-| 5 | PC: ô lịch tháng 39×48px (có từ trước, không phải do v8.1). | Lưu ý | Phóng to ô nếu bác sĩ dùng chuột/chạm trên PC. | Giao diện |
 | 8 | Chữ chip khu trống `#6B7F91` do đặc tả chốt đo 4,14:1 trên trắng và 3,84:1 trên nền trang, dưới 4,5:1. | Lưu ý | Đề xuất đổi `--chipZero` (sáng) sang `#5E7183` (5,04:1 trên trắng, 4,67:1 trên nền trang). Hỏi bác sĩ. | Giao diện |
 | 9 | Dòng nhắc cử chỉ hiện cả khi danh sách của ngày trống, kể cả sau 3 lần mở đầu (đúng chữ đặc tả mục 2.3, khác hành vi cũ là ẩn khi trống). | Lưu ý | Hỏi bác sĩ giữ theo đặc tả hay chỉ hiện trong 3 lần mở đầu. | Giao diện |
 | 10 | Đếm "3 lần mở" tính theo lần tải trang; trên iPhone, app tiếp tục từ nền không tính là lần mở mới. | Lưu ý | Chấp nhận; nếu bác sĩ muốn đếm cả lần quay lại từ nền thì đổi `useLanMoApp` (sự kiện `visibilitychange`). | Giao diện |
@@ -29,6 +28,28 @@
 | 30 | Vuốt phải đã nhận là ngang thì lệch dọc tới 60px vẫn đánh dấu đã khám. Cuộn dọc không bị nhầm. | Lưu ý | Bác sĩ thử trên máy thật; nếu vướng thì siết góc trong `src/lib/vuot.js` (liên quan #17). | Giao diện |
 | 31 | Bé mới tự đặt con trỏ vào ô mã: Safari iPhone có thể không bật bàn phím. | Lưu ý | Bác sĩ thử trên iPhone; nếu không bật thì bỏ tự đặt con trỏ hoặc thêm cách khác. | Giao diện |
 | 32 | Ngày sinh không ghi năm mà ra ngày tương lai thì lùi về năm trước, theo luật đã chốt: gõ 0711 khi hôm nay 06/11 ra 364 ngày, không báo lỗi. | Lưu ý | Hỏi bác sĩ có muốn cảnh báo khi tuổi lớn bất thường không (đụng thuật toán, cần bác sĩ chốt). | Thuật toán |
+| 33 | Mã chỉ toàn dấu cách: dòng bé ngày trước hiện mã trống thay vì "Chưa có mã"; "Tổng hợp ngày này" in dòng bắt đầu bằng dấu cách. Không mất bé. | Lưu ý | Cắt khoảng trắng khi hiện. | Giao diện |
+| 34 | "Chép sang hôm nay" so trùng đúng từng ký tự (dùng nguyên `copyPatientsFrom`): "g01 " không coi là trùng "G01"; bé không mã bị bỏ nếu hôm nay đã có bé không mã cùng phòng; bé ở phòng đã xoá không chép; hai bé trùng mã cùng ngày nguồn đều được chép; thông báo chỉ nêu số bé chép được, không nói số bị bỏ. | Lưu ý | Hỏi bác sĩ có muốn báo số bé bị bỏ. | Thuật toán |
+| 35 | Bấm "Chép sang hôm nay" lần nữa sau khi xong thì dòng báo đổi thành "Không có bé nào cần chép", đúng nhưng dễ hiểu lầm. | Lưu ý | Hỏi bác sĩ có muốn đổi chữ báo không. | Giao diện |
+| 36 | Lượt khám và tổng hợp nhiều ngày tính mọi bé trong danh sách, kể cả bé chưa đánh dấu đã khám; số dưới ngày ở lịch chỉ tính bé đã khám, nên hai số có thể lệch. | Lưu ý | Hỏi bác sĩ: lượt khám tính mọi bé hay chỉ bé đã khám. | Thuật toán |
+| 37 | Dòng bé ngày trước và chi tiết chỉ xem hiện tuổi sẵn theo ngày đó (bảng 16d); khác luật "chỉ tính khi bấm" ở trang hôm nay vì trang này chỉ xem. | Lưu ý | Hỏi bác sĩ có chấp nhận khác biệt này không. | Giao diện |
+| 38 | Màn 320px: ô lịch rộng khoảng 41px, dưới 44px vì 7 cột không đủ chỗ; iPhone 15 khoảng 52px. | Lưu ý | Chấp nhận, trừ khi bác sĩ dùng máy 320px. | Giao diện |
+| 39 | `scripts/kiem-pham-vi.mjs` so tên file đúng từng chữ nên ghi chú trong tên file ở phiếu làm báo lỗi giả; đã bỏ ghi chú khỏi fileDuocSua của phiếu 9.5. | Lưu ý | Lưu ý cho người viết phiếu: không ghi chú trong tên file. | Điều phối |
+
+## 06/11/2026 — v9.5 — Lịch mới, xem lại ngày trước, tổng hợp nhiều ngày
+- Phiếu: `doi-agent/phieu-viec/2026-11-06-v9-5-lich-xem-ngay-truoc-tong-hop.json` (đợt 5/6 của v9; đặc tả `doi-agent/thiet-ke-v9/THIET_KE_V9.md` mục 1.3, 4.3, 5.4, 5.5, 5.6). Chưa có bác sĩ duyệt ảnh 9.5.
+- Đã đổi (lời thường):
+  1. Tab Việc: lịch ô tròn. Số dưới ngày là việc chưa xong; ngày đã qua còn việc sót thì nền vàng nhạt. Dòng "Còn sót n việc ở các ngày trước" bấm để tới ngày sót gần nhất (ẩn khi hết sót). Có nút "Về hôm nay".
+  2. Tab Khám: lịch có số bé đã khám dưới mỗi ngày, và nút gạt "Xem một ngày / Tổng hợp nhiều ngày".
+  3. Xem một ngày: chạm ngày trước hôm nay để xem lại danh sách bé ngày đó. Trang này chỉ xem, không thêm bé, không vuốt, không sửa; chạm bé để xem chi tiết chỉ xem. Có "Chép sang hôm nay" và "Tổng hợp ngày này".
+  4. Tổng hợp nhiều ngày: chạm ngày đầu rồi ngày cuối, có "Chọn lại" và nút "Xem tổng hợp n ngày". Bảng có hai cách xếp "Theo ngày" và "Theo mã giường", văn bản sửa được, có "Sao chép" và "Soạn lại". Tuổi mỗi dòng tính theo ngày khám của dòng đó.
+  5. Bé không có mã không bị ghép với bé khác; bé ở phòng đã xoá vẫn hiện. Lịch trên PC: cột 340px, ô ngày 47×58px (sửa mục chờ #5 cũ).
+  6. Ảnh chuẩn 9.5 chưa lưu, chờ bác sĩ duyệt.
+- Kỹ thuật: `src/lib/lich.js` và `src/lib/tong-hop.js` mới (hàm thuần); `src/lib/clinical.js` thêm tuỳ chọn `ngayTruoc` cho `buildSummary` (mặc định không đổi); `src/hooks.js` thêm `useBeKhoang`, `useBeNgay`, `useDaKhamThang` (chỉ đọc, theo chỉ mục `examDate` và `patientId`); `src/components/Lich.jsx` và `src/components/KhamNgayTruoc.jsx` mới; `Tasks.jsx`, `Exam.jsx`, `App.jsx`, `App.css` sửa theo; `tests/lich.test.js` và `tests/tong-hop.test.js` mới; thêm bài trong `tests/clinical.test.js` và `tests/luat.test.js`; `scripts/chup-giao-dien.mjs` thêm phép kiểm và ảnh. Không đổi CSDL, `calcAge`, `parseDob`, `parseGa`, `actions.js` (`copyPatientsFrom` giữ nguyên), `backup.js`, `merge.js`. `package.json` chỉ thêm hai bộ kiểm mới vào lệnh test, không đổi thư viện.
+- Kết quả kiểm: kiểm thử độc lập ĐẠT, không vòng sửa nào; `npm test` 163/163 (gồm `tests/lich.test.js`, `tests/tong-hop.test.js`, 35 bài); script chụp ĐẠT 88 ảnh; tính tay 8 nhóm ca tuổi khớp app, gồm qua tháng, qua năm, năm nhuận, lẻ ngày, sinh có năm.
+- Chưa thử trên iPhone thật. Chưa kiểm được: sao lưu xuất nhập chưa chạy lại (không đổi file sao lưu); so ảnh chuẩn bị bỏ qua vì máy không có `sharp`. Ảnh chuẩn chưa lưu lại, chờ bác sĩ duyệt ảnh 9.5.
+- Việc tiếp theo: đợt 9.6 sau khi bác sĩ duyệt ảnh 9.5 (mốc ngày làm việc 07:00, chế độ 2 ngày, giao tour).
+- Dọn "Chờ duyệt": bỏ #5 (đã sửa: cột PC 340px, ô lịch 47×58); thêm #33–#39.
 
 ## 06/11/2026 — v9.4 — Khám: nút "+" trên dòng phòng, đã khám bằng vuốt phải, chi tiết bé mới
 - Phiếu: `doi-agent/phieu-viec/2026-11-06-v9-4-kham.json` (đợt 4/6 của v9; đặc tả `doi-agent/thiet-ke-v9/THIET_KE_V9.md` mục 3, 5, 9). Bác sĩ đồng ý thêm ngày 06/11/2026: bấm "+" hoặc Enter ở ô thêm việc cũng thay chữ tắt ở cuối.

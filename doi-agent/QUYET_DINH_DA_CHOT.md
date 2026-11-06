@@ -72,3 +72,14 @@
 - Nút xoá: chỉ biểu tượng thùng rác 44×44. (bác sĩ duyệt 05/11/2026, v9.2) Chỉ còn trên máy tính khi rê chuột (hoặc Tab tới nút), nền đỏ phấn #FBEAE8, biểu tượng #A8473D; thay kiểu viền đỏ không nền (#C62828 / #EF5350).
 - Vuốt bám theo ngón tay. (bác sĩ duyệt 05/11/2026, v9.2) Thay "nút hiện dần, thả quá nửa thì mở": dòng trượt thật, nền xanh nhạt (phải) hoặc đỏ phấn (trái) lộ ra sau dòng, mốc 1/3 chiều rộng dòng; thả qua mốc là xong / xoá, thả trước mốc trượt về. Thiết bị bật "giảm chuyển động": bỏ trượt, giữ kết quả.
 - Chạm 2 lần: nền mờ dần rồi bảng chi tiết trượt lên; đóng: bảng trượt xuống rồi nền tắt.
+
+
+## Lịch và xem ngày trước (v9.5 — chờ bác sĩ duyệt ảnh 9.5)
+Các điểm dưới là quyết định của Điều phối cho đợt 9.5, chưa có bác sĩ chốt. Báo bác sĩ khi duyệt ảnh 9.5.
+- Lịch dùng ô tròn: số ngày trong vòng tròn, số dưới vòng tròn; hôm nay viền xanh; ngày chọn tô xanh; cột CN chữ đỏ dịu. Lịch PC: cột 340px, ô ngày 47×58px (thay mục chờ #5 cũ).
+- Ngày trước chỉ xem: không có nút "+", không vuốt, không quản lý phòng, không "Lấy danh sách hôm qua". Chỉ "Chép sang hôm nay" ghi dữ liệu.
+- Tuổi trên dòng bé và chi tiết chỉ xem tính theo NGÀY KHÁM của chính dòng đó (bảng 16d), không có nút bấm, không tính theo hôm nay.
+- Khi tổng hợp, bé không có mã không được ghép với bé khác cùng phòng: mỗi dòng một nhóm "Chưa có mã".
+- Bé ở phòng đã xoá vẫn hiện khi xem và khi tổng hợp, xếp sau các phòng còn sống.
+- Tổng hợp nhiều ngày có hai cách xếp, theo ngày hoặc theo mã giường (mặc định theo mã giường). Mỗi cách giữ bản sửa riêng; "Soạn lại" chỉ làm lại cách đang xem.
+- Lượt khám trong tổng hợp nhiều ngày tính mọi bé có trong danh sách (tạm, chờ bác sĩ chốt: "Chờ duyệt" #36).

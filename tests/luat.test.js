@@ -333,3 +333,87 @@ test('v9.4: lưu việc thay chữ tắt ở cuối (bấm + hoặc Enter): ô t
   assert.match(read('src/components/Exam.jsx'), />Soạn lại</);
   assert.doesNotMatch(read('src/components/Exam.jsx'), /Soạn lại từ danh sách/);
 });
+
+// ===== v9 đợt 9.5: lịch mới, xem lại ngày trước (chỉ xem), tổng hợp nhiều ngày =====
+const boChuThich = (s) => s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+
+test('v9.5: trang xem ngày trước CHỈ XEM — chỉ một thao tác ghi (copyPatientsFrom), không dùng PatientDetail/useTuLuu, không ô nhập, không vuốt', () => {
+  const raw = read('src/components/KhamNgayTruoc.jsx');
+  const s = boChuThich(raw);
+  const nhap = [...s.matchAll(/import\s*\{([^}]*)\}\s*from\s*'([^']+)'/g)];
+  const tuActions = nhap.filter((m) => /actions\.js$/.test(m[2])).flatMap((m) => m[1].split(',').map((x) => x.trim()).filter(Boolean));
+  assert.deepEqual(tuActions, ['copyPatientsFrom'], 'chỉ được import copyPatientsFrom từ actions.js');
+  assert.doesNotMatch(s, /\b(PatientDetail|useTuLuu|RoomManager|RoomList|PatientRow|TodoRow|SwipeRow|PlusIcon)\b/);
+  assert.doesNotMatch(s, /<(input|textarea|select)\b/i, 'chi tiết chỉ xem không có ô nhập');
+  assert.doesNotMatch(s, /\b(onDelete|onDone|updatePatient|setPatientDone|addPatient|removePatient|toggleTodo|addTodo)\b/);
+  assert.doesNotMatch(s, /\bdb\./);
+  assert.equal((s.match(/copyPatientsFrom\(/g) || []).length, 1);
+  assert.match(s, /copyPatientsFrom\(iso, today\)/);
+  // tuổi tính theo NGÀY ĐÓ của chính dòng, không bao giờ theo hôm nay
+  assert.equal((s.match(/calcAge\(/g) || []).length, 2);
+  assert.equal((s.match(/calcAge\(p, parseIso\(p\.examDate\)\)/g) || []).length, 2);
+  assert.doesNotMatch(s, /new Date\(|Date\.now\(|todayIso\(/);
+  assert.match(s, /now: parseIso\(iso\), ngayTruoc: true/);
+  // bé đang xem ở ngày trước là state riêng của trang này, không dùng selPid của App
+  assert.match(s, /const \[selPid, setSelPid\] = useState\(null\)/);
+  const app = read('src/App.jsx');
+  assert.match(app, /<KhamNgayTruoc key=\{ngayTruoc\}/);
+  assert.match(app, /setNgayTruoc\(null\);? \}, \[today\]\)/, 'qua ngày mới thì về hôm nay');
+  assert.match(app, /setSelPid\(null\); setSumOpen\(false\); setNgayTruoc\(iso\)/);
+});
+
+test('v9.5: lịch chỉ đọc dữ liệu; mỗi cách xếp ở tổng hợp nhiều ngày giữ bản sửa riêng; tuổi tính theo từng dòng', () => {
+  const s = boChuThich(read('src/components/Lich.jsx'));
+  assert.doesNotMatch(s, /from '\.\.\/lib\/actions\.js'/);
+  assert.doesNotMatch(s, /\bdb\./);
+  assert.match(s, /useBeKhoang\(/);
+  assert.match(s, /useDaKhamThang\(/);
+  assert.match(s, /const text = sua\[cach\] \?\? kq\.text/);
+  assert.match(s, /setSua\(\(s\) => \(\{ \.\.\.s, \[cach\]: null \}\)\)/, '"Soạn lại" chỉ làm lại cách đang xem');
+  assert.match(s, /useVietTat\(text, doiText\)/, 'ô sửa tổng hợp có viết tắt');
+  assert.match(s, /Cùng mã giường ở các ngày khác nhau có thể là bé khác\. App ghép theo phòng và mã, hãy kiểm tra trước khi gửi\./);
+  const tong = boChuThich(read('src/lib/tong-hop.js'));
+  assert.match(tong, /calcAge\(p, parseIso\(p\.examDate\)\)/);
+  assert.doesNotMatch(tong, /new Date\(|todayIso\(/);
+});
+
+test('v9.5: khung lịch — ô tròn 40px, ô chạm cao 58px, nút ≥44px, ngày tương lai không chọn được; lịch Việc dùng hàm của lich.js', () => {
+  const css = read('src/App.css').replace(/\/\*[\s\S]*?\*\//g, '');
+  const khoi = (sel) => new RegExp('(?:^|\\})' + sel.replace(/[.]/g, '\\.') + '\\{([^}]*)\\}', 'm').exec(css)?.[1] || '';
+  assert.match(khoi('.lich-o'), /width:40px;height:40px/);
+  assert.match(khoi('.lich-o'), /border-radius:50%/);
+  assert.match(khoi('.lich-cell'), /height:58px/);
+  assert.match(khoi('.lich-nut'), /width:44px;height:44px/);
+  assert.match(khoi('.dai-nut'), /height:44px/);
+  const lich = boChuThich(read('src/components/Lich.jsx'));
+  assert.match(lich, /disabled=\{xa\}/);
+  assert.match(lich, /khoaTuongLai && c\.iso > today/);
+  const t = boChuThich(read('src/components/Tasks.jsx'));
+  assert.match(t, /demViecChuaXong\(tasks\)/);
+  assert.match(t, /ngaySotGanNhat\(tasks, today\)/);
+  assert.doesNotMatch(t, /export function Calendar\b/, 'lịch cũ đã thay bằng LichViec');
+});
+
+test('v9.5: màu mới của lịch và dải ngày trước có đủ sáng/tối, bản tối đạt tương phản chữ ≥4,5:1, biểu tượng ≥3:1', () => {
+  const V = bienMau();
+  for (const che of ['sang', 'toi']) assert.match(V[che]['--lichXa'] || '', /^#[0-9A-Fa-f]{6}$/, `${che} --lichXa`);
+  const kiem = [
+    // chữ ≥ 4,5
+    ['ink/rangeBg', 'ink', 'rangeBg', 4.5], ['tNVi/surface', 'tNVi', 'surface', 4.5], ['tNVi/rangeBg', 'tNVi', 'rangeBg', 4.5],
+    ['rangeInk/rangeEnd', 'rangeInk', 'rangeEnd', 4.5], ['tintInk/rangeBg', 'tintInk', 'rangeBg', 4.5], ['tintInk/surface', 'tintInk', 'surface', 4.5],
+    ['tintInk/tint', 'tintInk', 'tint', 4.5], ['tBMi/tBM', 'tBMi', 'tBM', 4.5], ['accentInk/accent', 'accentInk', 'accent', 4.5],
+    ['noteInk/noteBg', 'noteInk', 'noteBg', 4.5], ['muted/tint2', 'muted', 'tint2', 4.5], ['tintInk/tint2', 'tintInk', 'tint2', 4.5],
+    ['ink/surface (nút "Về hôm nay" trên dải vàng)', 'ink', 'surface', 4.5],
+    // biểu tượng / viền / chữ không bắt buộc ≥ 3
+    ['rangeLine/surface', 'rangeLine', 'surface', 3], ['rangeLine/rangeEnd', 'rangeLine', 'rangeEnd', 3], ['accent/surface (vòng hôm nay)', 'accent', 'surface', 3],
+    ['accent/rangeBg (vòng hôm nay trong dải)', 'accent', 'rangeBg', 3], ['lichXa/surface (ngày tương lai, chữ nhạt)', 'lichXa', 'surface', 3]
+  ];
+  for (const [ten, a, b, min] of kiem) {
+    const r = tuongPhan(V.toi['--' + a], V.toi['--' + b]);
+    assert.ok(r >= min, `tối ${ten}: ${r.toFixed(2)} < ${min}`);
+  }
+  // bản sáng: chữ trên nền khoảng ngày và dải vàng (màu canvas đã duyệt)
+  for (const [a, b] of [['ink', 'rangeBg'], ['rangeInk', 'rangeEnd'], ['tintInk', 'rangeBg'], ['tNVi', 'rangeBg'], ['noteInk', 'noteBg'], ['tBMi', 'tBM'], ['tintInk', 'tint']]) {
+    assert.ok(tuongPhan(V.sang['--' + a], V.sang['--' + b]) >= 4.5, `sáng ${a}/${b}`);
+  }
+});

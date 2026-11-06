@@ -4,8 +4,10 @@ import { ensureSeed, clearDone, khoiPhucNhieu } from './lib/actions.js';
 import { buildSummary } from './lib/clinical.js';
 import { ZONES } from './db.js';
 import { fmtLong, fmtDM, parseIso } from './lib/dates.js';
-import { ZoneNav, TaskGroups, TaskForm, Calendar, monthOf } from './components/Tasks.jsx';
+import { ZoneNav, TaskGroups, TaskForm, LichViec, monthOf } from './components/Tasks.jsx';
 import { ExamActions, RoomManager, RoomList, PatientDetail, SummaryPanel } from './components/Exam.jsx';
+import KhamNgayTruoc from './components/KhamNgayTruoc.jsx';
+import { LichKham } from './components/Lich.jsx';
 import ThuVien from './components/ThuVien.jsx';
 import { VietTatProvider } from './components/VietTat.jsx';
 import { HoanTacProvider, useHoanTac } from './components/HoanTac.jsx';
@@ -43,11 +45,13 @@ function AppChinh() {
   const [sumOpen, setSumOpen] = useState(false);
   const [backupOpen, setBackupOpen] = useState(false);
   const [vtOpen, setVtOpen] = useState(false);
+  const [ngayTruoc, setNgayTruoc] = useState(null);  // v9.5: đang xem lại một ngày trước ở tab Khám (chỉ xem); null = hôm nay
+  const [lichKham, setLichKham] = useState(false);
 
   useEffect(() => { ensureSeed(); }, []);
 
-  // Qua ngày mới: đưa mục Việc về hôm nay
-  useEffect(() => { setViewDate(today); setCalMonth(monthOf(today)); }, [today]);
+  // Qua ngày mới: đưa mục Việc và Khám về hôm nay
+  useEffect(() => { setViewDate(today); setCalMonth(monthOf(today)); setNgayTruoc(null); }, [today]);
 
   const { tasks, rooms, patients, todosByPid, prev, roomUse, lastExport } = data;
   const dayTasks = useMemo(() => tasks.filter((t) => t.date === viewDate), [tasks, viewDate]);
@@ -62,13 +66,17 @@ function AppChinh() {
   const total = isTask ? dayTasks.length : patients.length;
   const done = isTask ? dayTasks.filter((t) => t.done).length : patients.filter((p) => p.done).length;
   const pct = total ? Math.round((done / total) * 100) : 0;
-  const heading = isTask ? (isToday ? 'Việc hôm nay' : 'Việc ngày ' + fmtDM(viewDate)) : 'Khám bệnh hôm nay';
-  const dateText = fmtLong(parseIso(isTask ? viewDate : today));
+  const xemTruoc = !isTask && !!ngayTruoc;   // tab Khám đang xem ngày trước
+  const heading = isTask ? (isToday ? 'Việc hôm nay' : 'Việc ngày ' + fmtDM(viewDate)) : (xemTruoc ? 'Khám ngày ' + fmtDM(ngayTruoc) : 'Khám bệnh hôm nay');
+  const dateText = fmtLong(parseIso(isTask ? viewDate : (ngayTruoc || today)));
 
   // khu cũ (BM) không có trong ô chọn khu khi thêm việc
   const pickZone = (k) => { setActive(k); if (ZONES.includes(k)) setNewZone(k); };
   const toggleIn = (setter) => (k) => setter((c) => ({ ...c, [k]: !c[k] }));
   const goToday = () => { setViewDate(today); setCalMonth(monthOf(today)); };
+  // Xem một ngày trước: bé đang mở và bảng tổng hợp của HÔM NAY được đóng lại, không lẫn với bé của ngày đang xem
+  const xemNgayTruoc = (iso) => { setSelPid(null); setSumOpen(false); setNgayTruoc(iso); };
+  const veHomNayKham = () => setNgayTruoc(null);
   const summary = () => buildSummary({ rooms, patients, todosByPid });
   // Xoá việc đã xong: một lần Hoàn tác trả lại tất cả việc vừa xoá
   const xoaDaXong = async () => {
@@ -104,6 +112,12 @@ function AppChinh() {
     </Sheet>
   );
 
+  const lichKhamSheet = lichKham && !isTask && (
+    <Sheet label="Lịch khám" className="sheet-lich" wide={wide} onClose={() => setLichKham(false)}>
+      <LichKham today={today} dangXem={ngayTruoc} wide={wide} onXemNgay={xemNgayTruoc} onVeHomNay={veHomNayKham} onClose={() => setLichKham(false)} />
+    </Sheet>
+  );
+
   if (!data.ready) return <div className="loading">Đang mở dữ liệu…</div>;
 
   // ===================== PC =====================
@@ -120,12 +134,19 @@ function AppChinh() {
             <div className="muted small">{dateText}</div>
             <h1 className="h1">{heading}</h1>
           </div>
-          <div className="stack8">
-            <div className="row-between muted small"><span>{isTask ? 'Đã hoàn thành' : 'Đã khám'}</span><span>{done}/{total}</span></div>
-            <div className="bar"><div style={{ width: pct + '%' }} /></div>
-          </div>
+          {!xemTruoc && (
+            <div className="stack8">
+              <div className="row-between muted small"><span>{isTask ? 'Đã hoàn thành' : 'Đã khám'}</span><span>{done}/{total}</span></div>
+              <div className="bar"><div style={{ width: pct + '%' }} /></div>
+            </div>
+          )}
 
-          {!isTask && <ExamActions prev={prev} today={today} roomEdit={roomEdit} onToggleRoomEdit={() => setRoomEdit(!roomEdit)} />}
+          {!isTask && (
+            <button type="button" className={'btn cal-toggle' + (xemTruoc ? ' on' : '')} onClick={() => setLichKham(true)}>
+              <CalIcon /><span className="grow left-text">Lịch khám</span>
+            </button>
+          )}
+          {!isTask && !xemTruoc && <ExamActions prev={prev} today={today} roomEdit={roomEdit} onToggleRoomEdit={() => setRoomEdit(!roomEdit)} />}
 
           {isTask && (
             <>
@@ -135,8 +156,8 @@ function AppChinh() {
                   {overdue > 0 && <span className="badge">{overdue}</span>}
                   <Chevron dir="down" style={{ transform: `rotate(${calOpen ? 180 : 0}deg)` }} />
                 </button>
-                {calOpen && <Calendar tasks={tasks} viewDate={viewDate} today={today} month={calMonth} setMonth={setCalMonth} onPick={setViewDate} />}
-                {!isToday && <button type="button" className="btn tint" onClick={goToday}>Về hôm nay</button>}
+                {calOpen && <LichViec inline tasks={tasks} viewDate={viewDate} today={today} month={calMonth} setMonth={setCalMonth} onPick={setViewDate} />}
+                {!calOpen && !isToday && <button type="button" className="btn tint" onClick={goToday}>Về hôm nay</button>}
               </div>
               <ZoneNav dayTasks={dayTasks} active={active} onPick={pickZone} />
               {examHint}
@@ -150,6 +171,8 @@ function AppChinh() {
             <TaskForm variant="pc" date={viewDate} zone={newZone} setZone={setNewZone} tags={newTags} setTags={setNewTags} />
             <TaskGroups dayTasks={dayTasks} active={active} collapsed={collapsed} onToggle={toggleIn(setCollapsed)} />
           </main>
+        ) : xemTruoc ? (
+          <KhamNgayTruoc key={ngayTruoc} wide iso={ngayTruoc} today={today} onVeHomNay={veHomNayKham} />
         ) : (
           <>
             <main className="pc-main exam">
@@ -167,6 +190,7 @@ function AppChinh() {
           </>
         )}
         {backupSheet}
+        {lichKhamSheet}
         {vtSheet}
       </div>
     );
@@ -184,18 +208,24 @@ function AppChinh() {
           <div className="row8 none">
             {vtBtn}
             {backupBtn}
-            {isTask && (
+            {isTask ? (
               <button type="button" className="round-btn rel" onClick={() => setCalSheet(true)} aria-label="Mở lịch">
                 <CalIcon />{overdue > 0 && <span className="badge">{overdue}</span>}
+              </button>
+            ) : (
+              <button type="button" className={'round-btn rel' + (xemTruoc ? ' on' : '')} onClick={() => setLichKham(true)} aria-label="Lịch khám">
+                <CalIcon />
               </button>
             )}
           </div>
         </div>
-        <div className="row10">
-          <div className="bar grow thin"><div style={{ width: pct + '%' }} /></div>
-          <div className="prog-text">{isTask ? 'Đã xong' : 'Đã khám'} {done}/{total}</div>
-          {isTask && !isToday && <button type="button" className="btn tint sm" onClick={goToday}>Về hôm nay</button>}
-        </div>
+        {!xemTruoc && (
+          <div className="row10">
+            <div className="bar grow thin"><div style={{ width: pct + '%' }} /></div>
+            <div className="prog-text">{isTask ? 'Đã xong' : 'Đã khám'} {done}/{total}</div>
+            {isTask && !isToday && <button type="button" className="btn tint sm" onClick={goToday}>Về hôm nay</button>}
+          </div>
+        )}
       </header>
       <div className="ph-tabs">{tabs}</div>
 
@@ -210,6 +240,8 @@ function AppChinh() {
           </main>
           <TaskForm variant="ph" date={viewDate} zone={newZone} setZone={setNewZone} tags={newTags} setTags={setNewTags} khuLoc={active} />
         </>
+      ) : xemTruoc ? (
+        <KhamNgayTruoc key={ngayTruoc} iso={ngayTruoc} today={today} onVeHomNay={veHomNayKham} />
       ) : (
         <main className="ph-main exam">
           <ExamActions compact prev={prev} today={today} roomEdit={roomEdit} onToggleRoomEdit={() => setRoomEdit(!roomEdit)} />
@@ -221,8 +253,8 @@ function AppChinh() {
       )}
 
       {calSheet && isTask && (
-        <Sheet label="Lịch" onClose={() => setCalSheet(false)}>
-          <Calendar tasks={tasks} viewDate={viewDate} today={today} month={calMonth} setMonth={setCalMonth}
+        <Sheet label="Lịch công việc" className="sheet-lich" onClose={() => setCalSheet(false)}>
+          <LichViec tasks={tasks} viewDate={viewDate} today={today} month={calMonth} setMonth={setCalMonth}
             onPick={(d) => setViewDate(d)} onClose={() => setCalSheet(false)} />
         </Sheet>
       )}
@@ -237,6 +269,7 @@ function AppChinh() {
         </Sheet>
       )}
       {backupSheet}
+      {lichKhamSheet}
       {vtSheet}
     </div>
   );

@@ -330,7 +330,7 @@ export function PatientDetail({ p, todos, onClose, wide = false, phong = '' }) {
   );
 }
 /** Tổng hợp y lệnh: sửa được, sao chép để gửi đồng nghiệp. */
-export function SummaryPanel({ build, onClose }) {
+export function SummaryPanel({ build, onClose, tieuDe = 'Tổng hợp y lệnh' }) {
   const [text, setText] = useState(build);
   const [msg, setMsg] = useState('');
   const vt = useVietTat(text, (x) => { setText(x); setMsg(''); });
@@ -340,7 +340,7 @@ export function SummaryPanel({ build, onClose }) {
   };
   return (
     <>
-      <SheetHead title="Tổng hợp y lệnh" onClose={onClose} closeLabel="Đóng tổng hợp" />
+      <SheetHead title={tieuDe} onClose={onClose} closeLabel="Đóng tổng hợp" />
       <div className="field">
         <label htmlFor="tonghop-noidung" className="sr-only">Nội dung tổng hợp, có thể sửa trước khi sao chép</label>
         {vt.strip}

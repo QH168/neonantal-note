@@ -12,6 +12,8 @@
   - `TodoRow` (v9.2) — việc cần làm của bé: không còn ô tick (chữ sát lề trái 14px); vuốt phải qua 1/3 = xong (`toggleTodo`, ghi `doneAt`); vuốt trái qua 1/3 = xoá mềm + thanh Hoàn tác 6 giây (`khoiPhucTodo`); việc xong chữ `--muted`, không gạch ngang, `TickOk` cuối dòng; chạm 2 lần (`themCham`/`boDemCham`, cũng dùng trên PC) mở `TodoDetail`. Dùng `SwipeRow` trong `src/components/ui.jsx`.
   - `TodoDetail` (v9.2) — bảng nhỏ (`Sheet` `sheet-todo`, cao theo nội dung, mở chồng lên chi tiết bé): ô tên sửa được (tự lưu, `setTodoText`, tên rỗng không lưu, có viết tắt), dòng trạng thái `TrangThaiXong` ("Chưa xong" + "Hoàn thành" / "Đã xong lúc hh:mm" + "Bỏ đánh dấu xong"), "Xoá việc" (có Hoàn tác 6 giây), "Xong". Esc chỉ đóng bảng trên cùng.
   - `SummaryPanel` — khung "Tổng hợp y lệnh" sửa được + "Sao chép" + "Soạn lại" (soạn lại từ danh sách; v9.4 đổi tên nút, nội dung tổng hợp không đổi). Nút mở bảng ở `src/App.jsx` ghi "Tổng hợp y lệnh".
+- `src/components/Lich.jsx` (v9.5, bảng 16c, 16e, 16f) — `LichKham`: lịch tab Khám, nút gạt "Xem một ngày / Tổng hợp nhiều ngày". Xem một ngày: chạm ngày trước hôm nay thì mở ngày đó (`onXemNgay`), chạm hôm nay thì về hôm nay (`onVeHomNay`); ngày sau hôm nay không chạm được. Số dưới ngày = số bé đã khám (`useDaKhamThang`). Tổng hợp nhiều ngày: chạm ngày đầu rồi ngày cuối (`chonKhoang`), dòng "dd/mm đến dd/mm, n ngày, m lượt khám", "Chọn lại", nút "Xem tổng hợp n ngày" (mờ khi chưa đủ hai đầu). `TongHopNhieu` là bảng tổng hợp (bảng 16f): nút gạt "Theo ngày / Theo mã giường" (mặc định theo mã giường), ô văn bản sửa được, "Sao chép", "Soạn lại". Mỗi cách xếp giữ bản sửa riêng; "Soạn lại" chỉ làm lại cách đang xem.
+- `src/components/KhamNgayTruoc.jsx` (v9.5, bảng 16d, chỉ xem) — xem lại ngày trước: dải vàng "Đang xem ngày trước. Chỉ xem, không sửa." và "Về hôm nay"; danh sách theo phòng, "Đã khám n/m" từng phòng; bé ở phòng đã xoá vẫn hiện; dòng bé ghi số đo "38w0d hôm đó, 1850 g" tính theo ngày đó. Không nút "+", không vuốt, không quản lý phòng. Chạm bé mở `BeChiXem` (chi tiết chỉ xem, không dùng `PatientDetail`, không ô nhập). Đáy: "Chép sang hôm nay" (`copyPatientsFrom`, báo "Đã chép n bé sang hôm nay" hoặc "Không có bé nào cần chép") và "Tổng hợp ngày này" (`buildSummary` với `ngayTruoc`). Ngày không có bé thì báo rõ. Dữ liệu chỉ đọc qua `useBeNgay`.
 - `src/lib/actions.js` — `ensureSeed` (tạo Phòng 1–3), `addRoom`, `renameRoom`, `removeRoom`, `addPatient`, `updatePatient`,
   `setPatientDone` (đã khám / bỏ; qua `phanDoiXong`, ghi `doneAt`), `removePatient`, `addTodo`, `toggleTodo` (ghi `doneAt`), `removeTodo`, `khoiPhucTodo` (Hoàn tác xoá), `setTodoText`, `copyPatientsFrom` (không mang `doneAt` sang ngày mới).
 - `src/lib/thu-tu.js` — hàm thuần `soSanhBe`, `sapBe`, `orderTiepTheo`: thứ tự bé trong phòng (theo `order`, rồi giờ tạo, rồi id).
@@ -27,7 +29,7 @@
 Xem mục "Khám" trong `doi-agent/QUYET_DINH_DA_CHOT.md`.
 
 ## Điểm dễ hỏng
-- `copyPatientsFrom` chống trùng theo **phòng + mã**; bé chưa có mã ("") sẽ bị coi là trùng với bé chưa có mã khác cùng phòng.
+- `copyPatientsFrom` chống trùng theo **phòng + mã**; bé chưa có mã ("") sẽ bị coi là trùng với bé chưa có mã khác cùng phòng (xem "Chờ duyệt" #34 trong `NHAT_KY.md`).
 - Thứ tự bé: `copyPatientsFrom` sắp bé nguồn rồi gán `order`; `addPatient` gán `order` để bé thêm tay nằm cuối. Bé cũ không có `order` vẫn xếp theo giờ tạo. Đừng bỏ `sapBe` khi đổi cách hiển thị (kiểm bằng `tests/thu-tu.test.js`).
 - `roomUse` đếm bằng một truy vấn cho mỗi phòng — ổn với vài phòng; nếu nhiều phòng, agent Thuật toán có thể gộp lại.
 - Tổng hợp y lệnh dùng `buildSummary` trong `src/lib/clinical.js` (xem thẻ tuần tuổi).
@@ -36,3 +38,7 @@ Xem mục "Khám" trong `doi-agent/QUYET_DINH_DA_CHOT.md`.
 - Nút "+" trên dòng phòng bấm hai lần nhanh có thể tạo bé rỗng thừa (xoá bằng "Xoá khỏi hôm nay"); bé mới tự đặt con trỏ vào ô mã, Safari iPhone có thể không bật bàn phím (xem "Chờ duyệt").
 - Ô "Tuổi thai" ở hàng 3 ô là tuổi thai lúc sinh; "Hiệu chỉnh" ở ô kết quả là tuổi thai hiệu chỉnh. Đừng đổi nhãn một bên mà quên bên kia. Sau khi xoá việc của bé trong chi tiết bé, thanh Hoàn tác che "Xoá khỏi hôm nay" và "Xong" 6 giây, nút Hoàn tác đè lên nút "Xong" (xem "Chờ duyệt").
 - Ảnh chụp tự động thử "Lấy danh sách hôm qua" 2 lần để chắc không chép trùng.
+- Lượt khám trong tổng hợp nhiều ngày tính mọi bé có trong danh sách các ngày đó, kể cả bé chưa đánh dấu đã khám. Số dưới ngày ở lịch chỉ tính bé đã khám, nên hai số có thể lệch (xem "Chờ duyệt" #36).
+- Dòng bé ngày trước và chi tiết chỉ xem tính tuổi sẵn theo ngày khám đó, không có nút bấm; khác trang hôm nay (xem "Chờ duyệt" #37).
+- Ngày trước chỉ đọc: không đổi `updatedAt` của dòng nào. Bé ở phòng đã xoá vẫn hiện (`phongChoXem`).
+- Đổi ngày xem thì bé đang chọn của ngày cũ được bỏ chọn (`key={ngayTruoc}` ở `src/App.jsx`).

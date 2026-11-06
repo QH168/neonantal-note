@@ -7,12 +7,15 @@
   - `parseGa(ga)` → `{ w, d, days }` hoặc `null`. Nhận 346, 34w6d, 34+6, 34 6, 34.6, 34,6, 34/6, 3406, 34, "34 tuần 6 ngày". Giới hạn 20–45 tuần, ngày lẻ 0–6.
   - `parseDob(dob, now)` → `{ date }` hoặc `{ err }`. Không ghi năm: năm nay, nếu tương lai thì lùi 1 năm.
   - `calcAge(p, now)` → `{ days: 'N ngày', pma: 'XwYd' }` hoặc `{ err }`. Ngày tuổi = số ngày từ ngày sinh đến hôm nay (làm tròn).
-  - `gaFmt`, `buildSummary({ rooms, patients, todosByPid, now })`, `copyText`.
+  - `gaFmt`, `buildSummary({ rooms, patients, todosByPid, now, ngayTruoc })`, `copyText`. `ngayTruoc` (v9.5, mặc định false): dòng hai ghi "Tuổi thai ghi là tuổi thai hiệu chỉnh ngày dd/mm.", danh sách trống ghi "ngày này"; không truyền thì văn bản như cũ.
 - `src/lib/dates.js` — `p2`, `isoOf`, `todayIso`, `parseIso`, `addDays`, `fmtLong`, `fmtDM`.
+- `src/lib/tong-hop.js` (v9.5) — `tongHopNhieuNgay({ tuNgay, denNgay, rooms, patients, todosByPid, cachXep })` trả `{ text, soNgay, soLuot, soMaGiuong, soBeChuaCoMa }` (`cachXep` là 'ngay' hoặc 'ma'); `phongChoXem` (phòng còn sống, rồi phòng đã xoá có bé, rồi 'Phòng đã xoá'). Tuổi mỗi dòng là `calcAge(p, parseIso(p.examDate))`.
 
 ## Nơi hiện (v9.4)
 - Chi tiết bé (`PatientDetail` trong `src/components/Exam.jsx`, bảng 16b): ô nhập "Tuổi thai" là tuổi thai lúc sinh; nút "Tính tuần tuổi" bên trái, ô kết quả `be-kq` bên phải ghi "Ngày tuổi" và "Hiệu chỉnh" (= tuổi thai hiệu chỉnh). Vẫn chỉ tính khi bấm; sửa ngày sinh hoặc tuổi thai thì xoá kết quả cũ ngay. `src/lib/clinical.js` không đổi.
 - Khung "Tổng hợp y lệnh" do `buildSummary` dựng; nút "Soạn lại" soạn lại từ danh sách.
+- Ngày trước (v9.5, bảng 16d): dòng bé hiện tuổi thai hiệu chỉnh "hôm đó" (ví dụ "38w0d hôm đó, 1850 g"); chi tiết chỉ xem hiện "Ngày tuổi" và "Hiệu chỉnh" ghi rõ ngày. Tính sẵn theo ngày khám của chính dòng đó, không cần bấm (`soDoNgayTruoc` trong `src/components/KhamNgayTruoc.jsx`). "Tổng hợp ngày này" dùng `buildSummary` với `ngayTruoc: true`.
+- Tổng hợp nhiều ngày (v9.5, bảng 16f): `tongHopNhieuNgay`. Tiêu đề "TỔNG HỢP 02/11 - 04/11/2026" (khác năm thì ghi đủ năm); nhóm theo mã giường "PHÒNG 1 - G01" hoặc theo ngày "NGÀY 02/11". Kiểm bằng `tests/tong-hop.test.js`.
 
 ## Kiểm tra
 - `tests/clinical.test.js`, `tests/ca-chuan.test.js` (đọc bảng `doi-agent/ca-chuan-lam-sang.md`).
@@ -24,3 +27,4 @@ Xem mục "Tính tuần tuổi" trong `doi-agent/QUYET_DINH_DA_CHOT.md`. Đặc 
 ## Điểm dễ hỏng
 - Luôn tính theo ngày lịch giờ máy (bỏ giờ phút), không dùng UTC.
 - `buildSummary` ghi "Tuổi thai ghi là tuổi thai hiệu chỉnh hôm nay." — đổi định dạng PMA thì tổng hợp cũng đổi.
+- Tuổi ngày trước và tổng hợp nhiều ngày tính theo `examDate` của từng dòng, không dùng hôm nay và không dùng đầu hoặc cuối khoảng. Đổi `calcAge`, `parseDob` hoặc `parseGa` thì chạy `tests/tong-hop.test.js` và `tests/clinical.test.js`.
