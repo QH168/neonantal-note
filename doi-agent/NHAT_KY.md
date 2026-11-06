@@ -37,17 +37,17 @@
 | 39 | `scripts/kiem-pham-vi.mjs` so tên file đúng từng chữ nên ghi chú trong tên file ở phiếu làm báo lỗi giả; đã bỏ ghi chú khỏi fileDuocSua của phiếu 9.5. | Lưu ý | Lưu ý cho người viết phiếu: không ghi chú trong tên file. | Điều phối |
 
 ## 06/11/2026 — v9.5 — Lịch mới, xem lại ngày trước, tổng hợp nhiều ngày
-- Phiếu: `doi-agent/phieu-viec/2026-11-06-v9-5-lich-xem-ngay-truoc-tong-hop.json` (đợt 5/6 của v9; đặc tả `doi-agent/thiet-ke-v9/THIET_KE_V9.md` mục 1.3, 4.3, 5.4, 5.5, 5.6). Chưa có bác sĩ duyệt ảnh 9.5.
+- Phiếu: `doi-agent/phieu-viec/2026-11-06-v9-5-lich-xem-ngay-truoc-tong-hop.json` (đợt 5/6 của v9; đặc tả `doi-agent/thiet-ke-v9/THIET_KE_V9.md` mục 1.3, 4.3, 5.4, 5.5, 5.6). Bác sĩ đã duyệt 06/11/2026.
 - Đã đổi (lời thường):
   1. Tab Việc: lịch ô tròn. Số dưới ngày là việc chưa xong; ngày đã qua còn việc sót thì nền vàng nhạt. Dòng "Còn sót n việc ở các ngày trước" bấm để tới ngày sót gần nhất (ẩn khi hết sót). Có nút "Về hôm nay".
   2. Tab Khám: lịch có số bé đã khám dưới mỗi ngày, và nút gạt "Xem một ngày / Tổng hợp nhiều ngày".
   3. Xem một ngày: chạm ngày trước hôm nay để xem lại danh sách bé ngày đó. Trang này chỉ xem, không thêm bé, không vuốt, không sửa; chạm bé để xem chi tiết chỉ xem. Có "Chép sang hôm nay" và "Tổng hợp ngày này".
   4. Tổng hợp nhiều ngày: chạm ngày đầu rồi ngày cuối, có "Chọn lại" và nút "Xem tổng hợp n ngày". Bảng có hai cách xếp "Theo ngày" và "Theo mã giường", văn bản sửa được, có "Sao chép" và "Soạn lại". Tuổi mỗi dòng tính theo ngày khám của dòng đó.
   5. Bé không có mã không bị ghép với bé khác; bé ở phòng đã xoá vẫn hiện. Lịch trên PC: cột 340px, ô ngày 47×58px (sửa mục chờ #5 cũ).
-  6. Ảnh chuẩn 9.5 chưa lưu, chờ bác sĩ duyệt.
+  6. Bác sĩ đã duyệt, ảnh chuẩn 9.5 đã lưu.
 - Kỹ thuật: `src/lib/lich.js` và `src/lib/tong-hop.js` mới (hàm thuần); `src/lib/clinical.js` thêm tuỳ chọn `ngayTruoc` cho `buildSummary` (mặc định không đổi); `src/hooks.js` thêm `useBeKhoang`, `useBeNgay`, `useDaKhamThang` (chỉ đọc, theo chỉ mục `examDate` và `patientId`); `src/components/Lich.jsx` và `src/components/KhamNgayTruoc.jsx` mới; `Tasks.jsx`, `Exam.jsx`, `App.jsx`, `App.css` sửa theo; `tests/lich.test.js` và `tests/tong-hop.test.js` mới; thêm bài trong `tests/clinical.test.js` và `tests/luat.test.js`; `scripts/chup-giao-dien.mjs` thêm phép kiểm và ảnh. Không đổi CSDL, `calcAge`, `parseDob`, `parseGa`, `actions.js` (`copyPatientsFrom` giữ nguyên), `backup.js`, `merge.js`. `package.json` chỉ thêm hai bộ kiểm mới vào lệnh test, không đổi thư viện.
 - Kết quả kiểm: kiểm thử độc lập ĐẠT, không vòng sửa nào; `npm test` 163/163 (gồm `tests/lich.test.js`, `tests/tong-hop.test.js`, 35 bài); script chụp ĐẠT 88 ảnh; tính tay 8 nhóm ca tuổi khớp app, gồm qua tháng, qua năm, năm nhuận, lẻ ngày, sinh có năm.
-- Chưa thử trên iPhone thật. Chưa kiểm được: sao lưu xuất nhập chưa chạy lại (không đổi file sao lưu); so ảnh chuẩn bị bỏ qua vì máy không có `sharp`. Ảnh chuẩn chưa lưu lại, chờ bác sĩ duyệt ảnh 9.5.
+- Chưa thử trên iPhone thật. Chưa kiểm được: sao lưu xuất nhập chưa chạy lại (không đổi file sao lưu); so ảnh chuẩn bị bỏ qua vì máy không có `sharp`. Ảnh chuẩn 9.5 đã lưu sau khi bác sĩ duyệt.
 - Việc tiếp theo: đợt 9.6 sau khi bác sĩ duyệt ảnh 9.5 (mốc ngày làm việc 07:00, chế độ 2 ngày, giao tour).
 - Dọn "Chờ duyệt": bỏ #5 (đã sửa: cột PC 340px, ô lịch 47×58); thêm #33–#39.
 

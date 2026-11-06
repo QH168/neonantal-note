@@ -74,8 +74,8 @@
 - Chạm 2 lần: nền mờ dần rồi bảng chi tiết trượt lên; đóng: bảng trượt xuống rồi nền tắt.
 
 
-## Lịch và xem ngày trước (v9.5 — chờ bác sĩ duyệt ảnh 9.5)
-Các điểm dưới là quyết định của Điều phối cho đợt 9.5, chưa có bác sĩ chốt. Báo bác sĩ khi duyệt ảnh 9.5.
+## Lịch và xem ngày trước (v9.5 — bác sĩ duyệt 06/11/2026)
+Các điểm dưới do Điều phối đề xuất cho đợt 9.5; bác sĩ đã duyệt đợt này sau khi được báo.
 - Lịch dùng ô tròn: số ngày trong vòng tròn, số dưới vòng tròn; hôm nay viền xanh; ngày chọn tô xanh; cột CN chữ đỏ dịu. Lịch PC: cột 340px, ô ngày 47×58px (thay mục chờ #5 cũ).
 - Ngày trước chỉ xem: không có nút "+", không vuốt, không quản lý phòng, không "Lấy danh sách hôm qua". Chỉ "Chép sang hôm nay" ghi dữ liệu.
 - Tuổi trên dòng bé và chi tiết chỉ xem tính theo NGÀY KHÁM của chính dòng đó (bảng 16d), không có nút bấm, không tính theo hôm nay.
