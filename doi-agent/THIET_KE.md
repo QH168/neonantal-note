@@ -75,6 +75,6 @@ Mỗi ảnh chụp iPhone (sáng và tối) chấm 8 mục. Mục nào **Không*
 
 ## 7. Ảnh tham chiếu
 
-- Ảnh đã duyệt: `doi-agent/anh-chuan/` (iPhone sáng/tối, PC). Thay đổi giao diện phải so với bộ này. Bộ này đã lưu lại cho v9.1 và v9.2 (bác sĩ duyệt 05/11 và 06/11/2026). Ảnh 9.3 chưa lưu chuẩn: chờ bác sĩ duyệt ảnh 9.3 rồi mới lưu.
+- Ảnh đã duyệt: `doi-agent/anh-chuan/` (iPhone sáng/tối, PC). Thay đổi giao diện phải so với bộ này. Bộ này đã lưu lại cho v9.1, v9.2 và v9.3 (bác sĩ duyệt 05/11 và 06/11/2026).
 - Thiết kế v9 đã duyệt 05/11/2026: `doi-agent/thiet-ke-v9/THIET_KE_V9.md`. Đã áp dụng đợt 9.1 (token, đầu trang, bảng cài đặt) đợt 9.2 (cử chỉ vuốt phải/trái 1/3, Hoàn tác, tích xanh, `doneAt`, chi tiết việc của bé, chi tiết việc cao ~76% với chip khu, mục "Cử chỉ" trong cài đặt) và đợt 9.3 (ô thêm việc 1 dòng, gợi ý chip trên ô gõ viết tắt, thanh "Đã đổi … thành …" 6 giây, thư viện bỏ bút chì; bàn phím iPhone chưa thử trên máy thật). Tab Khám mới và dòng bé vuốt phải (9.4), lịch mới (9.5), ngày làm việc (9.6) thuộc các đợt sau — chưa làm.
 - Bản thiết kế gốc: canvas "Ghi chú công việc theo khu vực", bảng "iPhone 15 – chữ gọn".

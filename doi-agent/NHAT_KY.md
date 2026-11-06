@@ -7,7 +7,7 @@
 | # | Phát hiện | Mức | Đề xuất | Agent |
 |---|---|---|---|---|
 | 1 | Cuộn dọc danh sách và cử chỉ mới (vuốt phải/trái 1/3 trên Việc, việc của bé, thư viện) bằng ngón tay thật, cùng bàn phím iPhone thật với bảng chi tiết việc, chưa kiểm được bằng máy (Chromium headless) — bác sĩ thử trên iPhone. | Lưu ý | Bác sĩ thử cuộn dọc, vuốt phải/trái và gõ trong chi tiết việc trên iPhone; nếu vướng thì giao phiếu chỉnh. | Giao diện |
-| 3 | Ô thêm việc một dòng: gõ "/ctm" rồi Enter thì gửi luôn, không thay chữ (phiếu chỉ yêu cầu dấu cách). | Lưu ý | Hỏi bác sĩ có muốn Enter cũng thay chữ trước khi gửi không. | Giao diện |
+| 3 | Ô thêm việc: gõ "/ctm" rồi bấm "+" hoặc Enter thì lưu nguyên chữ tắt. | Lưu ý | Bác sĩ đồng ý 06/11/2026: bấm "+" hoặc Enter cũng thay chữ trước khi lưu; làm ở đợt 9.4. | Giao diện |
 | 5 | PC: ô lịch tháng 39×48px (có từ trước, không phải do v8.1). | Lưu ý | Phóng to ô nếu bác sĩ dùng chuột/chạm trên PC. | Giao diện |
 | 8 | Chữ chip khu trống `#6B7F91` do đặc tả chốt đo 4,14:1 trên trắng và 3,84:1 trên nền trang, dưới 4,5:1. | Lưu ý | Đề xuất đổi `--chipZero` (sáng) sang `#5E7183` (5,04:1 trên trắng, 4,67:1 trên nền trang). Hỏi bác sĩ. | Giao diện |
 | 9 | Dòng nhắc cử chỉ hiện cả khi danh sách của ngày trống, kể cả sau 3 lần mở đầu (đúng chữ đặc tả mục 2.3, khác hành vi cũ là ẩn khi trống). | Lưu ý | Hỏi bác sĩ giữ theo đặc tả hay chỉ hiện trong 3 lần mở đầu. | Giao diện |
@@ -39,7 +39,7 @@
 - Kết quả kiểm: kiểm thử độc lập ĐẠT sau 2 vòng sửa; `npm test` 108/108; script chụp ĐẠT 56 ảnh.
   - Vòng 1: thanh Hoàn tác xoá che trọn ô thêm việc; nay nằm ngay trên ô.
   - Vòng 2: chạm "Hoàn tác" khi ô đang bung và trống bị trượt vì ô thu lại ngay dưới ngón tay; nay việc thu lại hoãn tới sau khi nhấc ngón, và script dùng cú chạm thật.
-- Chưa thử trên iPhone thật; `visualViewport` giả không phải bàn phím thật. Ảnh chuẩn chưa lưu lại, chờ bác sĩ duyệt ảnh 9.3.
+- Chưa thử trên iPhone thật; `visualViewport` giả không phải bàn phím thật. Bác sĩ duyệt giao diện 9.3 ngày 06/11/2026; ảnh chuẩn đã lưu lại.
 - Không làm: không hiện dòng chú thích nhỏ dưới hàng nhãn và dưới ô gõ ở bảng 15b và bảng 5 (đặc tả không yêu cầu, chỗ trên bàn phím chật); đã báo bác sĩ.
 - Dọn "Chờ duyệt": bỏ #4 (hộp "Đã thay" sáng ở bản tối, đã hết), #15 và #16 (thanh Hoàn tác che ô thêm việc; bàn phím che thanh, đã xử lý); giữ ý còn lại ở #20. Thêm #20–#25.
 - Việc tiếp theo: đợt 9.4 (Khám: nút "+" trên dòng phòng, đã khám bằng vuốt phải, chi tiết bé mới) sau khi bác sĩ duyệt ảnh 9.3.
