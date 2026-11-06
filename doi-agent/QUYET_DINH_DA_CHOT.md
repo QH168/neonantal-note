@@ -26,7 +26,7 @@
 - ⚙ Việc xếp: chưa xong trước, rồi theo thứ tự thêm (cả việc cũ), không xếp theo nhãn/mức. (viec.test.js)
 - Chi tiết việc (bác sĩ duyệt 29/10/2026): chạm 2 lần (trong 1 giây) vào việc → bảng "chi tiết việc" (sửa tên, khu, nhãn, ghi chú; không tiêu đề; không chữ "Tự lưu"); ghi chú hiện chữ nhỏ dưới tên việc. Bỏ chạm 3 lần, bảng nhãn riêng, vòng tròn nét đứt. (bác sĩ duyệt 05/11/2026, v9.2) Bảng cao ~76% màn hình theo bảng 15c (trước là ~50%), khu vực là hàng chip (trước là ô chọn khu; khu cũ BM vẫn hiện khi việc đang ở đó), có dòng trạng thái: "Chưa xong" + "Hoàn thành" hoặc "Đã xong lúc hh:mm" + "Bỏ đánh dấu xong"; chữ "Xoá việc" đỏ dịu #A8473D.
 - Đánh dấu xong và xoá việc (bác sĩ duyệt 05/11/2026, v9.2; thay "ô tick nhỏ 80% ở đầu dòng" và "xoá kiểu C" của 29/10/2026):
-  - Không còn ô tick đầu dòng việc (cũng không còn ở việc của bé); chữ sát lề trái 14px. Vuốt phải qua 1/3 chiều rộng dòng = xong: dòng trượt theo ngón tay, nền xanh nhạt không chữ không biểu tượng; qua mốc nền đậm một nấc và rung nhẹ nếu máy có (iPhone Safari không rung, chỉ đổi màu); thả trước mốc thì trượt về. Việc xong: không gạch ngang, chữ nhạt, nhãn mờ, tích xanh tròn 26px ở cuối dòng (chỉ hiển thị, không bấm), tự xuống cuối nhóm. Vuốt phải trên việc đã xong chỉ nhúc nhích rồi về. Bỏ đánh dấu xong chỉ làm trong chi tiết việc (nút "Bỏ đánh dấu xong"). Dòng BÉ ở tab Khám vẫn còn ô tick và mũi tên tới đợt 9.4.
+  - Không còn ô tick đầu dòng việc (cũng không còn ở việc của bé); chữ sát lề trái 14px. Vuốt phải qua 1/3 chiều rộng dòng = xong: dòng trượt theo ngón tay, nền xanh nhạt không chữ không biểu tượng; qua mốc nền đậm một nấc và rung nhẹ nếu máy có (iPhone Safari không rung, chỉ đổi màu); thả trước mốc thì trượt về. Việc xong: không gạch ngang, chữ nhạt, nhãn mờ, tích xanh tròn 26px ở cuối dòng (chỉ hiển thị, không bấm), tự xuống cuối nhóm. Vuốt phải trên việc đã xong chỉ nhúc nhích rồi về. Bỏ đánh dấu xong chỉ làm trong chi tiết việc (nút "Bỏ đánh dấu xong"). Dòng BÉ ở tab Khám: xem mục "Khám".
   - Xoá bằng vuốt trái qua 1/3: dòng trượt thật, nền đỏ phấn không biểu tượng, thả là xoá mềm (`deleted`), thanh "Đã xoá: … — Hoàn tác" ở đáy màn hình 6 giây; Hoàn tác chỉ đổi `deleted` về false, giữ nguyên nhãn, ghi chú, trạng thái. Xoá tiếp việc khác thì thanh đổi sang việc mới nhất. Cuộn dọc danh sách không được vô tình đánh dấu xong hoặc xoá.
   - Nút xoá viền đỏ cũ (#C62828 / #EF5350) không còn: chỉ còn trên máy tính khi rê chuột, nền đỏ phấn #FBEAE8, biểu tượng thùng rác #A8473D, 44×44.
   - "Xoá việc" trong chi tiết việc và "Xoá việc đã xong" đều có Hoàn tác 6 giây; Hoàn tác "Xoá việc đã xong" trả lại TẤT CẢ việc vừa xoá (bác sĩ quyết 05/11/2026). Thanh ghi "Đã xoá n việc đã xong — Hoàn tác".
@@ -39,14 +39,20 @@
 ## Khám
 - Phòng tự đặt tên, mặc định Phòng 1–3; phòng đã từng có bệnh nhân thì không xoá được.
 - Mỗi bé: mã/giường, ngày sinh, tuổi thai lúc sinh, cân nặng, ghi chú, việc cần làm; đánh dấu đã khám; xoá bé có hỏi xác nhận.
-  Việc cần làm của bé xoá bằng vuốt trái (không còn dấu ×) (bác sĩ duyệt 28/10/2026). (bác sĩ duyệt 05/11/2026, v9.2) Việc của bé dùng cùng cử chỉ với tab Việc: không còn ô tick, vuốt phải 1/3 = xong, vuốt trái 1/3 = xoá có Hoàn tác 6 giây (thay xoá kiểu C). Việc của bé CÓ chạm 2 lần (bác sĩ đưa từ đợt 9.4 lên 9.2; thay "chưa có chạm 2 lần"): mở bảng nhỏ sửa tên, dòng trạng thái ("Chưa xong" + "Hoàn thành" / "Đã xong lúc hh:mm" + "Bỏ đánh dấu xong"), "Xoá việc" có Hoàn tác 6 giây; dùng cả trên máy tính. Dòng BÉ ở tab Khám vẫn còn ô tick và mũi tên tới đợt 9.4 (chỉ thêm ghi `doneAt` khi đánh dấu đã khám); "Xoá khỏi danh sách hôm nay" của bé vẫn hỏi xác nhận.
+  Việc cần làm của bé xoá bằng vuốt trái (không còn dấu ×) (bác sĩ duyệt 28/10/2026). (bác sĩ duyệt 05/11/2026, v9.2) Việc của bé dùng cùng cử chỉ với tab Việc: không còn ô tick, vuốt phải 1/3 = xong, vuốt trái 1/3 = xoá có Hoàn tác 6 giây (thay xoá kiểu C). Việc của bé CÓ chạm 2 lần (bác sĩ đưa từ đợt 9.4 lên 9.2; thay "chưa có chạm 2 lần"): mở bảng nhỏ sửa tên, dòng trạng thái ("Chưa xong" + "Hoàn thành" / "Đã xong lúc hh:mm" + "Bỏ đánh dấu xong"), "Xoá việc" có Hoàn tác 6 giây; dùng cả trên máy tính.
+- Dòng bé và chi tiết bé (bác sĩ duyệt 05/11/2026, v9.4; thay "ô tick và mũi tên ở dòng bé", "ô gạch đứt thêm bệnh nhân" và chi tiết bé cũ):
+  - Dòng bé: bỏ ô tick và mũi tên; vuốt phải qua 1/3 là đã khám (ghi `doneAt`); đã khám thì tích xanh cuối dòng, chữ nhạt, không gạch ngang; chạm 1 lần mở chi tiết; dòng bé không xoá bằng vuốt (không vuốt trái, không nút thùng rác); bé đã khám vuốt phải chỉ nhúc nhích. ⚙ (luat.test.js v9.4, viec.test.js)
+  - Dòng phòng: nút "+" tròn thay ô gạch đứt "+ Thêm bệnh nhân"; phòng đang thu gọn thì bấm "+" tự mở phòng rồi thêm bé và mở chi tiết bé.
+  - Chi tiết bé mới theo bảng 16b: mã giường ở tiêu đề (sửa được, bé mới tự đặt con trỏ vào ô mã), chip tên phòng, hàng 3 ô Ngày sinh | Tuổi thai | Cân nặng, nút "Tính tuần tuổi" + ô kết quả (Ngày tuổi, Hiệu chỉnh). VẪN CHỈ TÍNH TUỔI KHI BẤM; sửa ngày sinh hoặc tuổi thai thì xoá kết quả cũ. Trạng thái "Chưa khám" + "Hoàn tất khám" / "Đã khám lúc hh:mm" + "Bỏ đánh dấu đã khám" (bé cũ chưa có giờ chỉ ghi "Đã khám"). "Xoá khỏi hôm nay" vẫn hỏi xác nhận. Nút "Tổng hợp" đổi thành "Tổng hợp y lệnh", nút trong bảng đổi thành "Soạn lại" (nội dung tổng hợp không đổi).
+  - Dữ liệu bé cũ không đổi khi mở app.
 - "Lấy danh sách hôm qua": chép bé + việc chưa xong từ ngày khám gần nhất trước hôm nay, không trùng phòng + mã. ⚙ (ảnh chụp thử tự động)
   Giữ đúng thứ tự bé như ngày nguồn; bé thêm tay nằm cuối phòng (bác sĩ duyệt 28/10/2026). ⚙ (tests/thu-tu.test.js)
 - "Tổng hợp y lệnh": văn bản sửa được, có nút Sao chép; bé không có việc mới ghi "Tiếp tục y lệnh cũ". ⚙
 
 ## Viết tắt (bác sĩ duyệt 28/10/2026)
 - ⚙ Gõ "/chữ tắt" rồi dấu cách ở mọi ô gõ chữ (thêm việc, tên và ghi chú việc, việc của bé, ghi chú của bé, khung Tổng hợp y lệnh) → tự thay bằng nội dung; không phân biệt hoa/thường. (viet-tat.test.js)
-- ⚙ Luật không đổi: "8/10", "1/2", "x/kmdm" (không đứng đầu từ) và key không có trong thư viện giữ nguyên. (viet-tat.test.js)
+- Khi lưu (bác sĩ đồng ý 06/11/2026, v9.4): bấm "+" hoặc Enter ở ô thêm việc (iPhone và PC) và ô thêm việc của bé cũng thay chữ tắt ở cuối trước khi lưu (thay "chỉ thay khi gõ dấu cách" cho riêng lúc lưu). Luật khi gõ dấu cách giữ nguyên; ô tên việc trong bảng chi tiết không đổi (Enter chỉ rời ô). ⚙ (viet-tat.test.js: `moRongKhiGui`; luat.test.js v9.4)
+- ⚙ Luật không đổi: "8/10", "1/2", "x/kmdm" (không đứng đầu từ) và key không có trong thư viện giữ nguyên, cả lúc gõ dấu cách lẫn lúc lưu. (viet-tat.test.js)
 - Gõ "/km" hiện tối đa 4 gợi ý, chạm để chèn. ⚙ (viet-tat.test.js: gợi ý, chèn, hoàn tác)
   - Gợi ý hiện thành hàng chip 44px ngay trên ô gõ, vuốt ngang được; chip đầu viền xanh là gợi ý tốt nhất (bác sĩ duyệt 05/11/2026, v9.3). Thay "Gợi ý (chạm để chèn):" cũ.
   - Sau khi thay chữ: thanh "Đã đổi /key thành nội dung" + nút Hoàn tác, giữ 6 giây (bác sĩ quyết 06/11/2026, v9.3; thay "Đã thay /key" và Hoàn tác ~4 giây của 28/10/2026, thống nhất với thanh Hoàn tác khi xoá). ⚙ (luat.test.js v9.3)
@@ -56,6 +62,7 @@
 
 ## Tính tuần tuổi (chỉ chạy khi bấm nút)
 - Hiện "Ngày tuổi" và "Tuổi thai hiệu chỉnh" dạng đủ tuần + ngày (36w0d, 36w3d). ⚙
+- Nhãn (bác sĩ duyệt 05/11/2026, v9.4, bảng 16b): ô kết quả ghi "Hiệu chỉnh" = tuổi thai hiệu chỉnh; ô nhập "Tuổi thai" = tuổi thai lúc sinh (ô có `aria-label` "Tuổi thai lúc sinh").
 - ⚙ KHÔNG hiện "còn bao nhiêu ngày đến 40w".
 - Ngày sinh nhận: 0810, 08/10, 8/10, 8-10, 8.10, 08/10/2026, 081026. Không ghi năm: lấy năm nay; nếu thành ngày tương lai thì lùi về năm trước. ⚙
 - Tuổi thai nhận: 346, 34w6d, 34+6, 34 6, 34.6, 3406, 34 (= 34w0d); giới hạn 20–45 tuần, ngày lẻ 0–6. ⚙

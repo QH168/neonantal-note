@@ -23,9 +23,9 @@ export function huongCuChi(dx, dy) {
 }
 
 /** Vuốt này có được phép không? Phải: cần duocPhai. Trái: luôn được. dx = 0: không. */
-export function duocVuot(dx, { duocPhai = true } = {}) {
+export function duocVuot(dx, { duocPhai = true, duocTrai = true } = {}) {
   const d = so(dx);
-  if (d < 0) return true;
+  if (d < 0) return duocTrai !== false;
   if (d > 0) return duocPhai === true;
   return false;
 }
@@ -35,7 +35,7 @@ export function duocVuot(dx, { duocPhai = true } = {}) {
  * Vuốt phải trên dòng đã xong: lực cản, chỉ nhúc nhích tối đa CAN_TOI_DA px.
  * Còn lại bám ngón tay, giới hạn trong [-rong, rong] (rong không hợp lệ thì 0).
  */
-export function doDich(dx, rong, { duocPhai = true, daXong = false } = {}) {
+export function doDich(dx, rong, { duocPhai = true, daXong = false, duocTrai = true } = {}) {
   const d = so(dx);
   if (!rongHopLe(rong) || d === 0) return 0;
   if (d > 0) {
@@ -43,6 +43,7 @@ export function doDich(dx, rong, { duocPhai = true, daXong = false } = {}) {
     if (daXong) return Math.min(d * HE_SO_CAN, CAN_TOI_DA, rong);
     return Math.min(d, rong);
   }
+  if (duocTrai === false) return 0;
   return Math.max(d, -rong);
 }
 
@@ -51,10 +52,11 @@ export function doDich(dx, rong, { duocPhai = true, daXong = false } = {}) {
  * Hướng không được phép, hoặc vuốt phải trên việc đã xong: không bao giờ qua mốc.
  * Chiều rộng 0 hoặc không hợp lệ: false.
  */
-export function quaMoc(dx, rong, { duocPhai = true, daXong = false } = {}) {
+export function quaMoc(dx, rong, { duocPhai = true, daXong = false, duocTrai = true } = {}) {
   const d = so(dx);
   if (!rongHopLe(rong) || d === 0) return false;
   if (d > 0 && (!duocPhai || daXong)) return false;
+  if (d < 0 && duocTrai === false) return false;
   return Math.abs(d) * 3 >= rong;
 }
 
@@ -62,10 +64,10 @@ export function quaMoc(dx, rong, { duocPhai = true, daXong = false } = {}) {
  * Nền sau dòng đang hiện: 'xong' (xanh, vuốt phải), 'xoa' (đỏ phấn, vuốt trái) hoặc null (không hiện).
  * Vuốt phải trên việc đã xong hoặc không được phải: null.
  */
-export function nenHien(dx, { duocPhai = true, daXong = false } = {}) {
+export function nenHien(dx, { duocPhai = true, daXong = false, duocTrai = true } = {}) {
   const d = so(dx);
   if (d > 0) return duocPhai && !daXong ? 'xong' : null;
-  if (d < 0) return 'xoa';
+  if (d < 0) return duocTrai === false ? null : 'xoa';
   return null;
 }
 

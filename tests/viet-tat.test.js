@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { chuanKey, taoMap, moRong, hoanTac, goiY, chenGoiY, BO_MAU } from '../src/lib/viet-tat.js';
+import { chuanKey, taoMap, moRong, moRongKhiGui, hoanTac, goiY, chenGoiY, BO_MAU } from '../src/lib/viet-tat.js';
 
 const map = taoMap(BO_MAU);
 const go = (s) => moRong(s, s.length, map);
@@ -98,4 +98,44 @@ test('chèn gợi ý: thay "/km" bằng nội dung + dấu cách, giữ chữ ph
 
 test('taoMap bỏ mục rỗng/thiếu', () => {
   assert.deepEqual(taoMap([{ key: '/AB', text: 'x' }, { key: '', text: 'y' }, { key: 'c', text: '' }, null]), { ab: 'x' });
+});
+
+// ---- moRongKhiGui: thay chữ tắt ở cuối khi lưu (bấm + hoặc Enter) ----
+test('moRongKhiGui: /ctm cuối ô, giữ chữ phía trước', () => {
+  assert.equal(moRongKhiGui('Làm /ctm', map), 'Làm Công thức máu');
+  assert.equal(moRongKhiGui('Khám xong /kmdm', map), 'Khám xong Khí máu động mạch');
+});
+
+test('moRongKhiGui: hoa thường như moRong', () => {
+  assert.equal(moRongKhiGui('Đo /CTM', map), 'Đo Công thức máu');
+  assert.equal(moRongKhiGui('/Kmdm', map), 'Khí máu động mạch');
+});
+
+test('moRongKhiGui: /ctm một mình', () => {
+  assert.equal(moRongKhiGui('/ctm', map), 'Công thức máu');
+});
+
+test('moRongKhiGui: có dấu cách/xuống dòng cuối vẫn thay, kết quả không còn khoảng trắng cuối', () => {
+  assert.equal(moRongKhiGui('Làm /ctm ', map), 'Làm Công thức máu');
+  assert.equal(moRongKhiGui('Làm /ctm   \n', map), 'Làm Công thức máu');
+});
+
+test('moRongKhiGui: không phải chữ tắt thì giữ nguyên chuỗi gốc', () => {
+  for (const s of ['8/10', 'Ăn 1/2', 'x/kmdm', 'Làm /khongco', 'Làm /ctm xem', 'Làm ctm', 'Làm /ctm/', '/']) {
+    assert.equal(moRongKhiGui(s, map), s);
+  }
+  assert.equal(moRongKhiGui('Làm 8/10 ', map), 'Làm 8/10 ');
+});
+
+test('moRongKhiGui: chuỗi rỗng, map rỗng, đầu vào lạ không lỗi', () => {
+  assert.equal(moRongKhiGui('', map), '');
+  assert.equal(moRongKhiGui('   ', map), '   ');
+  assert.equal(moRongKhiGui('/ctm', {}), '/ctm');
+  assert.equal(moRongKhiGui('/ctm', undefined), '/ctm');
+  assert.equal(moRongKhiGui(undefined, map), undefined);
+});
+
+test('moRongKhiGui: moRong và bộ mẫu không đổi', () => {
+  assert.equal(go('/ctm ').text, 'Công thức máu ');
+  assert.equal(BO_MAU.length, 13);
 });

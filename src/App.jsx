@@ -55,6 +55,7 @@ function AppChinh() {
   const isTask = tab === 'task';
   const isToday = viewDate === today;
   const sel = patients.find((p) => p.id === selPid);
+  const tenPhong = (p) => rooms.find((r) => r.id === p.roomId)?.name || '';
   const examLeft = patients.reduce((n, p) => n + (todosByPid[p.id] || []).filter((t) => !t.done).length, 0);
   const backupDue = !lastExport || Date.now() - lastExport.at > 24 * 3600 * 1000;
 
@@ -155,12 +156,12 @@ function AppChinh() {
               {roomEdit && <RoomManager rooms={rooms} roomUse={roomUse} />}
               <RoomList rooms={rooms} patients={patients} todosByPid={todosByPid} collapsed={roomCollapsed}
                 onToggle={toggleIn(setRoomCollapsed)} selPid={selPid} onOpen={setSelPid} today={today} />
-              <div><button type="button" className="btn" aria-expanded={sumOpen} onClick={() => setSumOpen(true)}>Tổng hợp</button></div>
+              <div className="tong-hop-wrap"><button type="button" className="btn" aria-expanded={sumOpen} onClick={() => setSumOpen(true)}>Tổng hợp y lệnh</button></div>
               {sumOpen && <section className="card stack10" aria-label="Tổng hợp y lệnh"><SummaryPanel build={summary} onClose={() => setSumOpen(false)} /></section>}
             </main>
             {sel && (
               <aside className="card pc-detail" aria-label="Chi tiết bệnh nhân">
-                <PatientDetail key={sel.id} wide p={sel} todos={todosByPid[sel.id] || []} onClose={() => setSelPid(null)} />
+                <PatientDetail key={sel.id} wide p={sel} phong={tenPhong(sel)} todos={todosByPid[sel.id] || []} onClose={() => setSelPid(null)} />
               </aside>
             )}
           </>
@@ -213,9 +214,9 @@ function AppChinh() {
         <main className="ph-main exam">
           <ExamActions compact prev={prev} today={today} roomEdit={roomEdit} onToggleRoomEdit={() => setRoomEdit(!roomEdit)} />
           {roomEdit && <RoomManager rooms={rooms} roomUse={roomUse} />}
-          <RoomList compact rooms={rooms} patients={patients} todosByPid={todosByPid} collapsed={roomCollapsed}
+          <RoomList rooms={rooms} patients={patients} todosByPid={todosByPid} collapsed={roomCollapsed}
             onToggle={toggleIn(setRoomCollapsed)} selPid={selPid} onOpen={setSelPid} today={today} />
-          <div><button type="button" className="btn" onClick={() => setSumOpen(true)}>Tổng hợp</button></div>
+          <div className="tong-hop-wrap"><button type="button" className="btn" onClick={() => setSumOpen(true)}>Tổng hợp y lệnh</button></div>
         </main>
       )}
 
@@ -226,8 +227,8 @@ function AppChinh() {
         </Sheet>
       )}
       {sel && !isTask && (
-        <Sheet label="Chi tiết bệnh nhân" onClose={() => setSelPid(null)}>
-          <PatientDetail key={sel.id} p={sel} todos={todosByPid[sel.id] || []} onClose={() => setSelPid(null)} />
+        <Sheet label="Chi tiết bệnh nhân" className="sheet-be" onClose={() => setSelPid(null)}>
+          <PatientDetail key={sel.id} p={sel} phong={tenPhong(sel)} todos={todosByPid[sel.id] || []} onClose={() => setSelPid(null)} />
         </Sheet>
       )}
       {sumOpen && !isTask && (

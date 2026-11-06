@@ -10,6 +10,10 @@
   - `gaFmt`, `buildSummary({ rooms, patients, todosByPid, now })`, `copyText`.
 - `src/lib/dates.js` — `p2`, `isoOf`, `todayIso`, `parseIso`, `addDays`, `fmtLong`, `fmtDM`.
 
+## Nơi hiện (v9.4)
+- Chi tiết bé (`PatientDetail` trong `src/components/Exam.jsx`, bảng 16b): ô nhập "Tuổi thai" là tuổi thai lúc sinh; nút "Tính tuần tuổi" bên trái, ô kết quả `be-kq` bên phải ghi "Ngày tuổi" và "Hiệu chỉnh" (= tuổi thai hiệu chỉnh). Vẫn chỉ tính khi bấm; sửa ngày sinh hoặc tuổi thai thì xoá kết quả cũ ngay. `src/lib/clinical.js` không đổi.
+- Khung "Tổng hợp y lệnh" do `buildSummary` dựng; nút "Soạn lại" soạn lại từ danh sách.
+
 ## Kiểm tra
 - `tests/clinical.test.js`, `tests/ca-chuan.test.js` (đọc bảng `doi-agent/ca-chuan-lam-sang.md`).
 - Mọi thay đổi trong thẻ này phải kèm ca mới trong bảng ca chuẩn nếu thêm cách nhập/luật mới.

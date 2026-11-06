@@ -52,6 +52,19 @@ export function moRong(text, caret, map) {
 }
 
 /**
+ * Khi lưu (bấm + hoặc Enter): nếu mục CUỐI của chuỗi là '/key' có trong map thì thay bằng nội dung.
+ * Cùng luật moRong (đứng đầu chuỗi hoặc sau khoảng trắng, không phân biệt hoa thường).
+ * Khoảng trắng thừa ở cuối bị bỏ khi xét; nếu có thay thì kết quả không còn khoảng trắng cuối.
+ * Không khớp (hoặc rỗng/map rỗng): trả đúng chuỗi gốc.
+ */
+export function moRongKhiGui(text, map) {
+  if (typeof text !== 'string' || !map) return text;
+  const cat = text.replace(/\s+$/, '');
+  const r = moRong(cat + ' ', cat.length + 1, map);
+  return r ? r.text.slice(0, -1) : text;
+}
+
+/**
  * Hoàn tác một lần thay: trả { text, caret } với '/key' + phím kích hoạt như cũ.
  * Trả null nếu chữ đã bị sửa (đoạn thay không còn nguyên chỗ cũ) — giao diện khi đó bỏ nút Hoàn tác.
  */

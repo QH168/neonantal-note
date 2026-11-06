@@ -2,7 +2,7 @@
 // Dùng chung cho mọi ô gõ chữ qua hook useVietTat. Hàm thay chữ nằm ở src/lib/viet-tat.js.
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useAbbrevs } from '../hooks.js';
-import { taoMap, moRong, hoanTac, goiY, chenGoiY } from '../lib/viet-tat.js';
+import { taoMap, moRong, moRongKhiGui, hoanTac, goiY, chenGoiY } from '../lib/viet-tat.js';
 
 const Ctx = createContext({ list: [], map: {} });
 
@@ -23,7 +23,7 @@ const THOI_GIAN_BAO = 6000;
  * Hook cho một ô gõ (input hoặc textarea).
  * - value: chữ hiện có; setValue(chuỗi): đặt chữ mới (ô tự lưu cũng gọi qua đây).
  * - opts.onBlur: việc phụ khi rời ô (vd. lưu ngay).
- * Trả về { props, strip }: rải `props` vào ô, đặt `strip` ngay trên (hoặc dưới) ô.
+ * Trả về { props, strip, chot }: rải `props` vào ô, đặt `strip` ngay trên (hoặc dưới) ô; `chot(chữ)` trả chữ đã thay chữ tắt ở cuối (dùng lúc lưu).
  */
 export function useVietTat(value, setValue, opts = {}) {
   const { list, map } = useContext(Ctx);
@@ -122,5 +122,7 @@ export function useVietTat(value, setValue, opts = {}) {
     onFocus: (e) => { setFocus(true); setCaret(e.target.selectionEnd ?? 0); },
     onBlur: (e) => { setFocus(false); opts.onBlur?.(e); }
   };
-  return { props, strip };
+  // Khi lưu (bấm "+" hoặc Enter): thay chữ tắt ở CUỐI ô trước khi cắt khoảng trắng và ghi (bác sĩ đồng ý 06/11/2026). Luật nằm ở lib/viet-tat.js.
+  const chot = (text) => moRongKhiGui(text, map);
+  return { props, strip, chot };
 }

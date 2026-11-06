@@ -89,7 +89,7 @@ const seed = async (page) => page.evaluate(async () => {
 });
 
 // ---------- đo ----------
-const VUNG_CHAM = ['.chk', '.icon-btn', '.pri-btn', '.swipe-del', '.round-btn', '.seg button', '.pill-btn', '.chip', '.vt-chip', '.vt-undo'];
+const VUNG_CHAM = ['.room-add', '.icon-btn', '.pri-btn', '.swipe-del', '.round-btn', '.seg button', '.pill-btn', '.chip', '.vt-chip', '.vt-undo'];
 const measure = (page) => page.evaluate((sels) => {
   const vis = (e) => { const r = e.getBoundingClientRect(); const s = getComputedStyle(e); return r.width > 0 && r.height > 0 && s.visibility !== 'hidden'; };
   const name = (e) => (e.getAttribute('aria-label') || e.textContent || e.className).trim().slice(0, 40);
@@ -123,8 +123,10 @@ const measure = (page) => page.evaluate((sels) => {
 // ---------- chạy ----------
 const ketQua = { ngayGiaDinh: NOW.toString(), anh: [], loi: [], luuY: [], doDac: {}, thuChucNang: {} };
 // Nếu script dừng giữa chừng (hết thời gian chờ một phần tử…), vẫn in ra các lỗi đã gom được để biết chỗ hỏng
-process.on('uncaughtException', (e) => {
+let trangCuoi = null; // trang đang chạy gần nhất, để chụp lại hiện trường khi script dừng giữa chừng
+process.on('uncaughtException', async (e) => {
   console.error('SCRIPT DỪNG GIỮA CHỪNG: ' + String(e?.message || e).split('\n')[0]);
+  try { await trangCuoi?.screenshot({ path: join(OUT, 'loi-dung-giua-chung.png') }); console.error('Chữ trong bảng đang mở: ' + (await trangCuoi.evaluate(() => (document.querySelector('.sheet')?.innerText || '(không có bảng)').slice(0, 600).replace(/\n/g, ' | ')))); } catch { /* bỏ qua */ }
   console.error('Lỗi đã gom được:\n  ' + (ketQua.loi.join('\n  ') || '(chưa có)'));
   console.error('Thử chức năng đã chạy:', JSON.stringify(ketQua.thuChucNang));
   process.exit(1);
@@ -141,6 +143,7 @@ async function moApp(opts, { lanMo = true, init = null } = {}) {
   await ctx.addInitScript(() => { window.__rung = 0; try { Object.defineProperty(navigator, 'vibrate', { value: () => { window.__rung++; return true; }, configurable: true }); } catch { /* bỏ qua */ } });
   await ctx.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
   const page = await ctx.newPage();
+  trangCuoi = page;
   await page.clock.setFixedTime(NOW);
   page.on('pageerror', (e) => ketQua.loi.push('Lỗi chạy trang: ' + e.message));
   page.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) ketQua.loi.push('Lỗi trong trang (console): ' + m.text().slice(0, 300)); });
@@ -215,6 +218,33 @@ const chamDoi = async (page, c) => { await page.touchscreen.tap(60, 45); await p
 const dongDaCoThanhHoanTac = (page) => page.locator('.hoantac').count();
 // chờ thanh Hoàn tác biến mất (hẹn giờ 6 giây) để nó không che các nút dưới đáy ở bước sau
 const choHoanTacTat = async (page) => { try { await page.locator('.hoantac').waitFor({ state: 'detached', timeout: 8000 }); } catch { /* không có thanh thì thôi */ } };
+// v9.4: chạm thật bằng màn hình cảm ứng, đúng MỘT lần (không .click() chuột). Dùng cho nút quan trọng trên iPhone.
+const chamMot = async (page, loc) => { await loc.scrollIntoViewIfNeeded(); const c = await tamDiem(loc); await page.touchscreen.tap(c.x, c.y); };
+// đệm chạm: chỉ dùng NGAY SAU một lần vuốt CDP (Chromium headless nuốt cú chạm đầu sau lần vuốt bằng ngón tay giả); chạm chỗ không có gì (đầu trang)
+const demChamSauVuot = async (page, trongBang = false) => { // trongBang: đang mở bảng, chạm dòng tiêu đề "Việc cần làm" (chạm nền ngoài sẽ đóng bảng)
+  const c = trongBang ? await tamDiem(page.locator('.sheet-be .be-viec-h').first()) : { x: 60, y: 45 };
+  await page.touchscreen.tap(c.x, c.y);
+  await page.waitForTimeout(250);
+};
+// vuốt dọc bằng ngón tay giả (cuộn danh sách): dx nhỏ, dy lớn
+const vuotDoc = async (cdp, x, y1, y2) => {
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y: y1 }] });
+  for (let i = 1; i <= 10; i++) await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: x + i, y: y1 + ((y2 - y1) * i) / 10 }] });
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+};
+// độ tương phản (WCAG) thấp nhất giữa chữ mã/số đo/việc của một dòng bé và nền dòng — dùng cho bé đã khám (chữ nhạt) ở sáng và tối
+const doTuongPhanBe = (loc) => loc.evaluate((e) => {
+  const luong = (c) => { const [r, g, b] = c.match(/\d+(\.\d+)?/g).slice(0, 3).map(Number).map((v) => v / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+  const nen = getComputedStyle(e.querySelector('.swipe-body')).backgroundColor;
+  let min = 99;
+  for (const x of e.querySelectorAll('.pat-code, .pat-main .small, .pat-todo')) {
+    const [hi, lo] = [luong(getComputedStyle(x).color), luong(nen)].sort((p, q) => q - p);
+    min = Math.min(min, (hi + 0.05) / (lo + 0.05));
+  }
+  return min;
+});// dòng bé theo mã (tab Khám) và đọc hàng bé trong IndexedDB
+const dongBe = (page, ma) => page.locator('.swipe', { has: page.locator('.pat-code', { hasText: new RegExp('^' + ma + '$') }) });
+const docBe = async (page, ma) => (await docBang(page, 'exam_patients')).filter((p) => p.code === ma && p.examDate === '2026-10-21');
 
 // đọc thẳng dòng trong IndexedDB (để kiểm dữ liệu thật đã lưu)
 const docViec = (page, text) => page.evaluate(async (tx) => {
@@ -1087,19 +1117,367 @@ async function thuThuVien(page, T, tien, cdp) {
   }
   await chup(page, 'iphone-kham-sang', true);
 
-  await page.locator('.pat-open', { hasText: 'G01' }).click();
-  await page.getByRole('button', { name: 'Tính tuần tuổi' }).click();
-  const calc = (await page.locator('.calc-box').textContent()) || '';
-  ketQua.thuChucNang.tinhTuanTuoi = calc;
-  if (!/77 ngày/.test(calc) || !/36w0d/.test(calc)) ketQua.loi.push('Tính tuần tuổi G01 (05/08, 25 tuần) không ra 77 ngày, 36w0d: ' + calc);
-  if (/40\s*w/.test(calc)) ketQua.loi.push('Màn hình tính tuổi có hiện "đến 40w"');
-  await chup(page, 'iphone-chi-tiet-be', true);
+  // ===================== v9.4: Khám — nút "+", dòng bé vuốt phải, chi tiết bé mới (bảng 13, 15d, 16b) =====================
+  const bangBeMo = page.getByRole('dialog', { name: 'Chi tiết bệnh nhân' });
+  const T94 = ketQua.thuChucNang.khamV94 = {};
+  const loi94 = (m) => ketQua.loi.push('Khám 9.4: ' + m);
+  const dung94 = (c, m) => { if (!c) loi94(m); };
+  const hoiXoaBe = async (ma, huyTruoc) => { // mở bé bằng một lần chạm, bấm "Xoá khỏi hôm nay" (hỏi xác nhận); huyTruoc: bấm Huỷ trước rồi mới đồng ý
+    await chamMot(page, dongBe(page, ma).locator('.pat-open'));
+    await bangBeMo.waitFor();
+    await page.waitForTimeout(600);
+    const nutXoa = bangBeMo.getByRole('button', { name: 'Xoá khỏi hôm nay', exact: true });
+    if (huyTruoc) {
+      page.once('dialog', async (d) => { T94['hoiHuy_' + ma] = d.message(); await d.dismiss(); });
+      await chamMot(page, nutXoa);
+      await page.waitForTimeout(500);
+      const con = (await docBe(page, ma))[0];
+      dung94(con && !con.deleted && (await bangBeMo.count()) === 1, 'bấm Huỷ ở câu hỏi xoá mà bé vẫn bị xoá hoặc bảng đóng');
+    }
+    page.once('dialog', async (d) => { T94['hoiXoa_' + ma] = d.message(); await d.accept(); });
+    await chamMot(page, nutXoa);
+    await page.waitForTimeout(800);
+    const x = (await docBe(page, ma))[0];
+    dung94(x && x.deleted && (await bangBeMo.count()) === 0, 'đồng ý xoá bé ' + ma + ' mà chưa xoá hoặc bảng chưa đóng');
+    dung94(T94['hoiXoa_' + ma] === `Xoá ${ma} khỏi danh sách hôm nay?`, 'câu hỏi xoá sai: "' + T94['hoiXoa_' + ma] + '"');
+  };
+  {
+    // --- dòng phòng: nút "+" tròn 32px viền xanh, vùng chạm 44px, căn phải, nằm NGOÀI nút thu gọn ---
+    T94.nutCong = await page.locator('.room-add').evaluateAll((es) => es.map((e) => {
+      const r = e.getBoundingClientRect(), o = e.querySelector('.room-add-o'), ob = o.getBoundingClientRect();
+      const g = e.closest('.group'), gb = e.closest('.room-h').querySelector('.group-btn').getBoundingClientRect();
+      return { ten: e.getAttribute('aria-label'), w: Math.round(r.width), h: Math.round(r.height), ow: Math.round(ob.width), oh: Math.round(ob.height), vien: getComputedStyle(o).borderTopWidth,
+        trongNutGon: !!e.closest('.group-btn'), canPhai: Math.round(g.getBoundingClientRect().right - r.right), lechDoc: Math.round(Math.abs(r.top + r.height / 2 - (gb.top + gb.height / 2))) };
+    }));
+    dung94(T94.nutCong.map((x) => x.ten).join('|') === 'Thêm bé vào Phòng 1|Thêm bé vào Phòng 2|Thêm bé vào Phòng 3', 'nút "+" thiếu hoặc sai aria-label: ' + JSON.stringify(T94.nutCong.map((x) => x.ten)));
+    for (const x of T94.nutCong) {
+      dung94(x.w === 44 && x.h === 44, `nút "${x.ten}" là ${x.w}×${x.h} (cần vùng chạm 44×44)`);
+      dung94(x.ow === 32 && x.oh === 32 && ['1px', '1.5px'].includes(x.vien), `nút "${x.ten}": vòng tròn ${x.ow}×${x.oh}, viền ${x.vien} (cần 32×32, viền 1,5px; Chrome có thể làm tròn xuống 1px)`);
+      dung94(!x.trongNutGon, `nút "${x.ten}" nằm trong nút thu gọn phòng (nút lồng nút)`);
+      dung94(x.canPhai <= 2, `nút "${x.ten}" không căn phải (cách lề ${x.canPhai}px)`);
+      dung94(x.lechDoc <= 2, `nút "${x.ten}" lệch ${x.lechDoc}px so với dòng tên phòng`);
+    }
+    T94.cuNutThem = await page.evaluate(() => ({ gachDut: document.querySelectorAll('.add-dashed').length, chuCu: /\+ Thêm bệnh nhân/.test(document.body.innerText), nutLong: document.querySelectorAll('button button').length, chk: document.querySelectorAll('.chk, .mini-box').length }));
+    dung94(!T94.cuNutThem.gachDut && !T94.cuNutThem.chuCu, 'còn ô gạch đứt "+ Thêm bệnh nhân"');
+    dung94(!T94.cuNutThem.nutLong, 'có nút lồng trong nút (' + T94.cuNutThem.nutLong + ')');
+    dung94(!T94.cuNutThem.chk, 'còn ô vuông / ô nhỏ cũ');
+    // --- dòng bé: không ô vuông, không mũi tên, không nút xoá, chữ sát lề 14px, số đo "25w0d, 1850 g", việc hiện chữ ---
+    T94.dongG03 = await dongBe(page, 'G03').evaluate((e) => {
+      const code = e.querySelector('.pat-code'), body = e.querySelector('.swipe-body');
+      return { chk: e.querySelectorAll('.chk, input[type=checkbox], .mini-box').length, nutXoa: e.querySelectorAll('.swipe-del').length, nutLong: e.querySelectorAll('button button').length, nutMo: e.querySelectorAll('button.pat-open').length,
+        bieuTuong: e.querySelectorAll('.pat-open svg').length, gach: getComputedStyle(code).textDecorationLine, mo: getComputedStyle(body).opacity, leTrai: Math.round(code.getBoundingClientRect().left - e.getBoundingClientRect().left),
+        badge: e.querySelector('.left-badge')?.textContent.trim() || '', viec: [...e.querySelectorAll('.pat-todo')].map((x) => x.textContent) };
+    });
+    const d3 = T94.dongG03;
+    dung94(d3.chk === 0 && d3.nutXoa === 0 && d3.nutLong === 0 && d3.nutMo === 1 && d3.bieuTuong === 0, 'dòng bé sai cấu trúc ' + JSON.stringify(d3));
+    dung94(d3.gach === 'none' && d3.mo === '1', 'dòng bé chưa khám bị gạch ngang hoặc mờ ' + JSON.stringify(d3));
+    dung94(d3.leTrai >= 14 && d3.leTrai <= 16, 'chữ dòng bé không sát lề trái 14px (cách ' + d3.leTrai + 'px)');
+    dung94(d3.badge === 'Còn 1 việc' && d3.viec.join('|') === 'Tăng sữa 5 ml/cữ', 'dòng bé thiếu "Còn 1 việc" hoặc chữ việc: ' + JSON.stringify(d3));
+    T94.soDo = (await dongBe(page, 'G01').locator('.pat-main .small').first().textContent()).trim();
+    dung94(T94.soDo === '25w0d, 1850 g', 'số đo dòng bé "' + T94.soDo + '" (cần "25w0d, 1850 g")');
+    T94.coChuDanhSach = await doCoChu(page);
+    for (const x of T94.coChuDanhSach) loi94('cỡ chữ ngoài thang ở danh sách — ' + x);
+  }
+  {
+    // --- bé cũ: đã khám nhưng chưa có doneAt (dữ liệu trước v9.2) hiện đúng, mở rồi đóng không ghi gì ---
+    await page.evaluate(async () => {
+      const db = await new Promise((res) => { const r = indexedDB.open('ghichu-sosinh'); r.onsuccess = () => res(r.result); });
+      const all = await new Promise((res) => { const r = db.transaction('exam_patients').objectStore('exam_patients').getAll(); r.onsuccess = () => res(r.result); });
+      const p = all.find((x) => x.code === 'G12' && x.examDate === '2026-10-21');
+      const moi = { ...p, done: true }; delete moi.doneAt;
+      await new Promise((res) => { const tx = db.transaction('exam_patients', 'readwrite'); tx.objectStore('exam_patients').put(moi); tx.oncomplete = res; });
+      db.close();
+    });
+    await page.reload();
+    await page.waitForSelector('.phone-app');
+    await page.waitForTimeout(500);
+    await page.getByRole('button', { name: 'Khám', exact: true }).click();
+    await page.waitForTimeout(400);
+    const truoc = JSON.stringify((await docBe(page, 'G12'))[0]);
+    T94.tichBeCu = await dongBe(page, 'G12').locator('.tick-ok').getAttribute('aria-label');
+    dung94(T94.tichBeCu === 'Đã khám', 'bé cũ đã khám không hiện tích "Đã khám"');
+    await chamMot(page, dongBe(page, 'G12').locator('.pat-open'));
+    await bangBeMo.waitFor();
+    await page.waitForTimeout(600);
+    T94.beCu = { trangThai: ((await bangBeMo.locator('.trang-thai').textContent()) || '').trim(), conTroOMa: await page.evaluate(() => document.activeElement?.id === 'be-ma') };
+    dung94(T94.beCu.trangThai === 'Đã khámBỏ đánh dấu đã khám', 'bé cũ đã khám chưa có giờ phải ghi chỉ "Đã khám": "' + T94.beCu.trangThai + '"');
+    dung94(!T94.beCu.conTroOMa, 'bé đã có mã mà tự đặt con trỏ vào ô mã (bật bàn phím)');
+    await chamMot(page, bangBeMo.getByRole('button', { name: 'Đóng chi tiết', exact: true }));
+    await page.waitForTimeout(700);
+    T94.moKhongDoiDuLieu = JSON.stringify((await docBe(page, 'G12'))[0]) === truoc;
+    dung94(T94.moKhongDoiDuLieu, 'mở rồi đóng chi tiết bé cũ làm đổi dữ liệu');
+    // mở lại: "Bỏ đánh dấu đã khám" (doneAt về null), rồi đóng bằng "Xong"
+    await chamMot(page, dongBe(page, 'G12').locator('.pat-open'));
+    await bangBeMo.waitFor();
+    await page.waitForTimeout(600);
+    await chamMot(page, bangBeMo.getByRole('button', { name: 'Bỏ đánh dấu đã khám', exact: true }));
+    await page.waitForTimeout(400);
+    const g = (await docBe(page, 'G12'))[0];
+    T94.boDanhDauBeCu = { done: g.done, doneAt: g.doneAt ?? null, trangThai: ((await bangBeMo.locator('.trang-thai').textContent()) || '').trim() };
+    dung94(!g.done && (g.doneAt ?? null) === null && T94.boDanhDauBeCu.trangThai === 'Chưa khámHoàn tất khám', 'bỏ đánh dấu đã khám của bé cũ sai ' + JSON.stringify(T94.boDanhDauBeCu));
+    await chamMot(page, bangBeMo.getByRole('button', { name: 'Xong', exact: true }));
+    await page.waitForTimeout(700);
+    dung94((await bangBeMo.count()) === 0, '"Xong" không đóng chi tiết bé');
+  }
+  {
+    // --- "+" ở phòng đang thu gọn: phòng tự mở, thêm bé, mở chi tiết, con trỏ nằm ở ô mã, bé nằm cuối phòng ---
+    const phong = (n) => page.locator('.group', { has: page.getByRole('heading', { name: new RegExp('^Phòng ' + n) }) });
+    await chamMot(page, phong(2).locator('.group-btn'));
+    await page.waitForTimeout(250);
+    T94.phong2SauGon = await phong(2).locator('.group-btn').getAttribute('aria-expanded');
+    dung94(T94.phong2SauGon === 'false', 'chạm tên phòng không thu gọn được');
+    await chamMot(page, phong(2).locator('.room-add'));
+    await bangBeMo.waitFor();
+    await page.waitForTimeout(600);
+    T94.phong2SauCong = await phong(2).locator('.group-btn').getAttribute('aria-expanded');
+    dung94(T94.phong2SauCong === 'true', 'bấm "+" ở phòng đang thu gọn mà phòng không tự mở');
+    T94.beMoi = await page.evaluate(() => {
+      const ma = document.getElementById('be-ma'), s = document.querySelector('.sheet');
+      const o3 = [...document.querySelectorAll('.be-3 input')], rects = o3.map((e) => e.getBoundingClientRect());
+      return { conTro: document.activeElement === ma, ma: ma.value, maPh: ma.placeholder, nhanMa: document.querySelector('label[for=be-ma]')?.textContent, chip: document.querySelector('.be-phong')?.textContent,
+        o3: o3.map((e) => ({ ph: e.placeholder, ten: e.getAttribute('aria-label') || e.closest('label')?.querySelector('span')?.textContent || '', fs: parseFloat(getComputedStyle(e).fontSize) })),
+        cungHang: new Set(rects.map((r) => Math.round(r.top))).size === 1, vuaKhung: rects.every((r) => r.left >= 0 && r.right <= innerWidth), cuonNgang: s.scrollWidth > s.clientWidth,
+        oHoTen: !!document.querySelector('.sheet input[name], .sheet input[placeholder*="Họ"]') };
+    });
+    const bm = T94.beMoi;
+    dung94(bm.conTro && bm.ma === '' && bm.maPh === 'Mã / giường' && bm.nhanMa === 'Mã / giường', 'bé mới: con trỏ chưa ở ô mã / ô mã sai ' + JSON.stringify(bm));
+    dung94(bm.chip === 'Phòng 2', 'chip tên phòng "' + bm.chip + '"');
+    dung94(bm.o3.map((x) => x.ph).join('|') === '0810|346|1850' && bm.o3.map((x) => x.ten).join('|') === 'Ngày sinh|Tuổi thai lúc sinh|Cân nặng, g', 'ba ô sai gợi ý hoặc tên: ' + JSON.stringify(bm.o3));
+    dung94(bm.o3.every((x) => x.fs === 16), 'ô nhập nhỏ hơn 16px: ' + JSON.stringify(bm.o3));
+    dung94(bm.cungHang && bm.vuaKhung && !bm.cuonNgang && !bm.oHoTen, 'ba ô không cùng hàng / tràn khung / có ô họ tên: ' + JSON.stringify(bm));
+    await chup(page, 'iphone-chi-tiet-be-moi', true);
+    await page.keyboard.type('TMP2');
+    await page.waitForTimeout(700);
+    const t2 = (await docBe(page, 'TMP2'))[0];
+    dung94(t2 && !t2.deleted && t2.roomId === (await docBang(page, 'rooms')).find((r) => r.name === 'Phòng 2').id && t2.done === false, 'bé mới TMP2 chưa lưu đúng phòng: ' + JSON.stringify(t2));
+    await chamMot(page, bangBeMo.getByRole('button', { name: 'Đóng chi tiết', exact: true }));
+    await page.waitForTimeout(700);
+    T94.thuTuPhong2 = (await phong(2).locator('.pat-code').allTextContents()).join(',');
+    dung94(T94.thuTuPhong2 === 'G12,TMP2', 'bé mới không nằm cuối phòng: ' + T94.thuTuPhong2);
+    // "+" ở phòng đang mở: không thu gọn phòng
+    await chamMot(page, phong(1).locator('.room-add'));
+    await bangBeMo.waitFor();
+    await page.waitForTimeout(600);
+    T94.phong1SauCong = await phong(1).locator('.group-btn').getAttribute('aria-expanded');
+    dung94(T94.phong1SauCong === 'true', 'bấm "+" làm thu gọn phòng đang mở');
+    await page.keyboard.type('TMP1');
+    await page.waitForTimeout(700);
+    await chamMot(page, bangBeMo.getByRole('button', { name: 'Xong', exact: true }));
+    await page.waitForTimeout(700);
+    const t1 = (await docBe(page, 'TMP1'))[0];
+    dung94(t1 && t1.code === 'TMP1' && (await bangBeMo.count()) === 0, '"Xong" chưa lưu nốt mã vừa gõ hoặc chưa đóng bảng');
+    T94.thuTuPhong1 = (await phong(1).locator('.pat-code').allTextContents()).join(',');
+    dung94(T94.thuTuPhong1 === 'G01,G03,TMP1', 'bé mới không nằm cuối phòng 1: ' + T94.thuTuPhong1);
+    // xoá bé thử: hỏi xác nhận (Huỷ giữ lại, đồng ý mới xoá), câu hỏi đúng tên mã; bé chưa có mã thì hỏi "bệnh nhân này"
+    await hoiXoaBe('TMP1', true);
+    await hoiXoaBe('TMP2', false);
+    await chamMot(page, phong(3).locator('.room-add'));
+    await bangBeMo.waitFor();
+    await page.waitForTimeout(600);
+    page.once('dialog', async (d) => { T94.hoiXoaBeChuaMa = d.message(); await d.accept(); });
+    await chamMot(page, bangBeMo.getByRole('button', { name: 'Xoá khỏi hôm nay', exact: true }));
+    await page.waitForTimeout(800);
+    dung94(T94.hoiXoaBeChuaMa === 'Xoá bệnh nhân này khỏi danh sách hôm nay?', 'câu hỏi xoá bé chưa có mã: "' + T94.hoiXoaBeChuaMa + '"');
+    dung94((await bangBeMo.count()) === 0, 'xoá bé chưa có mã mà bảng chưa đóng');
+    T94.conLai = (await page.locator('.pat-code').allTextContents()).join(',');
+    dung94(T94.conLai === 'G01,G03,G12', 'sau khi xoá bé thử còn: ' + T94.conLai);
+  }
+  {
+    // --- cử chỉ dòng bé (bảng 12, 13): chỉ vuốt phải; vuốt trái không có tác dụng; cuộn dọc không đánh dấu nhầm ---
+    const cdp = await ctx.newCDPSession(page);
+    const g12 = dongBe(page, 'G12');
+    const rongB = (await g12.boundingBox()).width, mocB = rongB / 3;
+    const nenXanh2 = await mauBien(page, '--swR2');
+    const trangThai = async (ma) => { const r = (await docBe(page, ma))[0]; return { done: r.done, doneAt: r.doneAt ?? null, deleted: !!r.deleted }; };
+    // vuốt trái qua mốc: không dịch, không nền, không xoá, không thanh Hoàn tác
+    await keoDong(cdp, g12, -Math.round(mocB + 30));
+    await page.waitForTimeout(100);
+    const gt = await doDong(g12);
+    T94.vuotTrai = { dich: gt.dich, nen: gt.nen, hien: gt.hien, opNen: gt.opNen, mau: gt.mau };
+    dung94(gt.dich === 0 && gt.hien !== '1' && gt.opNen === 0, 'vuốt trái dòng bé vẫn dịch hoặc hiện nền ' + JSON.stringify(T94.vuotTrai));
+    await thaTay(cdp);
+    await page.waitForTimeout(450);
+    T94.sauVuotTrai = { ...(await trangThai('G12')), thanh: await page.locator('.hoantac').count() };
+    dung94(!T94.sauVuotTrai.done && !T94.sauVuotTrai.deleted && !T94.sauVuotTrai.thanh, 'vuốt trái dòng bé làm đổi dữ liệu ' + JSON.stringify(T94.sauVuotTrai));
+    // vuốt phải trước mốc: trượt về, chưa khám
+    await vuotDong(page, cdp, g12, Math.round(mocB - 25));
+    dung94(!(await trangThai('G12')).done, 'thả vuốt phải trước mốc mà bé đã bị đánh dấu khám');
+    // cuộn dọc trên dòng bé: không đánh dấu nhầm
+    {
+      const b = await g12.boundingBox();
+      await vuotDoc(cdp, b.x + 60, b.y + b.height / 2, b.y + b.height / 2 - 140);
+      await page.waitForTimeout(400);
+      T94.cuonDoc = await trangThai('G12');
+      dung94(!T94.cuonDoc.done, 'cuộn dọc danh sách làm bé bị đánh dấu khám nhầm');
+    }
+    // vuốt phải qua mốc: nền xanh đậm một nấc + rung đúng một lần; thả → đã khám (doneAt = giờ máy)
+    const rung0 = await page.evaluate(() => window.__rung);
+    await keoDong(cdp, g12, Math.round(mocB + 30));
+    await page.waitForTimeout(100);
+    const gp = await doDong(g12);
+    T94.vuotPhai = { nen: gp.nen, qua: gp.qua, mau: gp.mau, dich: Math.round(gp.dich), rung: (await page.evaluate(() => window.__rung)) - rung0 };
+    dung94(gp.nen === 'xong' && gp.qua === '1' && gp.mau === nenXanh2 && gp.dich > 0 && T94.vuotPhai.rung === 1, 'vuốt phải dòng bé qua mốc sai ' + JSON.stringify(T94.vuotPhai) + ' (cần nền ' + nenXanh2 + ')');
+    dung94(gp.chuTrongNen === '' && gp.svgTrongNen === 0, 'nền vuốt phải của dòng bé có chữ hoặc biểu tượng');
+    await chup(page, 'iphone-kham-vuot-phai', false);
+    await thaTay(cdp);
+    // ngay sau khi thả: một cú click (như thả ngón làm sinh click) phải bị chặn, không mở chi tiết
+    await page.evaluate(() => { const nut = [...document.querySelectorAll('.swipe')].find((e) => e.querySelector('.pat-code')?.textContent === 'G12')?.querySelector('.pat-open'); nut?.click(); });
+    await page.waitForTimeout(450);
+    T94.moNhamSauVuot = await bangBeMo.count();
+    dung94(T94.moNhamSauVuot === 0, 'ngay sau khi vuốt, cú click vẫn mở chi tiết bé');
+    T94.sauVuotPhai = await trangThai('G12');
+    dung94(T94.sauVuotPhai.done && T94.sauVuotPhai.doneAt === NOW.getTime(), 'vuốt phải qua mốc chưa đánh dấu đã khám đúng (doneAt) ' + JSON.stringify(T94.sauVuotPhai));
+    // đã khám: tích xanh có nhãn "Đã khám", chữ nhạt (--muted), không gạch ngang, không mờ; mã và tuổi vẫn đọc rõ
+    const muted = await mauBien(page, '--muted'), ink = await mauBien(page, '--ink');
+    T94.daKham = await g12.evaluate((e) => {
+      const code = e.querySelector('.pat-code'), sub = e.querySelector('.pat-main .small'), body = e.querySelector('.swipe-body');
+      return { tich: e.querySelectorAll('.tick-ok').length, nhan: e.querySelector('.tick-ok')?.getAttribute('aria-label'), maMau: getComputedStyle(code).color, tuoiMau: getComputedStyle(sub).color, gach: getComputedStyle(code).textDecorationLine, mo: getComputedStyle(body).opacity };
+    });
+    T94.chuaKham = await dongBe(page, 'G03').locator('.pat-code').evaluate((e) => getComputedStyle(e).color);
+    dung94(T94.daKham.tich === 1 && T94.daKham.nhan === 'Đã khám' && T94.daKham.maMau === muted && T94.daKham.gach === 'none' && T94.daKham.mo === '1', 'bé đã khám hiển thị sai ' + JSON.stringify(T94.daKham) + ' (cần chữ ' + muted + ')');
+    dung94(T94.chuaKham === ink, 'bé chưa khám không dùng chữ đậm: ' + T94.chuaKham);
+    T94.tuongPhanSang = await doTuongPhanBe(g12);
+    dung94(T94.tuongPhanSang >= 4.5, 'chữ bé đã khám (sáng) tương phản ' + T94.tuongPhanSang.toFixed(2) + ' < 4,5');
+    // đã khám: vuốt phải chỉ nhúc nhích rồi về, không đổi
+    await keoDong(cdp, g12, Math.round(mocB + 60));
+    const gn = await doDong(g12);
+    await thaTay(cdp);
+    await page.waitForTimeout(500);
+    T94.nhucNhich = { dich: gn.dich, hien: gn.hien, sau: await trangThai('G12') };
+    dung94(gn.dich > 0 && gn.dich <= 16.5 && gn.hien !== '1' && T94.nhucNhich.sau.done && T94.nhucNhich.sau.doneAt === NOW.getTime(), 'bé đã khám vuốt phải phải chỉ nhúc nhích ' + JSON.stringify(T94.nhucNhich));
+    // G01 (còn việc): đã khám nhưng vẫn "Còn 1 việc"; tích đứng sau
+    await vuotDong(page, cdp, dongBe(page, 'G01'), Math.round(mocB + 30));
+    T94.g01 = { ...(await trangThai('G01')), badge: ((await dongBe(page, 'G01').locator('.left-badge').textContent().catch(() => '')) || '').trim(), tich: await dongBe(page, 'G01').locator('.tick-ok').count(),
+      tichSauBadge: await dongBe(page, 'G01').evaluate((e) => { const b = e.querySelector('.left-badge')?.getBoundingClientRect(), t = e.querySelector('.tick-ok')?.getBoundingClientRect(); return !!b && !!t && t.left >= b.right - 0.5; }) };
+    dung94(T94.g01.done && T94.g01.badge === 'Còn 1 việc' && T94.g01.tich === 1 && T94.g01.tichSauBadge, 'bé đã khám còn việc phải giữ "Còn 1 việc" và tích đứng sau ' + JSON.stringify(T94.g01));
+    T94.tienDo = ((await page.locator('.prog-text').textContent()) || '').trim();
+    dung94(T94.tienDo === 'Đã khám 2/3', 'chữ tiến độ "' + T94.tienDo + '" (cần "Đã khám 2/3")');
+    T94.dauPhong = await page.locator('.group-btn .small').allTextContents();
+    dung94(T94.dauPhong.join('|') === 'Đã khám 1/2|Đã khám 1/1|Chưa có bệnh nhân', 'đếm đã khám theo phòng: ' + T94.dauPhong.join('|'));
+    await chup(page, 'iphone-kham-da-kham', true);
+    await cdp.detach();
+  }
+  {
+    // --- chạm 1 lần mở chi tiết bé (đã khám); bảng 16b: ba ô cùng hàng, "Tính tuần tuổi" bên trái, kết quả bên phải ---
+    await demChamSauVuot(page); // đệm cú chạm bị nuốt NGAY sau lần vuốt CDP (cho phép duy nhất)
+    await chamMot(page, dongBe(page, 'G01').locator('.pat-open'));
+    await bangBeMo.waitFor();
+    await page.waitForTimeout(600);
+    T94.g01Moi = await page.evaluate(() => ({ conTro: document.activeElement?.id === 'be-ma', ma: document.getElementById('be-ma').value, chip: document.querySelector('.be-phong')?.textContent, nutDong: document.querySelector('.be-head .icon-btn')?.getAttribute('aria-label') }));
+    dung94(!T94.g01Moi.conTro && T94.g01Moi.ma === 'G01' && T94.g01Moi.chip === 'Phòng 1' && T94.g01Moi.nutDong === 'Đóng chi tiết', 'chi tiết bé G01 sai tiêu đề/con trỏ ' + JSON.stringify(T94.g01Moi));
+    T94.trangThaiG01 = ((await bangBeMo.locator('.trang-thai').textContent()) || '').trim();
+    dung94(T94.trangThaiG01 === 'Đã khám lúc 08:00Bỏ đánh dấu đã khám', 'dòng trạng thái bé đã khám: "' + T94.trangThaiG01 + '"');
+    await chup(page, 'iphone-chi-tiet-be-da-kham', true);
+    const nutTrangThai = (ten) => bangBeMo.getByRole('button', { name: ten, exact: true });
+    await chamMot(page, nutTrangThai('Bỏ đánh dấu đã khám'));
+    await page.waitForTimeout(400);
+    let gg = (await docBe(page, 'G01'))[0];
+    T94.boDaKham = { done: gg.done, doneAt: gg.doneAt ?? null, chu: ((await bangBeMo.locator('.trang-thai').textContent()) || '').trim() };
+    dung94(!gg.done && T94.boDaKham.doneAt === null && T94.boDaKham.chu === 'Chưa khámHoàn tất khám', '"Bỏ đánh dấu đã khám" sai ' + JSON.stringify(T94.boDaKham));
+    await chamMot(page, nutTrangThai('Hoàn tất khám'));
+    await page.waitForTimeout(400);
+    gg = (await docBe(page, 'G01'))[0];
+    dung94(gg.done && gg.doneAt === NOW.getTime(), '"Hoàn tất khám" chưa ghi đã khám + doneAt ' + JSON.stringify({ done: gg.done, doneAt: gg.doneAt }));
+    await chamMot(page, nutTrangThai('Bỏ đánh dấu đã khám'));
+    await page.waitForTimeout(400);
+    dung94(!(await docBe(page, 'G01'))[0].done, 'bỏ đánh dấu lần 2 chưa về chưa khám');
+    // tính tuổi: chỉ tính khi bấm; kết quả bên phải nút; sửa ngày sinh / tuổi thai thì xoá kết quả cũ
+    const ketQuaTuoi = () => bangBeMo.locator('.be-kq');
+    const oNgaySinh = bangBeMo.getByLabel('Ngày sinh', { exact: true }), oTuoiThai = bangBeMo.getByLabel('Tuổi thai lúc sinh', { exact: true });
+    T94.truocKhiTinh = { trong: await bangBeMo.locator('.be-kq-trong').count(), so: await bangBeMo.locator('.be-kq b').count() };
+    dung94(T94.truocKhiTinh.trong === 1 && T94.truocKhiTinh.so === 0, 'chưa bấm mà đã có kết quả tuổi (chỉ tính khi bấm) ' + JSON.stringify(T94.truocKhiTinh));
+    await chamMot(page, bangBeMo.getByRole('button', { name: 'Tính tuần tuổi', exact: true }));
+    await page.waitForTimeout(300);
+    const calc = ((await ketQuaTuoi().textContent()) || '').trim();
+    ketQua.thuChucNang.tinhTuanTuoi = calc;
+    if (!/Ngày tuổi\s*77 ngày/.test(calc) || !/Hiệu chỉnh\s*36w0d/.test(calc)) ketQua.loi.push('Tính tuần tuổi G01 (05/08, 25 tuần) không ra 77 ngày, 36w0d: ' + calc);
+    if (/40\s*w/.test(calc)) ketQua.loi.push('Màn hình tính tuổi có hiện "đến 40w"');
+    const hinhTuoi = () => page.evaluate(() => {
+      const nut = [...document.querySelectorAll('.be-tuoi .btn')][0].getBoundingClientRect(), kq = document.querySelector('.be-kq').getBoundingClientRect(), s = document.querySelector('.sheet');
+      const cat = [...document.querySelectorAll('.be-kq b')].filter((b) => b.scrollWidth > b.clientWidth + 0.5 || b.getBoundingClientRect().right > kq.right + 0.5 || b.getBoundingClientRect().left < kq.left - 0.5).map((b) => b.textContent);
+      return { nutTrai: nut.right <= kq.left + 0.5, cungHang: nut.top < kq.bottom && kq.top < nut.bottom, cat, tran: s.scrollWidth > s.clientWidth, kqRong: Math.round(kq.width) };
+    });
+    T94.hinhTuoi = await hinhTuoi();
+    dung94(T94.hinhTuoi.nutTrai && T94.hinhTuoi.cungHang && !T94.hinhTuoi.cat.length && !T94.hinhTuoi.tran, 'ô tuổi: nút phải bên trái ô kết quả, không bị cắt/tràn ' + JSON.stringify(T94.hinhTuoi));
+    await oTuoiThai.fill('27');
+    T94.xoaKhiDoiTuoiThai = await bangBeMo.locator('.be-kq b').count();
+    dung94(T94.xoaKhiDoiTuoiThai === 0, 'sửa tuổi thai mà kết quả tuổi cũ chưa bị xoá');
+    await oTuoiThai.fill('25');
+    await oNgaySinh.fill('2006'); // 20/06 → đúng 123 ngày so với 21/10/2026
+    await chamMot(page, bangBeMo.getByRole('button', { name: 'Tính tuần tuổi', exact: true }));
+    await page.waitForTimeout(300);
+    T94.tuoi123 = ((await ketQuaTuoi().textContent()) || '').trim();
+    dung94(/123 ngày/.test(T94.tuoi123) && /42w4d/.test(T94.tuoi123), 'ca tuổi 123 ngày sai: ' + T94.tuoi123);
+    T94.hinh123 = await hinhTuoi();
+    dung94(!T94.hinh123.cat.length && !T94.hinh123.tran, '"123 ngày" bị cắt hoặc tràn ' + JSON.stringify(T94.hinh123));
+    // lỗi vẫn hiện đủ chữ (ô kết quả nhường chỗ cho hộp lỗi)
+    const hopLoi = () => bangBeMo.locator('.err-box');
+    const doLoi = async () => hopLoi().evaluate((e) => ({ chu: e.textContent.trim(), cat: e.scrollHeight > e.clientHeight + 1 || e.scrollWidth > e.clientWidth + 1, vuaKhung: e.getBoundingClientRect().right <= innerWidth, kq: document.querySelectorAll('.be-kq b').length }));
+    await oTuoiThai.fill('19');
+    await chamMot(page, bangBeMo.getByRole('button', { name: 'Tính tuần tuổi', exact: true }));
+    await page.waitForTimeout(300);
+    T94.loiTuoiThai = await doLoi();
+    dung94(T94.loiTuoiThai.chu === 'Chưa đọc được tuổi thai "19". Nhập ví dụ 346, 34w6d hoặc 34+6 (từ 20 đến 45 tuần).' && !T94.loiTuoiThai.cat && T94.loiTuoiThai.vuaKhung && T94.loiTuoiThai.kq === 0, 'lỗi tuổi thai ngoài 20–45 tuần hiện sai/cắt ' + JSON.stringify(T94.loiTuoiThai));
+    await oTuoiThai.fill('25');
+    await oNgaySinh.fill('abc');
+    await chamMot(page, bangBeMo.getByRole('button', { name: 'Tính tuần tuổi', exact: true }));
+    await page.waitForTimeout(300);
+    T94.loiNgaySinh = await doLoi();
+    dung94(T94.loiNgaySinh.chu === 'Ngày sinh nhập dạng ngày + tháng, ví dụ 0810 hoặc 08/10.' && !T94.loiNgaySinh.cat && T94.loiNgaySinh.vuaKhung, 'lỗi ngày sinh hiện sai/cắt ' + JSON.stringify(T94.loiNgaySinh));
+    await chup(page, 'iphone-chi-tiet-be-loi', true);
+    await oNgaySinh.fill('0508');
+    await page.waitForTimeout(700);
+    const sauSua = (await docBe(page, 'G01'))[0];
+    T94.duLieuG01 = { dob: sauSua.dob, ga: sauSua.ga, wt: sauSua.wt };
+    dung94(sauSua.dob === '0508' && sauSua.ga === '25' && sauSua.wt === '1850', 'khôi phục ngày sinh/tuổi thai G01 không về như cũ ' + JSON.stringify(T94.duLieuG01));
+    await chamMot(page, bangBeMo.getByRole('button', { name: 'Tính tuần tuổi', exact: true }));
+    await page.waitForTimeout(300);
+    T94.coChuChiTiet = await doCoChu(page);
+    for (const x of T94.coChuChiTiet) loi94('cỡ chữ ngoài thang ở chi tiết bé — ' + x);
+    await chup(page, 'iphone-chi-tiet-be', true);
+  }
+  {
+    // --- Việc cần làm của bé (16b): tiêu đề + "Còn x/y"; ô thêm tròn + "+" 44px; thay chữ tắt khi bấm + hoặc Enter; con trỏ ở lại ---
+    const cdp = await ctx.newCDPSession(page);
+    T94.tieuDeViec = ((await bangBeMo.locator('.be-viec-h').textContent()) || '').trim();
+    dung94(/^Việc cần làm\s*Còn 1\/1$/.test(T94.tieuDeViec), 'tiêu đề việc cần làm "' + T94.tieuDeViec + '"');
+    T94.nutThemViec = await bangBeMo.getByRole('button', { name: 'Thêm việc của bé', exact: true }).evaluate((e) => { const r = e.getBoundingClientRect(); return { w: Math.round(r.width), h: Math.round(r.height), tron: getComputedStyle(e).borderTopLeftRadius }; });
+    dung94(T94.nutThemViec.w === 44 && T94.nutThemViec.h === 44 && T94.nutThemViec.tron === '22px', 'nút "+" thêm việc của bé sai ' + JSON.stringify(T94.nutThemViec));
+    const oViec = bangBeMo.getByPlaceholder('Thêm việc cần làm…');
+    const todoDb = async (ten) => (await docBang(page, 'patient_todos')).filter((t) => t.text === ten && !t.deleted);
+    await chamMot(page, oViec);
+    await page.keyboard.type('/km');
+    T94.gioiYBe = { chip: await bangBeMo.locator('.vt-sug .vt-chip').count(), ngoaiLabel: await bangBeMo.locator('.vt-strip').first().evaluate((e) => !e.closest('label')) };
+    dung94(T94.gioiYBe.chip >= 2 && T94.gioiYBe.ngoaiLabel, 'gợi ý viết tắt ở ô thêm việc của bé sai ' + JSON.stringify(T94.gioiYBe));
+    await oViec.fill('');
+    await page.keyboard.type('Làm /ctm');
+    await chamMot(page, bangBeMo.getByRole('button', { name: 'Thêm việc của bé', exact: true }));
+    await page.waitForTimeout(400);
+    T94.themBangCong = { co: (await todoDb('Làm Công thức máu')).length, o: await oViec.inputValue(), conTro: await page.evaluate(() => document.activeElement?.placeholder), thanh: await bangBeMo.locator('.vt-toast').count() };
+    dung94(T94.themBangCong.co === 1 && T94.themBangCong.o === '' && T94.themBangCong.conTro === 'Thêm việc cần làm…' && !T94.themBangCong.thanh, 'bấm "+" ở ô việc của bé: chữ tắt/con trỏ sai ' + JSON.stringify(T94.themBangCong));
+    await page.keyboard.type('/kmdm');
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(400);
+    dung94((await todoDb('Khí máu động mạch')).length === 1, 'Enter ở ô việc của bé chưa thay /kmdm thành "Khí máu động mạch"');
+    await page.keyboard.type('Chia 8/10');
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(400);
+    dung94((await todoDb('Chia 8/10')).length === 1, '"Chia 8/10" bị đổi khi lưu');
+    T94.tieuDeViec2 = ((await bangBeMo.locator('.be-viec-h').textContent()) || '').trim();
+    dung94(/Còn 4\/4$/.test(T94.tieuDeViec2), 'đếm "Còn x/y" không cập nhật: ' + T94.tieuDeViec2);
+    const moc = (await bangBeMo.locator('.swipe', { hasText: 'Chia 8/10' }).boundingBox()).width / 3;
+    for (const ten of ['Làm Công thức máu', 'Khí máu động mạch', 'Chia 8/10']) await vuotDong(page, cdp, bangBeMo.locator('.swipe', { hasText: ten }), -Math.round(moc + 30));
+    await choHoanTacTat(page);
+    dung94(!(await todoDb('Làm Công thức máu')).length && !(await todoDb('Chia 8/10')).length, 'dọn việc thử của bé không xong');
+    await demChamSauVuot(page, true); // đệm cú chạm bị nuốt NGAY sau lần vuốt CDP (cho phép duy nhất)
+    await cdp.detach();
+  }
   {
     // v9.2: việc cần làm của bé — vuốt phải xong, vuốt trái xoá + Hoàn tác, chạm 2 lần mở bảng nhỏ chồng lên chi tiết bé
     // (thay phép kiểm kiểu C cũ: "vuốt trái → thẻ đứng yên, nút Xoá ở cuối dòng, không còn dấu ×")
     const cdp = await ctx.newCDPSession(page);
     const T = ketQua.thuChucNang.viecCuaBe = {};
-    const them = async (ten) => { await page.getByPlaceholder('Thêm việc cần làm…').fill(ten); await page.getByRole('button', { name: 'Thêm', exact: true }).click(); await page.waitForTimeout(350); };
+    const them = async (ten) => { await page.getByPlaceholder('Thêm việc cần làm…').fill(ten); await chamMot(page, page.getByRole('button', { name: 'Thêm việc của bé', exact: true })); await page.waitForTimeout(350); };
     await them('Việc thử của bé 1');
     await them('Việc thử của bé 2');
     const hang = (ten) => page.locator('.sheet .swipe', { hasText: ten });
@@ -1208,6 +1586,28 @@ async function thuThuVien(page, T, tien, cdp) {
     await vuotDong(page, cdp, hang('Việc thử của bé 1'), -Math.round(mocB + 30));
     await vuotDong(page, cdp, hang('Việc thử của bé 2'), -Math.round(mocB + 30));
     await choHoanTacTat(page);
+    {
+      // v9.4: thanh Hoàn tác trong chi tiết bé — ghi rõ nó còn che những nút nào; không che ô đang gõ thêm việc của bé
+      await demChamSauVuot(page, true); // đệm cú chạm bị nuốt NGAY sau lần vuốt CDP (cho phép duy nhất)
+      await them('Việc thử của bé 3');
+      const oViecBe = page.getByPlaceholder('Thêm việc cần làm…');
+      await chamMot(page, oViecBe);
+      await vuotDong(page, cdp, hang('Việc thử của bé 3'), -Math.round(mocB + 30));
+      T.thanhVaOGo = await page.evaluate(() => {
+        const h = document.querySelector('.hoantac');
+        if (!h) return null;
+        const a = h.getBoundingClientRect(), o = document.activeElement, ob = o && o.matches?.('input,textarea') ? o.getBoundingClientRect() : null;
+        const che = [...document.querySelectorAll('.sheet-be button, .sheet-be input, .sheet-be textarea')].filter((e) => {
+          const r = e.getBoundingClientRect();
+          return r.width > 0 && r.bottom > a.top && r.top < a.bottom && r.right > a.left && r.left < a.right;
+        }).map((e) => (e.getAttribute('aria-label') || e.textContent || e.placeholder || e.id).trim().slice(0, 30));
+        return { thanh: [Math.round(a.top), Math.round(a.bottom)], oDangGo: ob ? [Math.round(ob.top), Math.round(ob.bottom)] : null, oDangGoTen: o?.placeholder || o?.id || o?.tagName, cheOGo: !!ob && ob.bottom > a.top && ob.top < a.bottom, cheNhung: che };
+      });
+      if (!T.thanhVaOGo) ketQua.loi.push('Chi tiết bé: không thấy thanh Hoàn tác sau khi vuốt xoá việc thử 3');
+      else if (T.thanhVaOGo.cheOGo) ketQua.loi.push('Chi tiết bé: thanh Hoàn tác che ô đang gõ thêm việc của bé ' + JSON.stringify(T.thanhVaOGo));
+      if (T.thanhVaOGo && !T.thanhVaOGo.oDangGo) ketQua.luuY.push('Chi tiết bé: ô thêm việc mất con trỏ sau khi vuốt (chạm thật có thể khác); chưa kiểm được "không che ô đang gõ" với bàn phím thật');
+      await choHoanTacTat(page);
+    }
     await cdp.detach();
   }
   {
@@ -1252,7 +1652,7 @@ async function thuThuVien(page, T, tien, cdp) {
   }
   await page.getByRole('button', { name: 'Đóng chi tiết', exact: true }).click(); await page.waitForTimeout(600); // chờ bảng trượt xuống xong
 
-  await page.getByRole('button', { name: 'Tổng hợp', exact: true }).click();
+  await page.getByRole('button', { name: 'Tổng hợp y lệnh', exact: true }).click(); // v9.4: nút đổi tên từ "Tổng hợp"
   const tongHop = await page.locator('textarea.mono').inputValue();
   ketQua.thuChucNang.tongHop = tongHop.split('\n').slice(0, 6).join(' | ');
   if (!/Tiếp tục y lệnh cũ/.test(tongHop)) ketQua.loi.push('Tổng hợp y lệnh thiếu "Tiếp tục y lệnh cũ" cho bé không có việc mới');
@@ -1265,6 +1665,13 @@ async function thuThuVien(page, T, tien, cdp) {
     const t2 = await ta.inputValue();
     ketQua.thuChucNang.vietTatTongHop = t2.split('\n').slice(-1)[0];
     if (!/Thêm Điện giải đồ $/.test(t2)) ketQua.loi.push('Viết tắt: khung Tổng hợp ra "' + ketQua.thuChucNang.vietTatTongHop + '"');
+    // v9.4: nút "Soạn lại" (đổi tên từ "Soạn lại từ danh sách") dựng lại văn bản từ danh sách, không đổi nội dung tổng hợp
+    const nutSoan = page.getByRole('dialog', { name: 'Tổng hợp y lệnh' }).getByRole('button', { name: 'Soạn lại', exact: true });
+    ketQua.thuChucNang.soanLai = { cu: await page.getByRole('button', { name: 'Soạn lại từ danh sách' }).count(), moi: await nutSoan.count() };
+    if (ketQua.thuChucNang.soanLai.cu || ketQua.thuChucNang.soanLai.moi !== 1) ketQua.loi.push('Tổng hợp y lệnh: nút phải tên "Soạn lại" ' + JSON.stringify(ketQua.thuChucNang.soanLai));
+    await chamMot(page, nutSoan);
+    await page.waitForTimeout(200);
+    if ((await ta.inputValue()) !== tongHop) ketQua.loi.push('Tổng hợp y lệnh: "Soạn lại" không dựng lại đúng văn bản từ danh sách');
   }
   await page.getByRole('button', { name: 'Đóng tổng hợp', exact: true }).click(); await page.waitForTimeout(600); // chờ bảng trượt xuống xong
 
@@ -1338,16 +1745,49 @@ async function thuThuVien(page, T, tien, cdp) {
   }
   await chup(page, 'iphone-kham-toi', false);
   {
-    // tối: chi tiết việc của bé (bảng nhỏ chồng lên chi tiết bé); việc vừa vuốt phải thành xong
+    // v9.4, tối: kéo phải dòng bé (nền xanh rêu), bé đã khám đọc được (chữ nhạt + tích), chi tiết bé chưa khám và đã khám
     const cdp = await ctx.newCDPSession(page);
-    await page.locator('.pat-open', { hasText: 'G01' }).click();
-    await page.getByRole('dialog', { name: 'Chi tiết bệnh nhân' }).waitFor();
+    const T = ketQua.thuChucNang.khamToi = {};
+    const g03 = dongBe(page, 'G03');
+    const rongD = (await g03.boundingBox()).width;
+    const nenToi = await mauBien(page, '--swR2');
+    await keoDong(cdp, g03, Math.round(rongD / 3 + 30));
+    await page.waitForTimeout(100);
+    const gd = await doDong(g03);
+    T.keoPhai = { nen: gd.nen, qua: gd.qua, mau: gd.mau };
+    if (gd.nen !== 'xong' || gd.qua !== '1' || gd.mau !== nenToi) ketQua.loi.push('Khám 9.4 (tối): kéo phải dòng bé qua mốc sai nền ' + JSON.stringify(T.keoPhai) + ' (cần ' + nenToi + ')');
+    await chup(page, 'iphone-kham-vuot-phai-toi', false);
+    await thaTay(cdp);
+    await page.waitForTimeout(450);
+    await vuotDong(page, cdp, dongBe(page, 'G01'), Math.round(rongD / 3 + 30));
+    T.tuongPhan = { g01: await doTuongPhanBe(dongBe(page, 'G01')), g03: await doTuongPhanBe(g03), g12: await doTuongPhanBe(dongBe(page, 'G12')) };
+    for (const [ma, v] of Object.entries(T.tuongPhan)) if (v < 4.5) ketQua.loi.push(`Khám 9.4 (tối): chữ bé đã khám ${ma} tương phản ${v.toFixed(2)} < 4,5`);
+    T.daKhamToi = await page.locator('.pat-row.xong').count();
+    if (T.daKhamToi !== 3) ketQua.loi.push('Khám 9.4 (tối): mong đợi 3 bé đã khám, thấy ' + T.daKhamToi);
+    await chup(page, 'iphone-kham-da-kham-toi', true);
+    await demChamSauVuot(page); // đệm cú chạm bị nuốt NGAY sau lần vuốt CDP
+    await chamMot(page, g03.locator('.pat-open'));
+    await bangBeMo.waitFor();
+    await page.waitForTimeout(600);
+    await chup(page, 'iphone-chi-tiet-be-da-kham-toi', true);
+    await chamMot(page, bangBeMo.getByRole('button', { name: 'Bỏ đánh dấu đã khám', exact: true }));
+    await page.waitForTimeout(400);
+    await chamMot(page, bangBeMo.getByRole('button', { name: 'Tính tuần tuổi', exact: true }));
+    await page.waitForTimeout(300);
+    T.tuoiG03 = ((await bangBeMo.locator('.be-kq').textContent()) || '').trim();
+    if (!/Ngày tuổi\s*31 ngày/.test(T.tuoiG03) || !/Hiệu chỉnh\s*36w3d/.test(T.tuoiG03)) ketQua.loi.push('Khám 9.4 (tối): tuổi G03 (20/09, 32w0d) không ra 31 ngày, 36w3d: ' + T.tuoiG03);
+    await chup(page, 'iphone-chi-tiet-be-toi', true);
+    await chamMot(page, bangBeMo.getByRole('button', { name: 'Xong', exact: true }));
+    await page.waitForTimeout(700);
+    // tối: chi tiết việc của bé (bảng nhỏ chồng lên chi tiết bé); việc vừa vuốt phải thành xong
+    await chamMot(page, dongBe(page, 'G01').locator('.pat-open'));
+    await bangBeMo.waitFor();
     await page.waitForTimeout(500);
     const hang = page.locator('.sheet .swipe', { hasText: 'Đo bilirubin' });
     const rong = (await hang.boundingBox()).width;
     await vuotDong(page, cdp, hang, Math.round(rong / 3 + 30));
-    // đang mở bảng: "chạm vùng trống" là chạm tiêu đề bảng (chạm nền ngoài sẽ đóng bảng)
-    const tieuDe = await tamDiem(page.locator('.sheet .h2').first());
+    // đang mở bảng: "chạm vùng trống" là chạm dòng tiêu đề "Việc cần làm" (chạm nền ngoài sẽ đóng bảng)
+    const tieuDe = await tamDiem(page.locator('.sheet .be-viec-h').first());
     await page.touchscreen.tap(tieuDe.x, tieuDe.y);
     await page.waitForTimeout(250);
     const cc = await tamDiem(hang.locator('.todo-main'));
@@ -1995,8 +2435,64 @@ const IPHONE_OPTS = { viewport: { width: 393, height: 852 }, deviceScaleFactor: 
   await page.getByRole('button', { name: 'Khám', exact: true }).click();
   await page.getByRole('button', { name: /Lấy danh sách/ }).click();
   await page.waitForTimeout(400);
-  await page.locator('.pat-open', { hasText: 'G01' }).click();
-  await chup(page, 'pc-kham-sang', false);
+  {
+    // v9.4, PC: dòng bé không có nút xoá / ô vuông, không rê-kéo bằng chuột; Tab + Enter mở chi tiết ở cột phải;
+    // "Xong" và nút X đều đóng cột phải; "+" thêm bé (con trỏ vào ô mã); xoá bé vẫn hỏi xác nhận đúng tên mã
+    const T = ketQua.thuChucNang.khamPc = {};
+    const loi = (m) => ketQua.loi.push('PC Khám 9.4: ' + m);
+    const aside = page.locator('aside[aria-label="Chi tiết bệnh nhân"]');
+    const g03 = dongBe(page, 'G03');
+    await g03.hover();
+    await page.waitForTimeout(250);
+    T.nutXoaDongBe = await page.locator('.pat-row .swipe-del').count() + await page.locator('.swipe:has(.pat-row) .swipe-del').count();
+    if (T.nutXoaDongBe) loi('dòng bé có nút xoá khi rê chuột');
+    T.cuNutCu = await page.evaluate(() => ({ chk: document.querySelectorAll('.chk, .mini-box, .add-dashed').length, nutLong: document.querySelectorAll('button button').length }));
+    if (T.cuNutCu.chk || T.cuNutCu.nutLong) loi('còn ô vuông / ô gạch đứt / nút lồng nút ' + JSON.stringify(T.cuNutCu));
+    const b0 = await g03.boundingBox();
+    await page.mouse.move(b0.x + 40, b0.y + b0.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(b0.x + 300, b0.y + b0.height / 2, { steps: 8 });
+    await page.mouse.up();
+    T.keoBangChuot = { dich: (await doDong(g03)).dich, daKham: (await docBe(page, 'G03'))[0].done };
+    if (T.keoBangChuot.dich !== 0 || T.keoBangChuot.daKham) loi('kéo bằng chuột làm dòng bé dịch hoặc đã khám ' + JSON.stringify(T.keoBangChuot));
+    if (await aside.count()) { await aside.getByRole('button', { name: 'Đóng chi tiết', exact: true }).click(); await page.waitForTimeout(200); } // thả chuột trên nút có thể mở chi tiết: đóng lại cho phép kiểm sau
+    // Tab + Enter mở chi tiết (dòng bé là nút thật, không lồng nút)
+    await dongBe(page, 'G12').locator('.pat-open').focus();
+    await page.keyboard.press('Enter');
+    await aside.waitFor();
+    T.tabEnter = await page.evaluate(() => ({ ma: document.getElementById('be-ma')?.value, conTro: document.activeElement?.id === 'be-ma', chip: document.querySelector('.be-phong')?.textContent }));
+    if (T.tabEnter.ma !== 'G12' || T.tabEnter.conTro || T.tabEnter.chip !== 'Phòng 2') loi('Tab + Enter không mở đúng chi tiết G12 ' + JSON.stringify(T.tabEnter));
+    T.cotPhai = await aside.evaluate((e) => ({ cuonNgang: e.scrollWidth > e.clientWidth, o3: [...e.querySelectorAll('.be-3 input')].map((i) => Math.round(i.getBoundingClientRect().top)), nutDong: e.querySelector('.be-head .icon-btn')?.getAttribute('aria-label') }));
+    if (T.cotPhai.cuonNgang || new Set(T.cotPhai.o3).size !== 1) loi('cột phải: ba ô không cùng hàng / cuộn ngang ' + JSON.stringify(T.cotPhai));
+    await aside.getByRole('button', { name: 'Xong', exact: true }).click();
+    await page.waitForTimeout(300);
+    T.xongDongCotPhai = await aside.count();
+    if (T.xongDongCotPhai) loi('"Xong" không đóng chi tiết ở cột phải');
+    await page.locator('.pat-open', { hasText: 'G01' }).click();
+    await aside.waitFor();
+    await chup(page, 'pc-kham-sang', false);
+    await aside.getByRole('button', { name: 'Đóng chi tiết', exact: true }).click();
+    await page.waitForTimeout(300);
+    if (await aside.count()) loi('nút X không đóng chi tiết ở cột phải');
+    // "+" ở Phòng 3 (đang trống): thêm bé, con trỏ vào ô mã, gõ mã, lưu nốt, xoá có hỏi xác nhận
+    await page.getByRole('button', { name: 'Thêm bé vào Phòng 3', exact: true }).click();
+    await aside.waitFor();
+    await page.waitForTimeout(300);
+    T.congPc = await page.evaluate(() => ({ conTro: document.activeElement?.id === 'be-ma', ma: document.getElementById('be-ma').value, chip: document.querySelector('.be-phong')?.textContent }));
+    if (!T.congPc.conTro || T.congPc.ma !== '' || T.congPc.chip !== 'Phòng 3') loi('"+" ở PC: con trỏ chưa vào ô mã ' + JSON.stringify(T.congPc));
+    await page.keyboard.type('TMPC');
+    await page.waitForTimeout(700);
+    if (!(await docBe(page, 'TMPC')).length) loi('bé mới trên PC chưa lưu mã');
+    page.once('dialog', async (d) => { T.hoiXoaPc = d.message(); await d.accept(); });
+    await aside.getByRole('button', { name: 'Xoá khỏi hôm nay', exact: true }).click();
+    await page.waitForTimeout(700);
+    if (T.hoiXoaPc !== 'Xoá TMPC khỏi danh sách hôm nay?') loi('câu hỏi xoá trên PC: "' + T.hoiXoaPc + '"');
+    if ((await aside.count()) || !(await docBe(page, 'TMPC'))[0]?.deleted) loi('xoá bé thử trên PC chưa xong');
+    // tổng hợp y lệnh: nút và nút "Soạn lại" đổi tên
+    await page.getByRole('button', { name: 'Tổng hợp y lệnh', exact: true }).click();
+    T.soanLaiPc = await page.getByRole('region', { name: 'Tổng hợp y lệnh' }).getByRole('button', { name: 'Soạn lại', exact: true }).count();
+    if (T.soanLaiPc !== 1) loi('thiếu nút "Soạn lại" ở Tổng hợp y lệnh trên PC');
+  }
   {
     // v9.1: PC cũng bỏ nút sáng/tối; bảng "Sao lưu và cài đặt" vẫn có chức năng cũ (xuất, nhập, thư mục)
     const T = ketQua.thuChucNang.pcCaiDat = {};
@@ -2011,9 +2507,93 @@ const IPHONE_OPTS = { viewport: { width: 393, height: 852 }, deviceScaleFactor: 
     await chup(page, 'pc-cai-dat-sang', false);
     await dongCaiDat(page, hop);
   }
+  {
+    // v9.4 (bác sĩ đồng ý 06/11/2026): PC, ô thêm việc thay chữ tắt ở cuối khi bấm "Thêm việc" hoặc Enter
+    const T = ketQua.thuChucNang.luuVietTatPc = {};
+    await page.getByRole('button', { name: 'Việc', exact: true }).click();
+    const o = page.getByLabel('Nội dung công việc');
+    const ghi = async (ten) => (await docViec(page, ten)).filter((t) => !t.deleted).length;
+    await o.click();
+    await page.keyboard.type('Làm /ctm');
+    await page.getByRole('button', { name: 'Thêm việc', exact: true }).click();
+    await page.waitForTimeout(400);
+    T.bamThem = { co: await ghi('Làm Công thức máu'), o: await o.inputValue() };
+    if (T.bamThem.co !== 1 || T.bamThem.o !== '') ketQua.loi.push('PC: bấm "Thêm việc" khi ô có "Làm /ctm" chưa thành "Làm Công thức máu" ' + JSON.stringify(T.bamThem));
+    await page.keyboard.type('Xem /kmdm');
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(400);
+    T.enter = await ghi('Xem Khí máu động mạch');
+    if (T.enter !== 1) ketQua.loi.push('PC: Enter khi ô có "Xem /kmdm" chưa thành "Xem Khí máu động mạch"');
+    for (const [go, can] of [['Ăn 8/10', 'Ăn 8/10'], ['Ghi /khongco', 'Ghi /khongco'], ['Đo x/kmdm', 'Đo x/kmdm'], ['/ctm', 'Công thức máu'], ['Làm /ctm  ', 'Làm Công thức máu']]) {
+      await page.keyboard.type(go);
+      await page.keyboard.press('Enter');
+      await page.waitForTimeout(350);
+      const n = await ghi(can);
+      if (n < 1) ketQua.loi.push(`PC: lưu "${go}" phải ra "${can}" (không thấy)`);
+    }
+    if ((await page.locator('.hoantac').count()) || (await page.locator('.vt-toast').count())) ketQua.loi.push('PC: lưu có thay chữ tắt mà còn hiện thanh Hoàn tác / thanh "Đã đổi"');
+  }
   await ctx.close();
 }
-// PC: người đã có 'dark' hoặc 'light' lưu từ bản cũ giữ nguyên giao diện sau khi cập nhật, kể cả khi máy báo ngược lại
+// v9.4, iPhone: ô thêm việc thay chữ tắt ở cuối khi bấm "+" (chạm thật, một lần) hoặc Enter; không cần thanh Hoàn tác
+{
+  const { ctx, page } = await moApp(IPHONE_OPTS);
+  const T = ketQua.thuChucNang.luuVietTatIphone = {};
+  const o = page.getByLabel('Nội dung công việc');
+  const ghi = async (ten) => (await docViec(page, ten)).filter((t) => !t.deleted).length;
+  const cong = page.getByRole('button', { name: 'Thêm việc', exact: true });
+  await chamO(page, o); // ô gõ tới khi nhận con trỏ (bộ đệm sẵn có của bước kiểm ô thêm việc)
+  await page.keyboard.type('Làm /ctm');
+  await chamMot(page, cong);
+  await page.waitForTimeout(450);
+  T.bamCong = { co: await ghi('Làm Công thức máu'), o: await o.inputValue(), conTro: await page.evaluate(() => document.activeElement?.id), thanhDaDoi: await page.locator('.vt-toast').count(), hoanTac: await page.locator('.hoantac').count() };
+  if (T.bamCong.co !== 1 || T.bamCong.o !== '' || T.bamCong.conTro !== 'ph-draft' || T.bamCong.thanhDaDoi || T.bamCong.hoanTac) ketQua.loi.push('iPhone: bấm "+" khi ô có "Làm /ctm" sai ' + JSON.stringify(T.bamCong));
+  await page.keyboard.type('Xem /kmdm');
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(450);
+  T.enter = await ghi('Xem Khí máu động mạch');
+  if (T.enter !== 1) ketQua.loi.push('iPhone: Enter khi ô có "Xem /kmdm" chưa thành "Xem Khí máu động mạch"');
+  for (const [go, can] of [['Chia 8/10', 'Chia 8/10'], ['Ghi /khongco', 'Ghi /khongco'], ['/ctm', 'Công thức máu']]) {
+    await page.keyboard.type(go);
+    await chamMot(page, cong);
+    await page.waitForTimeout(350);
+    if ((await ghi(can)) < 1) ketQua.loi.push(`iPhone: lưu "${go}" phải ra "${can}" (không thấy)`);
+  }
+  await ctx.close();
+}
+// v9.4, iPhone màn hẹp 320px: danh sách và chi tiết bé không tràn ngang; kết quả tuổi "123 ngày", "42w4d" không bị cắt; chữ ô nhập 16px
+{
+  const { ctx, page } = await moApp({ viewport: { width: 320, height: 700 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, userAgent: IPHONE_UA });
+  const T = ketQua.thuChucNang.man320 = {};
+  await page.getByRole('button', { name: 'Khám', exact: true }).click();
+  await page.getByRole('button', { name: /Lấy danh sách/ }).click();
+  await page.waitForTimeout(500);
+  T.danhSach = await page.evaluate(() => ({ trang: document.documentElement.scrollWidth - innerWidth, main: (() => { const m = document.querySelector('.ph-main'); return m.scrollWidth - m.clientWidth; })(), nutCongNgoai: [...document.querySelectorAll('.room-add')].some((e) => e.getBoundingClientRect().right > innerWidth) }));
+  if (T.danhSach.trang > 0 || T.danhSach.main > 0 || T.danhSach.nutCongNgoai) ketQua.loi.push('Màn 320: danh sách Khám bị tràn ngang ' + JSON.stringify(T.danhSach));
+  await chup(page, 'iphone-kham-320', true);
+  await chamMot(page, dongBe(page, 'G01').locator('.pat-open'));
+  const bang = page.getByRole('dialog', { name: 'Chi tiết bệnh nhân' });
+  await bang.waitFor();
+  await page.waitForTimeout(600);
+  await bang.getByLabel('Ngày sinh', { exact: true }).fill('2006');
+  await chamMot(page, bang.getByRole('button', { name: 'Tính tuần tuổi', exact: true }));
+  await page.waitForTimeout(300);
+  T.chiTiet = await page.evaluate(() => {
+    const s = document.querySelector('.sheet'), kq = document.querySelector('.be-kq').getBoundingClientRect();
+    const o = [...document.querySelectorAll('.be-3 input, #be-ma')];
+    return { tranSheet: s.scrollWidth - s.clientWidth, trang: document.documentElement.scrollWidth - innerWidth, chu: document.querySelector('.be-kq').textContent.trim(),
+      cat: [...document.querySelectorAll('.be-kq b')].filter((b) => b.scrollWidth > b.clientWidth + 0.5 || b.getBoundingClientRect().right > kq.right + 0.5).map((b) => b.textContent),
+      o3: [...document.querySelectorAll('.be-3 input')].map((e) => { const r = e.getBoundingClientRect(); return { l: Math.round(r.left), r: Math.round(r.right) }; }),
+      coO: o.map((e) => parseFloat(getComputedStyle(e).fontSize)), duoi: [...document.querySelectorAll('.sheet-r4 button')].map((e) => { const r = e.getBoundingClientRect(); return { chu: e.textContent.trim(), cao: Math.round(r.height), r: Math.round(r.right) }; }) };
+  });
+  const c320 = T.chiTiet;
+  if (c320.tranSheet > 0 || c320.trang > 0) ketQua.loi.push('Màn 320: chi tiết bé tràn ngang ' + JSON.stringify({ sheet: c320.tranSheet, trang: c320.trang }));
+  if (!/123 ngày/.test(c320.chu) || !/42w4d/.test(c320.chu) || c320.cat.length) ketQua.loi.push('Màn 320: kết quả tuổi bị cắt hoặc sai ' + JSON.stringify({ chu: c320.chu, cat: c320.cat }));
+  if (c320.o3.some((x) => x.l < 0 || x.r > 320) || c320.coO.some((f) => f < 16)) ketQua.loi.push('Màn 320: ba ô tràn khung hoặc chữ < 16px ' + JSON.stringify({ o3: c320.o3, coO: c320.coO }));
+  if (c320.duoi.some((x) => x.r > 320)) ketQua.loi.push('Màn 320: hàng nút cuối tràn ' + JSON.stringify(c320.duoi));
+  await chup(page, 'iphone-chi-tiet-be-320', true);
+  await ctx.close();
+}// PC: người đã có 'dark' hoặc 'light' lưu từ bản cũ giữ nguyên giao diện sau khi cập nhật, kể cả khi máy báo ngược lại
 for (const [cu, maySang, kyVong] of [['dark', 'light', true], ['light', 'dark', false]]) {
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: maySang });
   await ctx.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());

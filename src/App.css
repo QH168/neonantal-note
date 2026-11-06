@@ -51,7 +51,6 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .btn.sm{padding:0 12px}
 .btn.big{min-height:48px;font-size:16px}
 .btn.outline-accent{background:var(--accentInk);color:var(--accent);border-color:var(--accent)}
-.btn.done-btn{background:var(--tint);color:var(--tintInk);border:2px solid var(--accent)}
 .btn:disabled,.btn.disabled{opacity:.45;pointer-events:none}
 .btn.cal-toggle{justify-content:flex-start;min-height:48px}
 .icon-btn{flex:none;width:44px;height:44px;padding:0;border:0;background:transparent;display:flex;align-items:center;justify-content:center;color:var(--ink)}
@@ -118,15 +117,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .task-main:focus-visible{outline-offset:-2px;border-radius:8px}
 .task-text{font-size:16px;line-height:1.4;font-weight:500;overflow-wrap:anywhere}
 .task-text.done,.todo-text.done{color:var(--muted);text-decoration:none}
-.done-text{color:var(--done);text-decoration:line-through}
 .tick-ok{flex:none;width:26px;height:26px;margin-left:6px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--okBg);color:var(--okInk)}
 .pri-chuyen{margin-right:-6px}
-.chk{flex:none;width:44px;height:44px;padding:0;border:0;background:transparent;display:flex;align-items:center;justify-content:center}
-.chk .box{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;border:2px solid var(--box);background:var(--surface);color:var(--accentInk)}
-.chk.small .box{width:24px;height:24px;border-radius:7px}
-.chk .box svg{opacity:0}
-.chk .box.on{border-color:var(--accent);background:var(--accent)}
-.chk .box.on svg{opacity:1}
 .pri{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
 .pri-pick{display:flex;gap:6px}
 .pri-btn{width:44px;height:44px;border-radius:50%;border:2px solid;background:var(--surface);color:var(--ink);font-size:16px;font-weight:700;padding:0}
@@ -158,24 +150,28 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .cal-cell.sel .cal-badge.has{background:var(--accentInk);color:var(--accent)}
 .sheet .cal{border:0;padding:0}
 
-/* bệnh nhân */
-.pat-row{display:flex;align-items:center;gap:2px;min-height:60px;padding:0 8px 0 4px;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+/* bệnh nhân (v9.4): dòng bé là SwipeRow, không ô vuông, không mũi tên; chữ sát lề trái 14px; đã khám = chữ --muted + tích xanh */
+.room-h{display:flex;align-items:center}
+.room-h .group-h{flex:1;min-width:0}
+/* nút "+" thêm bé: tròn 32px viền xanh, vùng chạm 44px, nằm NGOÀI nút thu gọn của phòng */
+.room-add{flex:none;width:44px;height:44px;padding:0;border:0;background:transparent;color:var(--accent);display:flex;align-items:center;justify-content:center}
+.room-add-o{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;transition:transform 120ms ease,background-color 120ms ease}
+.room-add:active .room-add-o{background:var(--accent);color:var(--accentInk);transform:scale(.94)}
+.pat-row{display:flex;align-items:center;gap:0;min-height:60px;padding:0 9px 0 14px;background:var(--surface);border:1px solid var(--line);border-radius:12px}
 .pat-row.sel{border-color:var(--accent)}
-.pat-open{flex:1;min-width:0;min-height:52px;display:flex;align-items:center;gap:8px;padding:4px 8px;border:0;background:transparent;color:var(--ink);text-align:left}
+.pat-open{flex:1;min-width:0;min-height:52px;align-self:stretch;display:flex;align-items:center;gap:8px;padding:6px 8px 6px 0;border:0;background:transparent;color:var(--ink);text-align:left;touch-action:manipulation}
+.pat-open:focus-visible{outline-offset:-2px;border-radius:8px}
 .pat-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
-.pat-code{font-size:16px;font-weight:600}
-.pat-todos{display:flex;flex-direction:column;gap:3px;padding-top:6px}
-.pat-todo{display:flex;align-items:flex-start;gap:8px;font-size:14px;line-height:1.4}
-.mini-box{flex:none;width:8px;height:8px;margin-top:6px;border-radius:2px;border:1.5px solid var(--box)}
-.mini-box.on{border-color:var(--accent);background:var(--accent)}
+.pat-code{font-size:16px;font-weight:600;overflow-wrap:anywhere}
+.pat-todos{display:flex;flex-direction:column;gap:3px;padding-top:4px}
+.pat-todo{font-size:14px;line-height:1.4;overflow-wrap:anywhere}
+.pat-row.xong .pat-code,.pat-row.xong .pat-todo,.pat-todo.xong{color:var(--muted)}
 .pat-note{padding-top:6px;font-size:13px;line-height:1.4;color:var(--muted);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .left-badge{flex:none;padding:3px 10px;border:1px solid var(--edge);border-radius:12px;background:var(--surface2);font-size:12px;font-weight:600;white-space:nowrap}
-.add-dashed{min-height:48px;border:1px dashed var(--box);border-radius:12px;background:transparent;color:var(--tintInk);font-size:15px;font-weight:600}
 .todo-row{display:flex;align-items:center;gap:0;min-height:48px;padding:0 9px 0 14px;background:var(--surface2);border-radius:12px}
 .todo-main{flex:1;min-width:0;align-self:stretch;display:flex;align-items:center;padding:4px 8px 4px 0;touch-action:manipulation;cursor:default}
 .todo-main:focus-visible{outline-offset:-2px;border-radius:8px}
 .todo-text{flex:1;min-width:0;font-size:15px;line-height:1.4;font-weight:500;overflow-wrap:anywhere}
-.calc-box{display:flex;flex-direction:column;gap:4px;padding:12px;border-radius:12px;background:var(--tint2);font-size:15px;line-height:1.5}
 .err-box{padding:12px;border-radius:12px;background:var(--errBg);color:var(--errInk);font-size:14px;font-weight:500}
 .status{font-size:14px;font-weight:600;color:var(--tintInk)}
 .msg{margin:0;padding:10px 12px;border-radius:10px;background:var(--tint2);font-size:14px;line-height:1.45}
@@ -202,7 +198,6 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .ph-main{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 16px 16px;display:flex;flex-direction:column;gap:8px}
 .ph-main.exam{padding-top:4px;gap:12px;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
 :is(.phone-app,.sheet-ph) .group-title{font-size:16px}
-:is(.phone-app,.sheet-ph) .chk{width:48px;height:48px}
 :is(.phone-app,.sheet-ph) .btn{min-height:44px}
 .grow-ph{flex:1}
 @media (min-width:900px){.grow-ph{flex:none}}
@@ -238,19 +233,12 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 :is(.phone-app,.sheet-ph) .pat-todo{font-size:13px}
 :is(.phone-app,.sheet-ph) .pat-note{font-size:12px}
 :is(.phone-app,.sheet-ph) .left-badge{font-size:12px}
-:is(.phone-app,.sheet-ph) .add-dashed{font-size:15px}
 :is(.phone-app,.sheet-ph) .status{font-size:13px}
-/* ô tick nhỏ còn 80%, vùng chạm giữ nguyên */
-:is(.phone-app,.sheet-ph) .chk .box{width:21px;height:21px;border-radius:6px}
-:is(.phone-app,.sheet-ph) .chk .box svg{width:13px;height:13px}
-:is(.phone-app,.sheet-ph) .chk.small .box{width:19px;height:19px;border-radius:5px}
-:is(.phone-app,.sheet-ph) .chk.small .box svg{width:11px;height:11px}
 /* bảng trượt lên (chi tiết bé, tổng hợp, lịch, sao lưu) */
 :is(.phone-app,.sheet-ph) .sheet .h2{font-size:17px}
 :is(.phone-app,.sheet-ph) .sheet .field .muted.small{font-size:13px}
 :is(.phone-app,.sheet-ph) .sheet .todo-text{font-size:15px}
-:is(.phone-app,.sheet-ph) .calc-box{font-size:15px}
-:is(.phone-app,.sheet-ph) .err-box{font-size:13px}
+:is(.phone-app,.sheet-ph) :is(.phone-app,.sheet-ph) .err-box{font-size:13px}
 :is(.phone-app,.sheet-ph) .cal-title{font-size:15px}
 :is(.phone-app,.sheet-ph) .cal-wd{font-size:12px}
 :is(.phone-app,.sheet-ph) .msg{font-size:13px}
@@ -366,6 +354,30 @@ html.co-form-viec body:not(.co-bang) .hoantac-wrap{bottom:calc(var(--kb,0px) + v
 /* bảng nhỏ chi tiết việc của bé (chồng lên chi tiết bé): cao theo nội dung */
 .sheet.sheet-todo{overflow-y:auto;gap:10px;padding:10px 16px calc(24px + env(safe-area-inset-bottom));border-radius:22px 22px 0 0;border-top:1px solid var(--line)}
 .sheet-wrap.center .sheet.sheet-todo{border-radius:16px;border:1px solid var(--line);padding:12px 16px 16px}
+/* ===== v9.4: chi tiết bé (bảng 16b). Cao theo nội dung, cuộn khi dài; mã giường là ô sửa được ở tiêu đề ===== */
+.sheet.sheet-be{overflow-y:auto;gap:12px;padding:10px 16px calc(22px + env(safe-area-inset-bottom));border-radius:22px 22px 0 0;border-top:1px solid var(--line)}
+.sheet-wrap.center .sheet.sheet-be{border-radius:16px;border:1px solid var(--line);padding:12px 16px 16px}
+.sheet.sheet-be>*,.pc-detail>*{flex-shrink:0}
+.be-head{display:flex;align-items:center;gap:6px}
+.be-ma{flex:1;min-width:0;height:48px;padding:0 10px;border:0;border-bottom:2px solid var(--edge);border-radius:10px 10px 0 0;background:transparent;font-size:17px;font-weight:700;color:var(--ink)}
+.be-ma::placeholder{color:var(--muted);font-weight:500}
+.be-ma:placeholder-shown{border-bottom-color:var(--accent)} /* chưa có mã: gạch chân xanh, chỗ nhập rõ */
+.be-phong{flex:none;max-width:38%;padding:4px 10px;border-radius:12px;background:var(--surface2);font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.be-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.be-3 .field{min-width:0}
+.be-3 .input{padding:0 10px}
+.be-tuoi{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px}
+.be-tuoi .btn{flex:0 0 112px;min-height:56px;padding:0 8px;line-height:1.25;border-width:1.5px}
+.be-kq{flex:1 1 190px;min-width:0;display:grid;grid-template-columns:auto auto;justify-content:space-between;align-content:center;column-gap:12px;padding:8px 12px;border-radius:12px;background:var(--tint2)}
+.be-kq>span{display:flex;flex-direction:column;font-size:12px;color:var(--muted)}
+.be-kq b{font-size:17px;font-weight:700;color:var(--ink);white-space:nowrap}
+.be-kq-trong{display:flex;align-items:center;font-size:13px;line-height:1.35;color:var(--muted);background:transparent;border:1px dashed var(--edge)}
+.be-viec-h{margin:4px 0 0;display:flex;align-items:baseline;gap:6px;font-size:15px;font-weight:700}
+.be-them{display:flex;gap:8px}
+.be-note{flex:none;min-height:96px;width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--bg);font-size:16px;line-height:1.5;color:var(--ink);resize:none}
+@media (max-width:360px){.sheet-be .sheet-del-task{padding:0 8px;white-space:nowrap}.sheet-be .sheet-done{width:96px;min-width:0}.sheet-be .nut-trang-thai{padding:0 12px}} /* màn 320: hàng cuối không xuống dòng */
+.tong-hop-wrap{margin-top:auto}
+:is(.phone-app,.sheet-ph) .be-ma{font-size:17px}
 .sheet-grip{flex:none;align-self:center;width:40px;height:5px;border-radius:3px;background:var(--edge)}
 .sheet>.sheet-grip{margin:2px 0 -2px}
 .hr{flex:none;width:100%;height:1px;margin:0;border:0;background:var(--line)}

@@ -30,6 +30,17 @@ export function HoanTacProvider({ children }) {
   }, [lenLich]);
   const an = useCallback(() => { clearTimeout(timer.current); setMuc(null); }, []);
   useEffect(() => () => clearTimeout(timer.current), []);
+  // Thanh nổi ở đáy màn hình, trên bảng dưới (vd. chi tiết bé). Nếu nó rơi đúng chỗ ô đang gõ trong bảng (vd. ô thêm việc của bé
+  // khi bàn phím mở) thì cuộn ô đó lên giữa bảng, để thanh không che chỗ đang gõ.
+  const idMuc = muc?.id;
+  useEffect(() => {
+    if (!idMuc) return;
+    const o = document.activeElement;
+    const thanh = document.querySelector('.hoantac');
+    if (!o || !thanh || !o.matches?.('input,textarea') || !o.closest?.('.sheet')) return;
+    const a = o.getBoundingClientRect(), b = thanh.getBoundingClientRect();
+    if (a.bottom > b.top && a.top < b.bottom) o.scrollIntoView({ block: 'center' });
+  }, [idMuc]);
   const value = useMemo(() => ({ hien, an }), [hien, an]);
 
   const hoanTac = async () => {

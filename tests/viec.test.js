@@ -224,3 +224,48 @@ test('khiRoiOThemViec: chỉ có khoảng trắng tính là trống; không đ�
   assert.deepEqual(nhan, ['BM']);
   assert.notEqual(r.nhan, nhan);
 });
+// ---- Cử chỉ vuốt: duocTrai (dòng bé ở tab Khám chỉ vuốt phải) ----
+test('vuot: duocTrai=false, vuốt trái vô hiệu ở mọi hàm', () => {
+  const o = { duocTrai: false };
+  assert.equal(duocVuot(-50, o), false);
+  assert.equal(doDich(-50, 300, o), 0);
+  assert.equal(quaMoc(-200, 300, o), false);
+  assert.equal(nenHien(-50, o), null);
+  assert.equal(ketQuaKhiTha(-200, 300, o), 've');
+  assert.equal(ketQuaKhiTha(-300, 300, o), 've');
+});
+
+test('vuot: duocTrai=false, vuốt phải vẫn như thường', () => {
+  const o = { duocTrai: false };
+  assert.equal(duocVuot(50, o), true);
+  assert.equal(doDich(50, 300, o), 50);
+  assert.equal(quaMoc(100, 300, o), true);
+  assert.equal(quaMoc(99, 300, o), false);
+  assert.equal(nenHien(50, o), 'xong');
+  assert.equal(ketQuaKhiTha(100, 300, o), 'xong');
+  assert.equal(ketQuaKhiTha(99, 300, o), 've');
+});
+
+test('vuot: duocTrai=false + daXong, vuốt phải chỉ nhúc nhích, luôn về', () => {
+  const o = { duocTrai: false, daXong: true };
+  assert.equal(doDich(40, 300, o), 10);
+  assert.equal(doDich(400, 300, o), 16);
+  assert.equal(quaMoc(250, 300, o), false);
+  assert.equal(nenHien(40, o), null);
+  assert.equal(ketQuaKhiTha(250, 300, o), 've');
+  assert.equal(ketQuaKhiTha(-250, 300, o), 've');
+  assert.equal(doDich(-250, 300, o), 0);
+  assert.equal(duocVuot(-1, o), false);
+});
+
+test('vuot: không truyền duocTrai thì vuốt trái như cũ', () => {
+  assert.equal(duocVuot(-50), true);
+  assert.equal(doDich(-50, 300), -50);
+  assert.equal(doDich(-500, 300), -300);
+  assert.equal(quaMoc(-100, 300), true);
+  assert.equal(nenHien(-50), 'xoa');
+  assert.equal(ketQuaKhiTha(-100, 300), 'xoa');
+  assert.equal(ketQuaKhiTha(-100, 300, { daXong: true }), 'xoa');
+  assert.equal(ketQuaKhiTha(-100, 300, { duocTrai: true }), 'xoa');
+  assert.equal(duocVuot(-50, { duocPhai: false }), true);
+});

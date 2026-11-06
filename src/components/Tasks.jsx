@@ -290,7 +290,8 @@ export function TaskForm({ variant, date, zone, setZone, tags, setTags, khuLoc =
 
   const submit = async (e) => {
     e.preventDefault();
-    const text = chuanTenViec(draftRef.current);
+    // Bấm "+" hoặc Enter cũng thay chữ tắt ở cuối ô (vd. "Làm /ctm"), rồi mới cắt khoảng trắng và ghi.
+    const text = chuanTenViec(vt.chot(draftRef.current));
     if (!text) { if (ph) inputRef.current?.focus(); return; } // nút "+" khi ô trống: không tạo việc rỗng
     datDraft('');
     if (ph) inputRef.current?.focus();                        // giữ con trỏ để gõ tiếp
@@ -318,7 +319,8 @@ export function TaskForm({ variant, date, zone, setZone, tags, setTags, khuLoc =
           </select>
           <div className="row8"><span className="muted small">Nhãn</span>{tagBtns}</div>
           <span className="grow" />
-          <button type="submit" className="btn primary">Thêm việc</button>
+          {/* giữ con trỏ trong ô khi bấm: nếu không, hàng gợi ý viết tắt biến mất lúc nhả chuột, nút nhảy lên và cú bấm trượt */}
+          <button type="submit" className="btn primary" onPointerDown={giuConTro} onMouseDown={giuConTro}>Thêm việc</button>
         </div>
       </form>
     );

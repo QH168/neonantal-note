@@ -272,7 +272,7 @@ test('v9.3: ô thêm việc iPhone — nút "+" aria-label "Thêm việc", nhãn
   assert.match(t, /Nội dung công việc/);
   assert.doesNotMatch(t, /Nhãn \(chọn được nhiều\)/);
   assert.match(t, /khiRoiOThemViec\(/); // luật thu lại là hàm thuần trong src/lib/viec.js
-  assert.match(t, /chuanTenViec\(draftRef\.current\)/); // không tạo việc rỗng, không thêm trùng khi bấm liền
+  assert.match(t, /chuanTenViec\(vt\.chot\(draftRef\.current\)\)/); // v9.4: thay chữ tắt ở cuối rồi mới cắt khoảng trắng; không tạo việc rỗng, không thêm trùng khi bấm liền
   assert.doesNotMatch(read('src/lib/viec.js'), /from ['"]react['"]|document\.|window\./);
 });
 
@@ -285,4 +285,51 @@ test('v9.3: thư viện viết tắt — không còn bút chì; dòng mở sửa
   assert.match(tv, /placeholder="Tìm theo chữ viết tắt hoặc nội dung"/);
   assert.match(tv, /Chạm 2 lần vào dòng để sửa\. Vuốt trái quá 1\/3 rồi thả để xoá, có hoàn tác\./);
   for (const f of SRC) assert.doesNotMatch(read(f), /PencilIcon/, f + ' còn PencilIcon');
+});
+
+// ===== v9 đợt 9.4: Khám =====
+test('v9.4: dòng bé là SwipeRow chỉ vuốt phải; nút "+" nằm ngoài nút thu gọn; không còn ô vuông, ô gạch đứt, mũi tên', () => {
+  const ex = read('src/components/Exam.jsx');
+  const ui = read('src/components/ui.jsx');
+  const css = read('src/App.css').replace(/\/\*[\s\S]*?\*\//g, '');
+  assert.doesNotMatch(ex, /CheckBtn/);
+  assert.doesNotMatch(ui, /CheckBtn/);
+  for (const k of ['chk', 'add-dashed', 'mini-box', 'done-text']) assert.doesNotMatch(css, new RegExp('\\.' + k + '\\b'), 'CSS còn .' + k);
+  const dong = /function PatientRow[\s\S]*?\r?\n}\r?\n/.exec(ex)[0];
+  assert.match(dong, /<SwipeRow/);
+  assert.doesNotMatch(dong, /onDelete/, 'dòng bé không được truyền onDelete (không vuốt trái, không nút xoá)');
+  assert.doesNotMatch(dong, /<Chevron/);
+  assert.match(dong, /setPatientDone\(p, true\)/);
+  assert.match(ui, /typeof onDelete === 'function'/); // không onDelete thì không nút thùng rác
+  assert.match(ex, /aria-label=\{'Thêm bé vào ' \+ r\.name\}/);
+  const nutGon = /<button type="button" className="group-btn"[\s\S]*?<\/button>/.exec(ex)[0];
+  assert.doesNotMatch(nutGon, /room-add/, 'nút "+" không được lồng trong nút thu gọn');
+  assert.match(ex, /if \(!dangMo\) onToggle\(r\.id\)/); // phòng thu gọn: mở rồi mới thêm
+});
+
+test('v9.4: chi tiết bé — mã giường ở tiêu đề, ba ô, tính tuổi chỉ khi bấm, xoá vẫn hỏi, nút đóng chung một đường', () => {
+  const ex = read('src/components/Exam.jsx');
+  assert.match(ex, /<label htmlFor="be-ma" className="sr-only">Mã \/ giường<\/label>/);
+  assert.match(ex, /aria-label="Đóng chi tiết" onClose=\{dong\}/);
+  assert.match(ex, /className="btn primary big sheet-done" onClose=\{dong\}>Xong</);
+  assert.match(ex, /const dong = \(\) => \{ flush\(\); onClose\(\); \}/);
+  assert.match(ex, /ten: 'Tuổi thai lúc sinh'/);
+  assert.match(ex, /aria-label="Thêm việc của bé"/);
+  assert.match(ex, /nutDanhDau="Hoàn tất khám" nutBo="Bỏ đánh dấu đã khám"/);
+  assert.match(ex, /window\.confirm\(`Xoá \$\{f\.code \|\| 'bệnh nhân này'\} khỏi danh sách hôm nay\?`\)/);
+  assert.equal((ex.match(/calcAge\(/g) || []).length, 1, 'calcAge chỉ được gọi ở một chỗ: khi bấm nút');
+  assert.match(ex, /onClick=\{\(\) => setCalc\(calcAge\(f\)\)\}/);
+  assert.match(ex, /if \(k === 'dob' \|\| k === 'ga'\) setCalc\(null\)/);
+  assert.doesNotMatch(ex, /họ\s*tên/i);
+});
+
+test('v9.4: lưu việc thay chữ tắt ở cuối (bấm + hoặc Enter): ô thêm việc iPhone/PC và ô thêm việc của bé; nút đổi tên', () => {
+  assert.match(read('src/components/Tasks.jsx'), /chuanTenViec\(vt\.chot\(draftRef\.current\)\)/);
+  assert.match(read('src/components/Exam.jsx'), /chuanTenViec\(vtTodo\.chot\(todoRef\.current\)\)/);
+  assert.match(read('src/components/VietTat.jsx'), /const chot = \(text\) => moRongKhiGui\(text, map\)/);
+  const app = read('src/App.jsx');
+  assert.equal((app.match(/>Tổng hợp y lệnh</g) || []).length, 2);
+  assert.doesNotMatch(app, />Tổng hợp</);
+  assert.match(read('src/components/Exam.jsx'), />Soạn lại</);
+  assert.doesNotMatch(read('src/components/Exam.jsx'), /Soạn lại từ danh sách/);
 });

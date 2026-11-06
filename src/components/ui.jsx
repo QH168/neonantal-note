@@ -36,28 +36,23 @@ const Tick = ({ size = 16 }) => (
   <svg width={size} height={size} viewBox="0 0 16 16" strokeWidth="2.3" {...S}><path d="M3 8.5l3.2 3.2L13 4.8" /></svg>
 );
 
-/** Ô vuông đánh dấu (vùng chạm 44–48px). Còn dùng cho dòng bé ở tab Khám tới đợt 9.4. */
-export function CheckBtn({ done, label, onClick, small }) {
-  return (
-    <button type="button" className={'chk' + (small ? ' small' : '')} aria-pressed={done} aria-label={label} onClick={onClick}>
-      <span className={'box' + (done ? ' on' : '')}><Tick size={small ? 14 : 16} /></span>
-    </button>
-  );
+/** Tích xanh tròn 26px cuối dòng đã xong / đã khám. Chỉ để hiển thị, không bấm được. `nhan` là chữ cho máy đọc màn hình. */
+export function TickOk({ nhan = 'Đã xong' }) {
+  return <span className="tick-ok" role="img" aria-label={nhan}><Tick size={14} /></span>;
 }
 
-/** Tích xanh tròn 26px cuối dòng việc đã xong. Chỉ để hiển thị, không bấm được. */
-export function TickOk() {
-  return <span className="tick-ok" role="img" aria-label="Đã xong"><Tick size={14} /></span>;
-}
-
-/** Dòng trạng thái trong chi tiết việc: "Chưa xong" + "Hoàn thành", hoặc "Đã xong lúc hh:mm" + "Bỏ đánh dấu xong". */
-export function TrangThaiXong({ xong, gio, onDanhDau, onBo }) {
+/**
+ * Dòng trạng thái trong chi tiết: "Chưa xong" + "Hoàn thành", hoặc "Đã xong lúc hh:mm" + "Bỏ đánh dấu xong".
+ * Chữ đổi được cho chi tiết bé ("Chưa khám" + "Hoàn tất khám" / "Đã khám lúc hh:mm" + "Bỏ đánh dấu đã khám").
+ * Chưa có giờ (dữ liệu cũ) thì chỉ ghi chữ đã xong, không có "lúc".
+ */
+export function TrangThaiXong({ xong, gio, onDanhDau, onBo, chuaChu = 'Chưa xong', xongChu = 'Đã xong', nutDanhDau = 'Hoàn thành', nutBo = 'Bỏ đánh dấu xong' }) {
   return (
     <div className="trang-thai">
-      <span className="trang-thai-chu" aria-live="polite">{xong ? (gio ? `Đã xong lúc ${gio}` : 'Đã xong') : 'Chưa xong'}</span>
+      <span className="trang-thai-chu" aria-live="polite">{xong ? (gio ? `${xongChu} lúc ${gio}` : xongChu) : chuaChu}</span>
       {xong
-        ? <button type="button" className="nut-trang-thai bo" onClick={onBo}>Bỏ đánh dấu xong</button>
-        : <button type="button" className="nut-trang-thai" onClick={onDanhDau}>Hoàn thành</button>}
+        ? <button type="button" className="nut-trang-thai bo" onClick={onBo}>{nutBo}</button>
+        : <button type="button" className="nut-trang-thai" onClick={onDanhDau}>{nutDanhDau}</button>}
     </div>
   );
 }
@@ -94,7 +89,8 @@ const giamChuyenDong = () => typeof window !== 'undefined' && !!window.matchMedi
  * thả trước mốc: trượt về. Mọi con số do src/lib/vuot.js tính; ở đây chỉ nối vào ngón tay.
  * Khi kéo chỉ ghi biến CSS/thuộc tính data lên phần tử (không setState mỗi lần kéo, nên không vẽ lại danh sách).
  *  - onDone: có thì cho vuốt phải (thư viện viết tắt không truyền). daXong: dòng đã xong chỉ nhúc nhích rồi về.
- *  - onDelete: gọi SAU khi dòng đã thu lại (một lần duy nhất; gỡ dòng giữa chừng vẫn gọi).
+ *  - onDelete: gọi SAU khi dòng đã thu lại (một lần duy nhất; gỡ dòng giữa chừng vẫn gọi). Không truyền thì dòng không vuốt trái
+ *    được và không có nút thùng rác (dòng bé ở tab Khám chỉ vuốt phải).
  * Chuột (PC): không rê-kéo; rê vào dòng thì hiện nút thùng rác cạnh nhãn, Tab vào nút cũng hiện.
  * `label` là tên (để đọc "Xoá <kind>: <tên>"). `className` áp cho thân dòng.
  */
@@ -109,7 +105,9 @@ export function SwipeRow({ label, onDelete, onDone, daXong = false, className = 
   xoaRef.current = onDelete;
   const xongRef = useRef(onDone);
   xongRef.current = onDone;
-  const opts = { duocPhai: !!onDone, daXong };
+  // Không truyền onDelete (dòng bé ở tab Khám): không vuốt trái, không nền đỏ, không nút thùng rác trên PC.
+  const coXoa = typeof onDelete === 'function';
+  const opts = { duocPhai: !!onDone, duocTrai: coXoa, daXong };
   const optsRef = useRef(opts);
   optsRef.current = opts;
 
@@ -206,9 +204,11 @@ export function SwipeRow({ label, onDelete, onDone, daXong = false, className = 
       <div ref={thanRef} className={'swipe-body ' + className}
         onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={huy} onClickCapture={bam}>
         {children}
-        <button type="button" className="swipe-del" aria-label={ten} title={ten} onClick={xoa}>
-          <TrashIcon size={20} />
-        </button>
+        {coXoa && (
+          <button type="button" className="swipe-del" aria-label={ten} title={ten} onClick={xoa}>
+            <TrashIcon size={20} />
+          </button>
+        )}
       </div>
     </div>
   );
