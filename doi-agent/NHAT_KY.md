@@ -42,7 +42,7 @@
 - Kỹ thuật: `src/lib/viet-tat.js` thêm `moRongKhiGui`; `VietTat.jsx` trả thêm `chot`; `src/lib/vuot.js` thêm `opts.duocTrai` (mặc định true, không đổi hành vi cũ); `ui.jsx` (SwipeRow chỉ vuốt phải khi không có `onDelete`, `TrangThaiXong` nhận nhãn, xoá `CheckBtn`); `Exam.jsx`, `Tasks.jsx`, `HoanTac.jsx`, `App.jsx`, `App.css` sửa theo; `tests/viec.test.js`, `tests/viet-tat.test.js`, `tests/luat.test.js` thêm bài kiểm; `scripts/chup-giao-dien.mjs` thêm phép kiểm và ảnh. Không đổi `clinical.js`, `dates.js`, `db.js`, `actions.js`, `backup.js`, `merge.js`, `package.json`.
 - Kết quả kiểm: kiểm thử độc lập ĐẠT, không vòng sửa nào; `npm test` 122/122; script chụp ĐẠT 67 ảnh. Tính tay 6 ca tuổi khớp app (sinh cuối tháng, ngày lẻ tuổi thai, lùi năm). Sửa ngày sinh làm hỏng rồi sửa lại thì kết quả cũ xoá ngay. Dữ liệu bé cũ không đổi khi mở app.
 - Agent Giao diện sửa thêm một lỗi: trên PC bấm "Thêm việc" khi hàng gợi ý viết tắt đang hiện thì nút bị trượt.
-- Chưa thử trên iPhone thật. Ảnh chuẩn chưa lưu lại, chờ bác sĩ duyệt ảnh 9.4.
+- Chưa thử trên iPhone thật. Bác sĩ đã duyệt 06/11/2026; ảnh chuẩn 9.4 đã lưu.
 - Dọn "Chờ duyệt": bỏ #3 (đã làm); gộp #11 và #20 thành #26; thêm #26–#32 (thanh Hoàn tác đè nút "Xong" trong chi tiết bé, bấm "+" hai lần nhanh, "+" thêm việc liên tiếp rất nhanh, nhãn "Tuổi thai"/"Hiệu chỉnh", lệch dọc khi vuốt phải, bàn phím cho bé mới, ngày sinh lùi năm).
 - Việc tiếp theo: đợt 9.5 sau khi bác sĩ duyệt ảnh 9.4 (lịch mới, lịch trong tab Khám, xem ngày trước, tổng hợp nhiều ngày; việc lớn, đụng thuật toán).
 
