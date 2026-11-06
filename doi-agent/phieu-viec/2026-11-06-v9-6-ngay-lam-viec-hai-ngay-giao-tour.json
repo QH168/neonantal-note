@@ -1,0 +1,106 @@
+{
+  "ten": "v9 đợt 9.6 — Ngày làm việc (mốc 07:00); chế độ 2 ngày cho Việc và Khám; Dời hết sang hôm nay; chi tiết bé Đêm qua + mức tăng giảm cân; tổng hợp giao tour",
+  "ngay": "2026-11-06",
+  "khuVuc": "Khung chung, Việc, Khám, Tính tuần tuổi và tổng hợp y lệnh, Sao lưu và cài đặt",
+  "loai": "lon",
+  "canBacSiDuyet": true,
+  "trangThai": "Bác sĩ đã duyệt phiếu 06/11/2026",
+  "bacSiDaQuyet": [
+    "Câu 1: mốc ngày làm việc KHÔNG đưa vào sao lưu; mỗi máy tự đặt; file sao lưu giữ nguyên định dạng.",
+    "Câu 2: 'Mới đêm qua' tính từ 16:00 tới mốc.",
+    "Câu 3: cùng phòng, cùng mã mà có ngày sinh hai bên khác nhau thì KHÔNG ghép: hai bé riêng, không tính tăng giảm cân.",
+    "Câu 4: việc ghi trước mốc thuộc ngày làm việc trước, nằm trong 'Còn từ hôm qua' nếu chưa xong (theo đặc tả mục 7, không theo bảng 17c)."
+  ],
+  "keHoachTong": "doi-agent/phieu-viec/2026-11-05-v9-ke-hoach.json",
+  "dacTa": "doi-agent/thiet-ke-v9/THIET_KE_V9.md (mục 2.2, 4.4, 5.7, 5.8, 5.9, 7, 8)",
+  "bangCanvas": ["15f ApCaiDat", "17a KhamHaiNgay", "17b BeHaiNgay", "17c ViecHaiNgay", "17d GiaoTour"],
+  "agent": ["thuat-toan", "du-lieu", "giao-dien", "kiem-thu", "ghi-chep"],
+  "thuTuLam": "Thuật toán → Dữ liệu → Giao diện, lần lượt từng agent.",
+  "cauHoiBacSi": [
+    { "so": 1, "cauHoi": "Mốc ngày làm việc có đưa vào file sao lưu không?", "deXuat": "Không. Mỗi máy tự đặt, giống Sáng/Tối; file sao lưu giữ nguyên định dạng." },
+    { "so": 2, "cauHoi": "'Mới đêm qua' tính từ mấy giờ tới mốc?", "deXuat": "16:00" },
+    { "so": 3, "cauHoi": "Cùng phòng, cùng mã mà hai ngày ghi ngày sinh khác nhau thì ghép không?", "deXuat": "Không ghép: hiện thành hai bé riêng, không tính tăng giảm cân." },
+    { "so": 4, "cauHoi": "Việc ghi lúc 03:10 thuộc nhóm nào khi xem 2 ngày? Đặc tả mục 7 và bảng 17c khác nhau.", "deXuat": "Theo đặc tả mục 7: thuộc ngày làm việc trước, nằm trong khung 'Còn từ hôm qua' nếu chưa xong." }
+  ],
+  "fileDuocSua": [
+    "src/lib/dates.js",
+    "src/lib/cai-dat.js",
+    "src/lib/clinical.js",
+    "src/lib/actions.js",
+    "src/lib/hai-ngay.js",
+    "src/lib/tong-hop.js",
+    "src/hooks.js",
+    "src/components/KhamHaiNgay.jsx",
+    "src/components/GiaoTour.jsx",
+    "src/components/KhamNgayTruoc.jsx",
+    "src/components/Lich.jsx",
+    "src/components/Tasks.jsx",
+    "src/components/Exam.jsx",
+    "src/components/ui.jsx",
+    "src/components/BackupPanel.jsx",
+    "src/App.jsx",
+    "src/App.css",
+    "tests/ngay-lam-viec.test.js",
+    "tests/hai-ngay.test.js",
+    "tests/tong-hop.test.js",
+    "tests/clinical.test.js",
+    "tests/ca-chuan.test.js",
+    "tests/luat.test.js",
+    "tests/merge.test.js",
+    "scripts/chup-giao-dien.mjs",
+    "doi-agent/ca-chuan-lam-sang.md",
+    "doi-agent/BAN_DO.md",
+    "package.json"
+  ],
+  "ghiChuFile": "tests/merge.test.js: Điều phối giao agent Dữ liệu thêm bài gộp nhưng quên ghi vào phiếu lúc đầu, Kiểm thử phát hiện, đã bổ sung; chỉ thêm bài, bài cũ không đổi. package.json chỉ thêm bài kiểm mới vào lệnh test, không thêm thư viện. ca-chuan-lam-sang.md, tests/ca-chuan.test.js chỉ thêm ca, không đổi ca cũ. BAN_DO.md: agent code chỉ thêm tên file mới.",
+  "dataTacDong": {
+    "db": "Không đổi src/db.js, không thêm bảng, không đổi db.version, không đổi tên CSDL.",
+    "duLieuCu": "date, examDate đã lưu giữ nguyên, không chuyển đổi. Bản nâng cấp không ghi vào dòng cũ.",
+    "saoLuu": "Không đổi src/lib/backup.js, src/lib/merge.js, không đổi định dạng file; file sao lưu cũ vẫn nhập được (phải kiểm thật). Mốc lưu trong bảng meta, không sao lưu, chờ câu hỏi 1.",
+    "ghiMoi": "'Dời hết sang hôm nay' và 'Dời' đổi date của việc bằng updateRow, có updatedAt, có Hoàn tác 6 giây trả về date cũ. 'Chép sang' dùng cùng luật copyPatientsFrom, chỉ cho một bé."
+  },
+  "viecCanLam": {
+    "thuatToan": [
+      "src/lib/dates.js: hàm thuần ngayLamViec(now, mocPhut) = ngày lịch của (giờ máy − mốc), tính theo giờ máy, không qua UTC. Bài kiểm: biên 06:59/07:00, qua nửa đêm, qua tháng, qua năm, 29/02, mốc 00:00 đúng bằng ngày lịch.",
+      "useToday dùng ngày làm việc: tự đổi khi qua mốc và khi mở lại app; đổi mốc trong cài đặt có tác dụng ngay. Chờ đọc xong mốc từ meta rồi mới vẽ app, để không bao giờ ghi nhầm ngày vào lúc tải trang.",
+      "TUỔI THEO NGÀY LỊCH: trang hôm nay, tính tuần tuổi và tổng hợp y lệnh hôm nay vẫn dùng ngày lịch của máy, không theo mốc (đặc tả mục 7). Không đổi calcAge, parseDob, parseGa.",
+      "BẪY BẮT BUỘC SỬA, BÉ SINH SAU NỬA ĐÊM: 02:30 ngày 05/11 ghi bé sinh '0511' thì examDate = 04/11. Nếu xem lại ngày trước hoặc tổng hợp nhiều ngày bằng calcAge(p, examDate), parseDob thấy 05/11 sau 04/11, lùi một năm, ra khoảng 364 ngày tuổi. Thêm hàm thuần ngayTinhTuoi(p): ngày lịch của createdAt nếu muộn hơn examDate, không thì examDate; không có createdAt thì examDate. Dùng ở mọi nơi tính tuổi cho dòng đã qua: tong-hop.js, KhamNgayTruoc.jsx, 'Tổng hợp ngày này'. Dữ liệu cũ tạo đúng ngày ra kết quả như trước. Thêm ca này vào bộ ca chuẩn.",
+      "src/lib/hai-ngay.js, hàm thuần ghepHaiNgay({ homQua, homNay, rooms, todosByPid, mocPhut, gioBatDauDem }): ghép theo phòng + mã (bỏ khoảng trắng hai đầu, không phân biệt hoa thường). Bé không mã không ghép. Trùng phòng + mã trong cùng ngày: không ghép, hiện đủ, không mất bé. Theo câu hỏi 3: có ngày sinh hai bên mà khác nhau thì không ghép. Phòng đã xoá vẫn hiện.",
+      "Mới đêm qua: dòng hôm qua, không có copiedFrom, createdAt từ giờ bắt đầu đêm (câu hỏi 2) tới mốc. Không có createdAt thì không gắn nhãn. Trả số đếm cho chip Tất cả / Mới đêm qua / Còn việc / Chưa chép; mỗi bé nằm đúng một thẻ.",
+      "Mức tăng giảm cân: chỉ khi đã ghép chắc chắn và cả hai cân đọc được thành số; thiếu thì không hiện, không đoán.",
+      "Việc 2 ngày: 'Còn từ hôm qua' = việc chưa xong, chưa xoá của đúng ngày làm việc trước, không gồm các ngày xa hơn. Giờ ghi lấy từ createdAt: 'Ghi lúc 23:40 đêm qua'.",
+      "Tổng hợp giao tour trong src/lib/hai-ngay.js theo 17d, bốn chip bật/tắt: Bé mới, Việc còn lại, Bé ổn định, Ghi chú (mặc định tắt). Mỗi bé nằm đúng một nhóm; dòng đầu luôn đếm đủ số bé dù nhóm đang tắt. Bé chỉ có hôm qua: lấy việc chưa xong của hôm qua, ghi 'chưa có trong danh sách hôm nay'. Tuổi theo ngày lịch hôm nay. 'Phòng 1' viết tắt 'P1' chỉ khi tên đúng dạng đó, không thì giữ nguyên tên.",
+      "src/lib/actions.js: doiViecSangHomNay(ids, homNay) trả về danh sách id + date cũ để Hoàn tác; chepMotBe(patientId, homNay) cùng luật không trùng phòng + mã của copyPatientsFrom. Không đổi copyPatientsFrom.",
+      "Bài kiểm kết quả tính tay, không sinh từ chính hàm được kiểm."
+    ],
+    "duLieu": [
+      "Đọc, ghi mốc trong meta qua getMeta/setMeta, khoá 'mocNgayLamViec', giá trị 0, 360, 420, 480 phút, mặc định 420. Giá trị lạ về 420. Không đưa vào file sao lưu (chờ câu hỏi 1).",
+      "Xác nhận bằng bài kiểm: file sao lưu cũ nhập được; gộp iPhone và PC với hai mốc khác nhau không đổi dữ liệu; việc đã dời gộp đúng theo updatedAt.",
+      "Báo cáo có cần sao lưu trước khi cập nhật không."
+    ],
+    "giaoDien": [
+      "Cài đặt (15f): 'Ngày làm việc bắt đầu lúc' với ô chọn 00:00 / 06:00 / 07:00 / 08:00 cao 44px, chữ 16px, câu giải thích đổi theo mốc đang chọn. Đầu trang khi đang trong đêm ghi rõ ngày làm việc để không nhầm ngày.",
+      "Nút gạt 'Hôm nay / 2 ngày' ở Việc và Khám, mỗi nút vùng chạm ≥44px; mặc định Hôm nay mỗi lần mở app; ẩn khi đang xem ngày trước của 9.5.",
+      "Việc 2 ngày (17c): khung vàng 'Còn từ hôm qua, n việc' + 'Dời hết sang hôm nay' có Hoàn tác; vuốt phải là xong; chạm 2 lần mở chi tiết có thêm nút 'Dời sang hôm nay'. Hết việc thì ẩn khung. Việc ghi trong đêm hiện giờ ghi.",
+      "Khám 2 ngày (17a): chip lọc; thẻ 2 dòng Hôm qua / Hôm nay; bé mới viền vàng + 'Vào hh:mm đêm qua'; bé chỉ có hôm qua viền gạch đứt + 'Chép sang' vùng chạm 44px; đáy 'Tổng hợp giao tour'. Chạm thẻ mở chi tiết bé hôm nay; bé chỉ có hôm qua mở chi tiết chỉ xem.",
+      "Chi tiết bé ở chế độ 2 ngày (17b): khung gập 'Đêm qua, ghi lúc hh:mm' chỉ xem (ghi chú, việc đã xong, đã chép sang hôm nay); thẻ 'từ đêm qua' cho việc cùng chữ; ô cân nặng hiện mức tăng giảm. Vẫn chỉ tính tuổi khi bấm. Ô sửa, tự lưu và 'Xoá khỏi hôm nay' giữ như 9.4.",
+      "src/components/GiaoTour.jsx (17d): chip bật/tắt, ô sửa 16px, 'Sao chép', 'Soạn lại'. Bật tắt nhóm không làm mất chữ đã sửa nếu chưa bấm 'Soạn lại': khi đã sửa thì báo rõ và chờ bấm 'Soạn lại' mới soạn theo chip mới.",
+      "PC đủ chức năng. Màu tối kiểm tương phản ≥4,5:1 chữ, ≥3:1 biểu tượng.",
+      "Sửa scripts/chup-giao-dien.mjs: phép kiểm và ảnh iphone-viec-hai-ngay, iphone-kham-hai-ngay, iphone-be-hai-ngay, iphone-giao-tour, iphone-cai-dat-moc (cả tối). Thử bằng đồng hồ giả: 06:59, 07:00, 02:30."
+    ]
+  },
+  "khongLam": [
+    "Không đổi src/db.js, src/lib/backup.js, src/lib/merge.js, calcAge, parseDob, parseGa, copyPatientsFrom. Không đổi date, examDate của dữ liệu cũ. Không thêm thư viện npm. Không đổi kết quả ca chuẩn cũ.",
+    "Không thêm 'đến 40w'. Không có ô họ tên. Không đổi link app.",
+    "Không chạy --luu-chuan. Không commit, không push."
+  ],
+  "tieuChiDat": [
+    "npm test đạt; bài cũ không nới; bộ ca chuẩn cũ giữ nguyên, thêm ca bé sinh sau nửa đêm",
+    "Kiểm thử độc lập ĐẠT, tính tay tuổi và mức cân ít nhất 6 ca, gồm bé sinh sau nửa đêm; thử đồng hồ giả qua mốc, qua nửa đêm, qua tháng, qua năm",
+    "Dữ liệu cũ không đổi khi nâng cấp: so CSDL trước và sau khi mở bản mới; file sao lưu cũ nhập được",
+    "Không bé nào mất hoặc ghép nhầm trong 2 ngày và giao tour: bé không mã, trùng mã, phòng đã xoá, khác ngày sinh; mỗi bé đúng một nhóm",
+    "Dời việc và Hoàn tác trả đúng ngày cũ; dời không đụng việc đã xong hoặc đã xoá; Chép sang không trùng",
+    "Ảnh iPhone sáng/tối khớp bảng 15f, 17a, 17b, 17c, 17d; vùng chạm ≥44px, ô nhập ≥16px"
+  ],
+  "ghiChu": "Điều phối so canvas với đặc tả: bảng 17a, 17c vẽ việc và bé ghi lúc 02:30, 03:10 ở 'hôm nay', còn đặc tả mục 7 đưa vào ngày làm việc trước. Xem câu hỏi 4. Tờ đặc tả được ưu tiên hơn canvas."
+}

@@ -2,6 +2,8 @@
 import { chuanHoaTags, chuanTenViec } from './viec.js';
 import { sapBe, orderTiepTheo } from './thu-tu.js';
 import { chuanKey, BO_MAU } from './viet-tat.js';
+import { KHOA_MOC_NGAY_LAM_VIEC, chuanHoaMoc } from './cai-dat.js';
+import { lapKeHoachDoiViec, keHoachHoanTacDoi, chonChepMotBe } from './hai-ngay.js';
 import { db, addRow, updateRow, softDelete, getDeviceId, getMeta, setMeta } from '../db.js';
 
 const alive = (r) => !r.deleted;
@@ -164,6 +166,75 @@ export async function copyPatientsFrom(srcDate, today) {
     }
   });
   return added;
+}
+
+/**
+ * Chép MỘT bé (và việc chưa xong của bé) sang ngày làm việc nay (v9.6). Cùng luật copyPatientsFrom: bỏ qua phòng đã xoá,
+ * không trùng phòng + mã (chặt hơn một chút: xem chonChepMotBe). Không đổi copyPatientsFrom.
+ * @returns { added: 1, id } khi đã chép; { added: 0, ly: 'trung' | 'phong-xoa' | 'khong-thay' } khi không chép.
+ */
+export async function chepMotBe(patientId, homNay) {
+  await getDeviceId();
+  let kq = { added: 0, ly: 'khong-thay' };
+  await db.transaction('rw', db.exam_patients, db.patient_todos, db.rooms, db.meta, async () => {
+    const src = await db.exam_patients.get(patientId);
+    const roomIds = new Set((await db.rooms.filter(alive).toArray()).map((r) => r.id));
+    const cur = await db.exam_patients.where('examDate').equals(homNay).filter(alive).toArray();
+    const luat = chonChepMotBe({ src, cur, roomIds, homNay });
+    if (!luat.ok) { kq = { added: 0, ly: luat.ly }; return; }
+    const np = await addRow('exam_patients', {
+      roomId: src.roomId, examDate: homNay, code: src.code, dob: src.dob, ga: src.ga, wt: src.wt,
+      note: '', done: false, copiedFrom: src.id, order: orderTiepTheo(cur)
+    });
+    const todos = await db.patient_todos.where('patientId').equals(src.id).filter((t) => alive(t) && !t.done).toArray();
+    todos.sort((a, b) => (a.order || 0) - (b.order || 0));
+    let i = 0;
+    for (const t of todos) await addRow('patient_todos', { patientId: np.id, text: t.text, done: false, order: ++i });
+    kq = { added: 1, id: np.id };
+  });
+  return kq;
+}
+
+// ---------- Dời việc sang hôm nay (v9.6) ----------
+/**
+ * "Dời sang hôm nay" / "Dời hết sang hôm nay": đổi `date` của các việc (bảng tasks) sang ngày làm việc nay, bằng updateRow
+ * (có updatedAt). Chỉ dời việc còn sống, chưa xong, date là ngày trước homNay. Việc đã xong/đã xoá/đã ở hôm nay: bỏ qua.
+ * @returns [{ id, dateCu }] các việc ĐÃ dời → đưa cho hoanTacDoiViec khi Hoàn tác (6 giây).
+ */
+export async function doiViecSangHomNay(ids, homNay) {
+  await getDeviceId();
+  const daDoi = [];
+  await db.transaction('rw', db.tasks, db.meta, async () => {
+    const rows = (await db.tasks.bulkGet([...new Set(ids || [])])).filter(Boolean);
+    for (const k of lapKeHoachDoiViec(rows, ids, homNay)) {
+      await updateRow('tasks', k.id, { date: homNay });
+      daDoi.push(k);
+    }
+  });
+  return daDoi;
+}
+
+/** Hoàn tác doiViecSangHomNay: trả `date` về đúng ngày cũ. Trả mảng id đã trả lại. */
+export async function hoanTacDoiViec(daDoi) {
+  const out = [];
+  await getDeviceId();
+  await db.transaction('rw', db.tasks, db.meta, async () => {
+    for (const k of keHoachHoanTacDoi(daDoi)) {
+      if (!(await db.tasks.get(k.id))) continue;
+      await updateRow('tasks', k.id, { date: k.date });
+      out.push(k.id);
+    }
+  });
+  return out;
+}
+
+/**
+ * Đặt mốc ngày làm việc (phút) cho máy này. Ghi vào bảng meta (KHÔNG nằm trong file sao lưu, mỗi máy tự đặt), có chuẩn hoá: số lạ về 420. Trả về giá trị đã lưu.
+ */
+export async function datMocNgayLamViec(phut) {
+  const moc = chuanHoaMoc(phut);
+  await setMeta(KHOA_MOC_NGAY_LAM_VIEC, moc);
+  return moc;
 }
 
 // ---------- Viết tắt ----------

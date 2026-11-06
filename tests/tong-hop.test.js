@@ -328,3 +328,24 @@ test('tongHopNhieuNgay không đổi dữ liệu đưa vào', () => {
   tongHopNhieuNgay({ tuNgay: '2026-11-02', denNgay: '2026-11-04', ...d, cachXep: 'ngay' });
   assert.equal(JSON.stringify(d), sao);
 });
+
+// ---- v9.6: bé sinh sau nửa đêm (examDate 04/11, ghi lúc 02:30 ngày 05/11, sinh "0511") ----
+// Tính tay: GA 342 = 34*7+2 = 240 ngày. Ngày tính tuổi = ngày lịch của giờ tạo = 05/11 → 0 ngày tuổi → 34w2d.
+// Nếu nhầm tính theo examDate 04/11, "0511" lùi về 2025 → 364 ngày → 604 ngày = 86w2d (sai).
+test('v9.6: tổng hợp nhiều ngày — bé sinh sau nửa đêm ra 34w2d, không phải 86w2d', () => {
+  const p = be('r1', '2026-11-04', {
+    id: 'dem', code: 'G05', dob: '0511', ga: '342', wt: '1950', createdAt: new Date(2026, 10, 5, 2, 30).getTime(),
+  });
+  const kq = tongHopNhieuNgay({ tuNgay: '2026-11-04', denNgay: '2026-11-04', rooms: [R1], patients: [p], todosByPid: {}, cachXep: 'ma' });
+  assert.ok(kq.text.includes('04/11: 34w2d - 1950 g - Tiếp tục y lệnh cũ'), kq.text);
+  assert.ok(!kq.text.includes('86w'), kq.text);
+  const theoNgay = tongHopNhieuNgay({ tuNgay: '2026-11-04', denNgay: '2026-11-04', rooms: [R1], patients: [p], todosByPid: {}, cachXep: 'ngay' });
+  assert.ok(theoNgay.text.includes('G05: 34w2d - 1950 g - Tiếp tục y lệnh cũ'), theoNgay.text);
+});
+
+test('v9.6: tổng hợp nhiều ngày — dòng cũ tạo đúng ngày giữ nguyên kết quả (sinh 14/10, 35w0d, ngày 02/11 → 37w5d)', () => {
+  // 35*7 = 245; 14/10 → 02/11 = 19 ngày; 264 = 37w5d (37*7=259).
+  const p = be('r1', '2026-11-02', { id: 'cu', code: 'G01', dob: '1410', ga: '350', createdAt: new Date(2026, 10, 2, 9, 0).getTime() });
+  const kq = tongHopNhieuNgay({ tuNgay: '2026-11-02', denNgay: '2026-11-02', rooms: [R1], patients: [p], todosByPid: {}, cachXep: 'ma' });
+  assert.ok(kq.text.includes('02/11: 37w5d - Tiếp tục y lệnh cũ'), kq.text);
+});

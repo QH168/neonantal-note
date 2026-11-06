@@ -151,3 +151,103 @@ test('actions.js (đọc mã nguồn, chưa chạy với IndexedDB): ghi doneAt,
   assert.match(copy, /done: false/);
   assert.doesNotMatch(/export const addTask[\s\S]*?done: false\r?\n\}\);/.exec(src)[0], /doneAt/);
 });
+
+// ---------- Đợt 9.6: mốc ngày làm việc, dời việc, chép một bé ----------
+import { readFileSync as docFile } from 'node:fs';
+import { chuanHoaMoc, KHOA_MOC_NGAY_LAM_VIEC } from '../src/lib/cai-dat.js';
+const docMa = (duongDan) => docFile(new URL(duongDan, import.meta.url), 'utf8');
+
+test('9.6: mốc ngày làm việc KHÔNG ra file sao lưu và nhập file không ghi đè mốc (đọc mã backup.js, db.js)', () => {
+  const db = docMa('../src/db.js');
+  const bk = docMa('../src/lib/backup.js');
+  const tables = /export const DATA_TABLES = \[([^\]]*)\]/.exec(db)[1];
+  assert.doesNotMatch(tables, /meta/);
+  assert.equal(KHOA_MOC_NGAY_LAM_VIEC, 'mocNgayLamViec');
+  // xuất: chỉ đọc từng bảng trong DATA_TABLES, không đọc db.meta
+  const xuat = /export async function prepareBackupFile[\s\S]*?\r?\n}\r?\n/.exec(bk)[0];
+  assert.match(xuat, /for \(const t of DATA_TABLES\) tables\[t\] = await db\[t\]\.toArray\(\)/);
+  assert.doesNotMatch(xuat, /meta|getMeta|mocNgayLamViec/);
+  // nhập: chỉ bulkPut các bảng DATA_TABLES; meta chỉ ghi 'lastImport'
+  const nhap = /export async function importBackupFile[\s\S]*?\r?\n}\r?\n/.exec(bk)[0];
+  assert.doesNotMatch(nhap, /mocNgayLamViec|data\.meta/);
+  assert.deepEqual([...nhap.matchAll(/setMeta\('([^']+)'/g)].map((m) => m[1]), ['lastImport']);
+  assert.doesNotMatch(nhap, /db\.meta/);
+});
+
+test('9.6: hooks/actions của mốc: callback luôn trả số, ghi qua setMeta có chuẩn hoá (đọc mã, chưa chạy IndexedDB)', () => {
+  const hk = docMa('../src/hooks.js');
+  assert.match(hk, /export function useMocNgayLamViec\(\) \{\s*return useLiveQuery\(async \(\) => chuanHoaMoc\(\(await db\.meta\.get\(KHOA_MOC_NGAY_LAM_VIEC\)\)\?\.value\), \[\]\);/);
+  const ac = docMa('../src/lib/actions.js');
+  assert.match(ac, /export async function datMocNgayLamViec\(phut\) \{\s*const moc = chuanHoaMoc\(phut\);\s*await setMeta\(KHOA_MOC_NGAY_LAM_VIEC, moc\);/);
+  // meta chưa có dòng hoặc giá trị lạ → 420; số hợp lệ giữ nguyên
+  assert.equal(chuanHoaMoc(undefined), 420);
+  assert.equal(chuanHoaMoc(555), 420);
+  assert.equal(chuanHoaMoc(0), 0);
+  assert.equal(chuanHoaMoc(480), 480);
+});
+
+test('9.6: file sao lưu định dạng cũ (không doneAt, không mốc, date/examDate cũ) gộp ra đúng, không đổi date/examDate', () => {
+  const file = {
+    format: BACKUP_FORMAT, version: 1, exportedAt: '2026-10-01T00:00:00.000Z', device: 'iphone',
+    tables: {
+      tasks: [{ id: 't1', text: 'xét nghiệm', date: '2026-09-30', done: true, updatedAt: 100 }],
+      exam_patients: [{ id: 'p1', roomId: 'r1', examDate: '2026-09-30', code: '12', dob: '2909', updatedAt: 100 }],
+      patient_todos: [{ id: 'v1', patientId: 'p1', text: 'siêu âm', done: false, updatedAt: 100 }]
+    }
+  };
+  assert.equal(validateBackup(file, ['tasks', 'rooms', 'exam_patients', 'patient_todos', 'abbrevs']), null);
+  // máy trống: thêm đủ, nguyên văn
+  for (const t of ['tasks', 'exam_patients', 'patient_todos']) {
+    const r = mergeRows([undefined], file.tables[t]);
+    assert.equal(r.added, 1);
+    assert.deepEqual(r.toPut, file.tables[t]);
+  }
+  // máy đã có bản cũ hơn, không có doneAt: file đè đúng, date/examDate giữ như trong file
+  const r = mergeRows([{ id: 't1', text: 'cũ', date: '2026-09-29', done: false, updatedAt: 50 }], file.tables.tasks);
+  assert.equal(r.updated, 1);
+  assert.equal(r.toPut[0].date, '2026-09-30');
+  assert.equal('doneAt' in r.toPut[0], false);
+  // máy mới hơn: giữ nguyên bản máy
+  assert.equal(mergeRows([{ id: 'p1', examDate: '2026-09-30', updatedAt: 200 }], file.tables.exam_patients).toPut.length, 0);
+});
+
+test('9.6: việc đã dời (date mới, updatedAt mới) thắng bản cũ khi gộp; Hoàn tác dời (updatedAt còn mới hơn) thắng bản đã dời', () => {
+  const goc = { id: 't1', text: 'gọi hội chẩn', date: '2026-11-05', done: false, updatedAt: 1000 };
+  const daDoi = { ...goc, date: '2026-11-06', updatedAt: 2000 };
+  const hoanTac = { ...daDoi, date: '2026-11-05', updatedAt: 3000 };
+  // PC còn bản gốc, nhận file iPhone đã dời → thành ngày mới
+  let r = mergeRows([goc], [daDoi]);
+  assert.equal(r.toPut[0].date, '2026-11-06');
+  // iPhone đã dời, nhận file PC cũ (bản gốc) → giữ bản đã dời
+  r = mergeRows([daDoi], [goc]);
+  assert.equal(r.toPut.length, 0);
+  // Hoàn tác có updatedAt mới hơn thắng cả bản đã dời lẫn bản gốc
+  r = mergeRows([daDoi], [hoanTac]);
+  assert.equal(r.toPut[0].date, '2026-11-05');
+  r = mergeRows([hoanTac], [daDoi]);
+  assert.equal(r.toPut.length, 0);
+  // hai máy đặt mốc khác nhau: không liên quan dữ liệu (mốc không nằm trong bảng nào)
+  r = mergeRows([goc], [goc]);
+  assert.equal(r.toPut.length, 0);
+});
+
+test('9.6: bé chép từ chepMotBe (có copiedFrom) gộp được như dòng thường; việc chưa xong chép theo mang patientId mới', () => {
+  const nguon = { id: 'p1', roomId: 'r1', examDate: '2026-11-05', code: '7', dob: '0511', done: false, updatedAt: 10 };
+  const chep = { id: 'p2', roomId: 'r1', examDate: '2026-11-06', code: '7', dob: '0511', note: '', done: false, copiedFrom: 'p1', order: 1, updatedAt: 20, createdAt: 20, deviceId: 'x' };
+  const viec = { id: 'v2', patientId: 'p2', text: 'siêu âm', done: false, order: 1, updatedAt: 20 };
+  // máy kia chưa có bản chép: thêm nguyên văn, giữ copiedFrom
+  let r = mergeRows([undefined], [chep]);
+  assert.equal(r.added, 1);
+  assert.equal(r.toPut[0].copiedFrom, 'p1');
+  assert.equal(mergeRows([undefined], [viec]).added, 1);
+  // bé nguồn không bị đổi khi gộp bản chép
+  assert.equal(mergeRows([nguon], [nguon]).toPut.length, 0);
+  // bản chép sửa sau (cân nặng) ở máy kia thắng, copiedFrom còn nguyên
+  r = mergeRows([chep], [{ ...chep, wt: '3200', updatedAt: 30 }]);
+  assert.equal(r.updated, 1);
+  assert.equal(r.toPut[0].copiedFrom, 'p1');
+  // file chứa bản chép nhập vào máy mới → validateBackup chấp nhận
+  assert.equal(validateBackup({ format: BACKUP_FORMAT, version: 1, tables: { exam_patients: [nguon, chep], patient_todos: [viec] } }, ['exam_patients', 'patient_todos']), null);
+  // chepMotBe thật sự ghi copiedFrom (đọc mã)
+  assert.match(docMa('../src/lib/actions.js'), /export async function chepMotBe[\s\S]*?copiedFrom: src\.id/);
+});

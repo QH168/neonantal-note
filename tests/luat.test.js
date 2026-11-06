@@ -350,15 +350,17 @@ test('v9.5: trang xem ngày trước CHỈ XEM — chỉ một thao tác ghi (co
   assert.equal((s.match(/copyPatientsFrom\(/g) || []).length, 1);
   assert.match(s, /copyPatientsFrom\(iso, today\)/);
   // tuổi tính theo NGÀY ĐÓ của chính dòng, không bao giờ theo hôm nay
-  assert.equal((s.match(/calcAge\(/g) || []).length, 2);
-  assert.equal((s.match(/calcAge\(p, parseIso\(p\.examDate\)\)/g) || []).length, 2);
+  // v9.6: tuoiCuaDong (không phải calcAge) — bé ghi sau nửa đêm có examDate lùi một ngày, tính theo examDate sẽ ra ~364 ngày
+  assert.doesNotMatch(s, /\bcalcAge\(/, 'KhamNgayTruoc không được gọi calcAge trực tiếp');
+  assert.equal((s.match(/tuoiCuaDong\(/g) || []).length, 2);
+  assert.equal((s.match(/tuoiCuaDong\(p, parseIso\(p\.examDate\)\)/g) || []).length, 2);
   assert.doesNotMatch(s, /new Date\(|Date\.now\(|todayIso\(/);
   assert.match(s, /now: parseIso\(iso\), ngayTruoc: true/);
   // bé đang xem ở ngày trước là state riêng của trang này, không dùng selPid của App
   assert.match(s, /const \[selPid, setSelPid\] = useState\(null\)/);
   const app = read('src/App.jsx');
   assert.match(app, /<KhamNgayTruoc key=\{ngayTruoc\}/);
-  assert.match(app, /setNgayTruoc\(null\);? \}, \[today\]\)/, 'qua ngày mới thì về hôm nay');
+  assert.match(app, /setNgayTruoc\(null\);? \}, \[homNay\]\)/, 'qua ngày mới thì về hôm nay');
   assert.match(app, /setSelPid\(null\); setSumOpen\(false\); setNgayTruoc\(iso\)/);
 });
 
@@ -373,7 +375,7 @@ test('v9.5: lịch chỉ đọc dữ liệu; mỗi cách xếp ở tổng hợp 
   assert.match(s, /useVietTat\(text, doiText\)/, 'ô sửa tổng hợp có viết tắt');
   assert.match(s, /Cùng mã giường ở các ngày khác nhau có thể là bé khác\. App ghép theo phòng và mã, hãy kiểm tra trước khi gửi\./);
   const tong = boChuThich(read('src/lib/tong-hop.js'));
-  assert.match(tong, /calcAge\(p, parseIso\(p\.examDate\)\)/);
+  assert.match(tong, /tuoiCuaDong\(p, parseIso\(p\.examDate\)\)/); // v9.6: tuoiCuaDong = calcAge theo ngayTinhTuoi(p) (bé sinh sau nửa đêm)
   assert.doesNotMatch(tong, /new Date\(|todayIso\(/);
 });
 
@@ -415,5 +417,54 @@ test('v9.5: màu mới của lịch và dải ngày trước có đủ sáng/t�
   // bản sáng: chữ trên nền khoảng ngày và dải vàng (màu canvas đã duyệt)
   for (const [a, b] of [['ink', 'rangeBg'], ['rangeInk', 'rangeEnd'], ['tintInk', 'rangeBg'], ['tNVi', 'rangeBg'], ['noteInk', 'noteBg'], ['tBMi', 'tBM'], ['tintInk', 'tint']]) {
     assert.ok(tuongPhan(V.sang['--' + a], V.sang['--' + b]) >= 4.5, `sáng ${a}/${b}`);
+  }
+});
+// ===== v9 đợt 9.6: ngày làm việc, chế độ 2 ngày, giao tour =====
+test('v9.6: App chờ mốc rồi mới vẽ, dùng homNay (không còn useToday), tuổi/tiêu đề y lệnh vẫn theo ngày lịch', () => {
+  const app = boChuThich(read('src/App.jsx'));
+  assert.doesNotMatch(app, /(const|let) today\b|useToday|todayIso/, 'App không còn biến today');
+  assert.match(app, /useNgayLamViec\(mocPhut\)/);
+  assert.match(app, /if \(!ngay\.sanSang\) return/);
+  assert.match(app, /useAppData\(homNay\)/);
+  assert.match(app, /buildSummary\(\{ rooms, patients, todosByPid \}\)/, 'không đổi buildSummary mặc định (ngày lịch)');
+  assert.doesNotMatch(read('src/hooks.js'), /export function useToday\b/);
+  for (const f of SRC) assert.doesNotMatch(boChuThich(read(f)), /\buseToday\(/, f);
+});
+
+test('v9.6: Khám 2 ngày chỉ ghi qua chepMotBe và PatientDetail của dòng HÔM NAY; chi tiết bé chỉ có hôm qua là BeChiXem', () => {
+  const s = boChuThich(read('src/components/KhamHaiNgay.jsx'));
+  const nhap = [...s.matchAll(/import\s*\{([^}]*)\}\s*from\s*'([^']+)'/g)];
+  const tuActions = nhap.filter((m) => /actions\.js$/.test(m[2])).flatMap((m) => m[1].split(',').map((x) => x.trim()).filter(Boolean));
+  assert.deepEqual(tuActions, ['chepMotBe']);
+  assert.doesNotMatch(s, /\bdb\./);
+  assert.match(s, /ph\.examDate === homNay/);
+  assert.match(s, /<BeChiXem /);
+  assert.match(s, /Ghép theo phòng và mã|aria-label="Khám, xem 2 ngày"/);
+  assert.match(boChuThich(read('src/App.jsx')), /Ghép theo phòng và mã/);
+});
+
+test('v9.6: giao tour giữ bản sửa — đổi chip khi đã sửa chỉ báo, "Soạn lại" mới soạn lại', () => {
+  const s = boChuThich(read('src/components/GiaoTour.jsx'));
+  assert.match(s, /const text = sua \?\? kq\.text/);
+  assert.match(s, /if \(sua !== null\) setChipDoi\(true\)/);
+  assert.match(s, /const soanLai = \(\) => \{ setSua\(null\); setChipDoi\(false\)/);
+  assert.match(s, /useVietTat\(text, doiText\)/);
+});
+
+test('v9.6: Dời việc đi qua useHoanTac và hoanTacDoiViec; KhamNgayTruoc dùng tuoiCuaDong', () => {
+  const t = boChuThich(read('src/components/Tasks.jsx'));
+  assert.match(t, /doiViecSangHomNay\(ids, homNay\)/);
+  assert.match(t, /lam: \(\) => hoanTacDoiViec\(daDoi\)/);
+  assert.match(t, /hoanTac\.hien\(/);
+});
+
+test('v9.6: màu của khung 2 ngày dùng token có cả sáng và tối, bản tối đạt tương phản chữ ≥4,5:1, biểu tượng ≥3:1', () => {
+  const V = bienMau();
+  const chu = [['noteInk/noteBg', 'noteInk', 'noteBg'], ['noteInk/surface', 'noteInk', 'surface'], ['tintInk/surface', 'tintInk', 'surface'],
+    ['muted/surface', 'muted', 'surface'], ['muted/bg', 'muted', 'bg'], ['muted/noteBg', 'muted', 'noteBg'], ['accent/surface', 'accent', 'surface'],
+    ['accentInk/accent', 'accentInk', 'accent'], ['tintInk/tint', 'tintInk', 'tint'], ['muted/surface2', 'muted', 'surface2']];
+  for (const che of ['sang', 'toi']) {
+    for (const [ten, a, b] of chu) assert.ok(tuongPhan(V[che]['--' + a], V[che]['--' + b]) >= 4.5, `${che} ${ten}`);
+    assert.ok(tuongPhan(V[che]['--okInk'], V[che]['--okBg']) >= 3, `${che} tích xanh`);
   }
 });

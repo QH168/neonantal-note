@@ -34,7 +34,33 @@
 | 36 | Lượt khám và tổng hợp nhiều ngày tính mọi bé trong danh sách, kể cả bé chưa đánh dấu đã khám; số dưới ngày ở lịch chỉ tính bé đã khám, nên hai số có thể lệch. | Lưu ý | Hỏi bác sĩ: lượt khám tính mọi bé hay chỉ bé đã khám. | Thuật toán |
 | 37 | Dòng bé ngày trước và chi tiết chỉ xem hiện tuổi sẵn theo ngày đó (bảng 16d); khác luật "chỉ tính khi bấm" ở trang hôm nay vì trang này chỉ xem. | Lưu ý | Hỏi bác sĩ có chấp nhận khác biệt này không. | Giao diện |
 | 38 | Màn 320px: ô lịch rộng khoảng 41px, dưới 44px vì 7 cột không đủ chỗ; iPhone 15 khoảng 52px. | Lưu ý | Chấp nhận, trừ khi bác sĩ dùng máy 320px. | Giao diện |
-| 39 | `scripts/kiem-pham-vi.mjs` so tên file đúng từng chữ nên ghi chú trong tên file ở phiếu làm báo lỗi giả; đã bỏ ghi chú khỏi fileDuocSua của phiếu 9.5. | Lưu ý | Lưu ý cho người viết phiếu: không ghi chú trong tên file. | Điều phối |
+| 39 | `scripts/kiem-pham-vi.mjs` so tên file đúng từng chữ nên ghi chú trong tên file ở phiếu làm báo lỗi giả; đã bỏ ghi chú khỏi fileDuocSua của phiếu 9.5. | Đã xử lý (v9.6) | Bài học: phiếu phải ghi đủ file trước khi giao, và không ghi chú trong tên file. Phiếu 9.6 thiếu `tests/merge.test.js` lúc đầu; Điều phối đã bổ sung. | Điều phối |
+| 40 | Tổng hợp y lệnh lúc 02:30 ngày 05/11 có tiêu đề "KHÁM SÁNG 05/11/2026" trong khi đầu trang ghi ngày làm việc 04/11; đúng phiếu, tuổi và tiêu đề theo ngày lịch. | Lưu ý | Hỏi bác sĩ. | Thuật toán |
+| 41 | Bé ghi 02:30 ngày 05/11 hiện tuổi hơn bé ghi 14:00 ngày 04/11 một ngày khi xem lại ngày trước (tính theo ngày lịch lúc tạo). | Lưu ý | Lưu ý khi đọc tuổi bé ghi sau nửa đêm. | Thuật toán |
+| 42 | Bé không mã sau "Chép sang": thẻ gốc vẫn hiện "Chép sang", chip "Chưa chép" không giảm, bản chép là thẻ riêng; bấm lại bị chặn, không nhân đôi. | Lưu ý | Đề xuất nhận ra bản chép qua `copiedFrom`. | Thuật toán |
+| 43 | `copyPatientsFrom` so mã đúng từng ký tự, `chepMotBe` bỏ khoảng trắng và không phân biệt hoa thường; hai nút có thể xử lý khác nhau với 'g01' và 'G01'. | Lưu ý | Hỏi bác sĩ có thống nhất không. | Thuật toán |
+| 44 | Phòng đã xoá trong giao tour hiện tên phòng, không có chữ "đã xoá". | Lưu ý | Hỏi bác sĩ có muốn ghi "đã xoá" cạnh tên phòng không. | Giao diện |
+| 45 | Hai bé cùng phòng + mã mà một bên để trống ngày sinh vẫn ghép; mức cân có thể sai nếu là hai bé khác nhau. | Lưu ý | Lưu ý; giao diện đã ghi "Ghép theo phòng và mã". | Thuật toán |
+| 46 | Thẻ 2 ngày không có vuốt đã khám; dùng "Hoàn tất khám" trong chi tiết. | Lưu ý | Lưu ý. | Giao diện |
+| 47 | Giao tour: bé mới vào hôm nay sau mốc, chưa có việc, nằm trong nhóm "BÉ ỔN ĐỊNH", kèm chữ "mới vào hôm nay". Tên nhóm có thể gây hiểu nhầm về tình trạng bé. | Lưu ý | Hỏi bác sĩ có muốn tách nhóm riêng "Bé mới hôm nay" không. | Thuật toán |
+
+## 06/11/2026 — v9.6 — Ngày làm việc, xem 2 ngày, giao tour
+- Phiếu: `doi-agent/phieu-viec/2026-11-06-v9-6-ngay-lam-viec-hai-ngay-giao-tour.json` (đợt 6/6 của v9, đợt cuối; đặc tả `doi-agent/thiet-ke-v9/THIET_KE_V9.md` mục 2, 4, 5, 7, 8, 9). Bác sĩ đã duyệt phiếu 06/11/2026, kèm 4 quyết định.
+- Đã đổi (lời thường):
+  1. Ngày làm việc: "hôm nay" của tab Việc và tab Khám tính từ mốc 07:00 mặc định, không còn từ 00:00. Ví dụ 02:30 ngày 05/11 vẫn là ngày làm việc 04/11. Đầu trang ghi "Ngày làm việc dd/mm" khi đang trước mốc. Tuổi trên trang hôm nay vẫn theo ngày lịch.
+  2. Cài đặt "Ngày làm việc bắt đầu lúc" trong "Sao lưu và cài đặt": 00:00 / 06:00 / 07:00 / 08:00. Mốc lưu riêng trên từng máy, không vào file sao lưu.
+  3. Việc: nút gạt "Hôm nay / 2 ngày". Chế độ 2 ngày có khung vàng "Còn từ hôm qua, n việc" (việc chưa xong của ngày làm việc trước). Nút "Dời hết sang hôm nay" có Hoàn tác 6 giây trả đúng ngày cũ; chi tiết việc có "Dời sang hôm nay". Việc ghi trong đêm có giờ: "Ghi lúc 23:40 đêm qua".
+  4. Khám: nút gạt "Hôm nay / 2 ngày". Thẻ ghép bé hôm qua và hôm nay theo phòng + mã; chip Tất cả / Mới đêm qua / Còn việc / Chưa chép. Bé mới đêm qua viền vàng, ghi "Vào hh:mm đêm qua" (từ 16:00 hôm qua tới mốc). Bé chỉ có hôm qua viền gạch đứt, có "Chép sang" cho từng bé.
+  5. Chi tiết bé ở chế độ 2 ngày có khung gập "Đêm qua, ghi lúc hh:mm" chỉ xem. Ô cân nặng hiện mức tăng/giảm so với hôm qua khi đọc được cả hai cân.
+  6. "Tổng hợp giao tour": bốn chip (Bé mới, Việc còn lại, Bé ổn định, Ghi chú mặc định tắt). Chữ đã sửa giữ tới khi bấm "Soạn lại".
+  7. Bé sinh sau nửa đêm không bị lùi tuổi: tuổi dòng đã qua tính theo ngày ghi nếu muộn hơn ngày khám. Dữ liệu cũ tạo đúng ngày không đổi kết quả.
+  8. Bốn quyết định bác sĩ: mốc không đưa vào sao lưu; "Mới đêm qua" tính từ 16:00; cùng phòng + mã mà khác ngày sinh thì không ghép; việc ghi trước mốc thuộc ngày làm việc trước (theo đặc tả mục 7).
+- Kỹ thuật: `src/lib/dates.js` (ngayLamViec, cacNgay: hàm thuần); `src/lib/cai-dat.js` (mốc, chuanHoaMoc); `src/hooks.js` (useNgayLamViec, useMocNgayLamViec, useHaiNgayKham; useToday đã bỏ); `src/lib/clinical.js` (ngayTinhTuoi, tuoiCuaDong; calcAge, parseDob, parseGa không đổi); `src/lib/hai-ngay.js` (mới) và `src/lib/tong-hop.js` cập nhật; `src/lib/actions.js` (datMocNgayLamViec, doiViecSangHomNay, hoanTacDoiViec, chepMotBe; copyPatientsFrom giữ nguyên); `src/components/KhamHaiNgay.jsx`, `GiaoTour.jsx` mới; `Tasks.jsx`, `Exam.jsx`, `KhamNgayTruoc.jsx`, `ui.jsx` (GatHaiNgay), `BackupPanel.jsx`, `App.jsx`, `App.css`, `scripts/chup-giao-dien.mjs` sửa theo; tests mới `tests/ngay-lam-viec.test.js`, `tests/hai-ngay.test.js`; thêm bài trong `tests/clinical.test.js`, `tests/tong-hop.test.js`, `tests/luat.test.js`, `tests/merge.test.js`; ca mới trong `doi-agent/ca-chuan-lam-sang.md`; `package.json` chỉ thêm hai bộ kiểm mới vào lệnh test. Không đổi CSDL, `db.version`, `BACKUP_VERSION`, `backup.js`, `merge.js`, `calcAge`, `parseDob`, `parseGa`, `copyPatientsFrom`.
+- Kết quả kiểm: kiểm thử độc lập ĐẠT về chức năng. Một lỗi phạm vi: `tests/merge.test.js` chưa ghi trong phiếu do Điều phối quên, đã bổ sung, không sửa mã (#39). `npm test` 241/241; script chụp ĐẠT 102 ảnh; tính tay 6 ca tuổi và 5 ca cân khớp; dữ liệu tạo từ bản 893da9c mở bằng bản mới không đổi dòng nào; file sao lưu cũ nhập thật qua giao diện được, mốc không đổi; file sao lưu mới không có mốc. Lần giao diện từng bị ngắt do giới hạn sử dụng, đã làm tiếp.
+- Lỗi đã lường và đã xử lý: bé sinh sau nửa đêm (`ngayTinhTuoi`) không bị lùi một năm khi xem lại ngày trước.
+- Chưa thử trên iPhone thật. So ảnh chuẩn tự động bỏ qua vì thiếu `sharp`; so canvas bằng mắt, không so từng điểm. Ảnh chuẩn 9.6 chưa lưu, chờ bác sĩ duyệt ảnh 9.6.
+- Việc tiếp theo: v9 hết 6 đợt sau khi bác sĩ duyệt 9.6. Các mục #40–#46 trong "Chờ duyệt" là điểm hỏi bác sĩ.
+- Dọn "Chờ duyệt": #39 đánh dấu đã xử lý (kèm bài học); thêm #40–#46.
 
 ## 06/11/2026 — v9.5 — Lịch mới, xem lại ngày trước, tổng hợp nhiều ngày
 - Phiếu: `doi-agent/phieu-viec/2026-11-06-v9-5-lich-xem-ngay-truoc-tong-hop.json` (đợt 5/6 của v9; đặc tả `doi-agent/thiet-ke-v9/THIET_KE_V9.md` mục 1.3, 4.3, 5.4, 5.5, 5.6). Bác sĩ đã duyệt 06/11/2026.

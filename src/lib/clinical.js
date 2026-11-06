@@ -1,5 +1,5 @@
 // Tính tuần tuổi và soạn tổng hợp y lệnh. Giữ đúng quy tắc của prototype.
-import { p2 } from './dates.js';
+import { p2, parseIso, ngayLichCuaMs } from './dates.js';
 
 /**
  * Đọc tuổi thai lúc sinh. Chấp nhận: 346, 34w6d, 34w6, 34+6, 34 6, 34.6, 34,6, 34/6, 34 (= 34w0d).
@@ -63,6 +63,33 @@ export function calcAge(p, now = new Date()) {
   };
 }
 
+const laIso = (s) => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s);
+
+/**
+ * Ngày dùng để tính tuổi cho một DÒNG BÉ ĐÃ QUA (xem lại ngày trước, tổng hợp nhiều ngày, giao tour) — v9.6.
+ * Bé ghi sau nửa đêm thuộc ngày làm việc trước (examDate lùi một ngày) nhưng sinh ra "hôm nay" theo lịch; tính tuổi theo
+ * examDate thì ngày sinh rơi vào tương lai và parseDob lùi một năm (ra ~364 ngày). Nên lấy ngày lịch (giờ máy) của createdAt
+ * nếu muộn hơn examDate, không thì examDate. Không có createdAt hợp lệ → examDate. Thiếu cả hai → null.
+ * Dòng cũ tạo đúng ngày: createdAt cùng ngày với examDate nên kết quả y như trước.
+ * @returns 'YYYY-MM-DD' hoặc null
+ */
+export function ngayTinhTuoi(p) {
+  const exam = laIso(p?.examDate) ? p.examDate : null;
+  const c = p?.createdAt;
+  const ngayTao = typeof c === 'number' && Number.isFinite(c) && c > 0 ? ngayLichCuaMs(c) : null;
+  if (exam && ngayTao) return ngayTao > exam ? ngayTao : exam;
+  return exam || ngayTao || null;
+}
+
+/**
+ * Tuổi của một dòng bé đã qua, theo ngayTinhTuoi(p). Dòng không có ngày nào thì tính theo `now`.
+ * Trả giống calcAge: { days, pma } hoặc { err }.
+ */
+export function tuoiCuaDong(p, now = new Date()) {
+  const iso = ngayTinhTuoi(p);
+  return calcAge(p, iso ? parseIso(iso) : now);
+}
+
 /**
  * Soạn văn bản tổng hợp y lệnh.
  * @param rooms     phòng theo thứ tự
@@ -79,7 +106,8 @@ export function buildSummary({ rooms, patients, todosByPid, now = new Date(), ng
     const rb = [r.name.toUpperCase()];
     ps.forEach((p, i) => {
       const pend = (todosByPid[p.id] || []).filter((t) => !t.done);
-      const c = calcAge(p, now);
+      // Hôm nay: theo ngày lịch của `now`. Ngày trước: theo ngày tính tuổi của chính dòng (bé sinh sau nửa đêm).
+      const c = ngayTruoc ? tuoiCuaDong(p, now) : calcAge(p, now);
       const head = [p.code || 'Chưa có mã'];
       if (!c.err) head.push(c.pma);
       if (p.wt) head.push(p.wt + ' g');

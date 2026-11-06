@@ -24,3 +24,7 @@
 | 21/10/2026 | 0810 | 347 | LỖI | LỖI | ngày lẻ tuổi thai > 6 |
 | 21/10/2026 | 0810 | 19 | LỖI | LỖI | dưới 20 tuần |
 | 21/10/2026 | 01/12/2026 | 346 | LỖI | LỖI | ghi đủ năm nhưng sau hôm nay |
+| 05/11/2026 | 0511 | 342 | 0 | 34w2d | v9.6 bé sinh sau nửa đêm, ghi lúc 02:30 ngày 05/11 nên lưu ngày khám 04/11: ngày tính là ngày lịch của giờ tạo (05/11), không phải 04/11 (tính theo 04/11 sẽ ra 364 ngày) |
+| 01/01/2027 | 3112 | 300 | 1 | 30w1d | v9.6 như trên, qua năm: lưu ngày khám 31/12/2026, ngày tính 01/01/2027 |
+| 29/02/2028 | 2902 | 280 | 0 | 28w0d | v9.6 như trên, ngày nhuận: lưu ngày khám 28/02/2028, ngày tính 29/02/2028 |
+| 01/03/2026 | 2802 | 320 | 1 | 32w1d | v9.6 như trên, qua tháng, năm không nhuận: lưu ngày khám 28/02/2026, ngày tính 01/03/2026 |

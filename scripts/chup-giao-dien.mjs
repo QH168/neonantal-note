@@ -72,7 +72,7 @@ const seed = async (page) => page.evaluate(async () => {
     { roomId: rooms[0].id, code: 'G01', dob: '0508', ga: '25', wt: '1850', note: 'Theo dõi vàng da' },
     { roomId: rooms[0].id, code: 'G03', dob: '2009', ga: '320', wt: '2100', note: '' },
     { roomId: rooms[1].id, code: 'G12', dob: '0410', ga: '390', wt: '3200', note: '' }
-  ].map((p) => row({ examDate: '2026-10-20', done: true, ...p }))
+  ].map((p, i) => row({ examDate: '2026-10-20', done: true, ...p, createdAt: new Date(2026, 9, 20, 12, 0, 0).getTime() + i })) // v9.6: giờ tạo cùng ngày với examDate như dữ liệu thật (tuổi dòng đã qua tính theo ngayTinhTuoi)
     // mã id ngẫu nhiên như uuid thật: thứ tự chữ cái của id KHÁC thứ tự nhập (G01 nhập trước nhưng id đứng sau)
     .map((p, i) => ({ ...p, id: ['mau-z-g01', 'mau-a-g03', 'mau-m-g12'][i] }));
   const todos = [
@@ -133,7 +133,7 @@ process.on('uncaughtException', async (e) => {
 });
 const browser = await chromium.launch();
 
-async function moApp(opts, { lanMo = true, init = null } = {}) {
+async function moApp(opts, { lanMo = true, init = null, gio = NOW } = {}) {
   const ctx = await browser.newContext(opts);
   if (init) await ctx.addInitScript(init); // vd. visualViewport giả để thử thanh theo bàn phím (KHÔNG phải bàn phím thật)
   // Dòng nhắc cử chỉ chỉ hiện 3 lần mở đầu (v9.1): mặc định coi như đã mở nhiều lần để ảnh không có dòng nhắc;
@@ -144,7 +144,7 @@ async function moApp(opts, { lanMo = true, init = null } = {}) {
   await ctx.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
   const page = await ctx.newPage();
   trangCuoi = page;
-  await page.clock.setFixedTime(NOW);
+  await page.clock.setFixedTime(gio); // mặc định NOW (21/10/2026 08:00); v9.6 thử giờ khác: 06:59, 07:00, 02:30…
   page.on('pageerror', (e) => ketQua.loi.push('Lỗi chạy trang: ' + e.message));
   page.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) ketQua.loi.push('Lỗi trong trang (console): ' + m.text().slice(0, 300)); });
   await page.goto(URL);
@@ -1689,7 +1689,8 @@ async function thuThuVien(page, T, tien, cdp) {
     if (T.cuChi.join('|') !== cuChiCan.join('|')) ketQua.loi.push('Bảng cài đặt: mục Cử chỉ không đúng bảng 15f: ' + T.cuChi.join('|'));
     if ((await hop.getByRole('heading', { name: 'Cử chỉ', exact: true }).count()) !== 1) ketQua.loi.push('Bảng cài đặt thiếu tiêu đề "Cử chỉ"');
     if (!(await hop.getByText('Dòng nhắc cử chỉ chỉ hiện 3 lần mở đầu và khi danh sách trống.', { exact: true }).count())) ketQua.loi.push('Bảng cài đặt thiếu dòng chú thích dưới mục Cử chỉ');
-    if (await hop.getByText(/Ngày làm việc/).count()) ketQua.loi.push('Bảng cài đặt có mục "Ngày làm việc" (thuộc đợt 9.6, chưa được thêm)');
+    // v9.6: mục "Ngày làm việc" (bảng 15f) nằm giữa Giao diện và Cử chỉ; chi tiết được thử riêng ở phần v9.6 phía dưới
+    if ((await hop.getByRole('heading', { name: 'Ngày làm việc', exact: true }).count()) !== 1) ketQua.loi.push('Bảng cài đặt thiếu mục "Ngày làm việc" (v9.6)');
     T.thanhKeo = await hop.locator('.sheet-grip').count();
     if (T.thanhKeo !== 1) ketQua.loi.push('Bảng dưới thiếu thanh kéo ở đỉnh');
     T.macDinhTheoMay = await hop.getByRole('button', { name: 'Theo máy', exact: true }).getAttribute('aria-pressed');
@@ -2639,7 +2640,8 @@ const seedLich = async (page) => page.evaluate(async () => {
   ].map(([date, zone, text, done], i) => row({ id: 'lich-t' + i, date, zone, tags: [], text, done }));
   const phongXoa = row({ id: 'phong-xoa', name: 'Phòng cũ', order: 9, deleted: true });
   const pats = [];
-  const be = (id, examDate, room, code, dob, ga, wt, done, extra = {}) => pats.push(row({ id, examDate, roomId: room, code, dob, ga, wt, note: '', done, order: pats.length + 1, ...extra }));
+  // v9.6: giờ tạo cùng ngày với examDate (trưa) như dữ liệu thật — nếu để giờ máy giả (21/10) thì tuổi dòng đã qua bị tính tới 21/10
+  const be = (id, examDate, room, code, dob, ga, wt, done, extra = {}) => pats.push(row({ id, examDate, roomId: room, code, dob, ga, wt, note: '', done, order: pats.length + 1, createdAt: new Date(+examDate.slice(0, 4), +examDate.slice(5, 7) - 1, +examDate.slice(8, 10), 12, 0, 0).getTime() + pats.length, ...extra }));
   be('l18-g01', '2026-10-18', rooms[0].id, 'G01', '0508', '25', '1800', true);
   be('l18-g03', '2026-10-18', rooms[0].id, 'G03', '2009', '320', '2050', true);
   be('l19-g01', '2026-10-19', rooms[0].id, 'G01', '0508', '25', '1820', true);
@@ -3217,6 +3219,611 @@ for (const toi of [false, true]) { try { await luongIphoneV95(toi); } catch (e) 
   if (T.chiDoc.doi.length) E('xem ngày trước trên PC làm đổi dòng cũ: ' + JSON.stringify(T.chiDoc));
   await ctx.close();
 }
+
+// ---------- v9.6: ngày làm việc (mốc 07:00), chế độ 2 ngày (Việc, Khám), Dời + Hoàn tác, Chép sang, chi tiết "Đêm qua", giao tour ----------
+// Dữ liệu mẫu 2 ngày làm việc: hôm qua 04/11, hôm nay 05/11 (giờ giả 08:00 05/11; mốc 07:00). Có: bé không mã, hai bé trùng mã cùng phòng,
+// phòng đã xoá, hai bên khác ngày sinh, bé vào lúc 02:30 (ghi ngày làm việc trước), một dòng đã xoá. Chỉ mã giường giả.
+const Q96 = '2026-11-04', H96 = '2026-11-05';
+const gio96 = (d, h, m, s = 0, thang = 10, nam = 2026) => new Date(nam, thang, d, h, m, s);
+const NOW96 = gio96(5, 8, 0);
+const seedHaiNgay = async (page) => page.evaluate(async () => {
+  const open = () => new Promise((res, rej) => { const r = indexedDB.open('ghichu-sosinh'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+  const db = await open();
+  const all = (store) => new Promise((res) => { const r = db.transaction(store).objectStore(store).getAll(); r.onsuccess = () => res(r.result); });
+  const rooms = (await all('rooms')).sort((a, b) => a.order - b.order);
+  const ms = (d, h, m) => new Date(2026, 10, d, h, m).getTime();
+  let n = 0;
+  const row = (x) => ({ deleted: false, updatedAt: ms(5, 7, 30) + (n++), deviceId: 'mau', ...x });
+  const phongXoa = row({ id: 'phong-xoa', name: 'Phòng cũ', order: 9, deleted: true, createdAt: ms(1, 9, 0) });
+  const dem = { 4: 0, 5: 0 };
+  const be = (id, d, room, code, dob, ga, wt, done, tao, extra = {}) => row({ id, examDate: '2026-11-0' + d, roomId: room, code, dob, ga, wt, note: '', done, order: ++dem[d], createdAt: tao, ...extra });
+  const pats = [
+    be('q-g01', 4, rooms[0].id, 'G01', '2910', '300', '1850', true, ms(4, 9, 0)),
+    be('q-g05', 4, rooms[0].id, 'G05', '0511', '342', '1950', false, ms(5, 2, 30), { note: 'Sinh mổ 34w2d, thở nhanh sau sinh, đặt CPAP 6 cmH2O.' }),
+    be('q-g03', 4, rooms[0].id, 'G03', '1509', '320', '2080', true, ms(4, 9, 0)),
+    be('q-g12', 4, rooms[1].id, 'G12', '2910', '390', '3200', true, ms(4, 9, 0)),
+    be('q-g07a', 4, rooms[1].id, 'G07', '1509', '300', '1500', true, ms(4, 9, 0)),
+    be('q-g07b', 4, rooms[1].id, 'G07', '1509', '300', '1510', false, ms(4, 9, 0)),
+    be('q-nocode', 4, rooms[2].id, '', '', '', '', false, ms(4, 9, 0)),
+    be('q-g20', 4, rooms[2].id, 'G20', '1010', '300', '1600', true, ms(4, 9, 0)),
+    be('q-g99', 4, 'phong-xoa', 'G99', '0110', '340', '2500', true, ms(4, 9, 0)),
+    be('q-gxoa', 4, rooms[0].id, 'GXOA', '2910', '300', '1800', true, ms(4, 9, 0), { deleted: true }),
+    be('h-g01', 5, rooms[0].id, 'G01', '2910', '300', '1830', false, ms(5, 7, 30)),
+    be('h-g05', 5, rooms[0].id, 'G05', '0511', '342', '1980', false, ms(5, 7, 30), { copiedFrom: 'q-g05' }),
+    be('h-g03', 5, rooms[0].id, 'G03', '1509', '320', '2100', true, ms(5, 7, 30)),
+    be('h-g07', 5, rooms[1].id, 'G07', '1509', '300', '1520', false, ms(5, 7, 30)),
+    be('h-nocode', 5, rooms[2].id, '', '', '', '', false, ms(5, 7, 30)),
+    be('h-g20', 5, rooms[2].id, 'G20', '1110', '300', '1600', false, ms(5, 7, 30)),
+    be('h-g30', 5, rooms[0].id, 'G30', '0211', '330', '1700', false, ms(5, 7, 30))
+  ];
+  const td = (id, pid, text, done, order) => row({ id, patientId: pid, text, done, order, createdAt: ms(4, 10, order) });
+  const todos = [
+    td('qt1', 'q-g01', 'Đo bilirubin', false, 1), td('qt2', 'q-g05', 'Kháng sinh lần đầu 03:00', true, 1), td('qt3', 'q-g05', 'Chụp X-quang ngực', false, 2),
+    td('qt4', 'q-g12', 'Theo dõi vàng da', false, 1), td('ht1', 'h-g05', 'Chụp X-quang ngực', false, 1), td('ht2', 'h-g05', 'Khí máu sau 6 giờ CPAP', false, 2)
+  ];
+  const tk = (id, date, zone, text, done, tao, tags, extra = {}) => row({ id, date, zone, tags, text, done, createdAt: tao, ...extra });
+  const tasks = [
+    tk('tq1', '2026-11-04', 'HP', 'Gọi người nhà giường 12', false, ms(4, 14, 0), ['HC']),
+    tk('tq2', '2026-11-04', 'NICU', 'Theo dõi đường huyết G05', false, ms(4, 23, 40), ['XN']),
+    tk('tq3', '2026-11-04', 'NICU', 'Kháng sinh lần 2 cho G05', false, ms(5, 3, 10), ['NV']),
+    tk('tq4', '2026-11-04', 'NICU', 'Việc đã xong hôm qua', true, ms(4, 9, 0), []),
+    tk('tq5', '2026-11-04', 'NICU', 'Việc đã xoá hôm qua', false, ms(4, 9, 5), [], { deleted: true }),
+    tk('tq6', '2026-11-03', 'NICU', 'Việc sót ngày 03', false, ms(3, 9, 0), []),
+    tk('th1', '2026-11-05', 'NICU', 'Xem lại khí máu giường 3', false, ms(5, 7, 40), ['XN']),
+    tk('th2', '2026-11-05', 'NICU', 'Ký y lệnh truyền máu', true, ms(5, 7, 41), ['NV'])
+  ];
+  const tx = db.transaction(['tasks', 'exam_patients', 'patient_todos', 'rooms'], 'readwrite');
+  tx.objectStore('rooms').put(phongXoa);
+  pats.forEach((r) => tx.objectStore('exam_patients').put(r));
+  todos.forEach((r) => tx.objectStore('patient_todos').put(r));
+  tasks.forEach((r) => tx.objectStore('tasks').put(r));
+  await new Promise((res) => { tx.oncomplete = res; });
+  db.close();
+});
+async function moAppHaiNgay(opts, gio = NOW96) {
+  const r = await moApp(opts, { gio });
+  await seedHaiNgay(r.page);
+  await r.page.reload();
+  await r.page.waitForSelector('.phone-app, .pc');
+  await r.page.waitForTimeout(500);
+  try { await r.ctx.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: URL.replace(/\/$/, '') }); } catch { /* không cấp được thì thôi */ }
+  return r;
+}
+const IPHONE_UA96 = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1';
+const IPHONE96 = { viewport: { width: 393, height: 852 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true, userAgent: IPHONE_UA96 };
+// bảng mẫu: bé đã khám/chưa, tuổi tính tay (ngày lịch 05/11/2026): G01 sinh 29/10, 30w0d → 7 ngày → 31w0d; G05 sinh 05/11, 34w2d → 0 ngày → 34w2d;
+// G03 sinh 15/09, 32w0d → 51 ngày → 39w2d; G12 sinh 29/10, 39w0d → 7 ngày → 40w0d.
+const hhmm = (d) => String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+// chạm đặt giờ máy giả mới trong lúc app đang mở (giả lập "thời gian trôi qua"): app kiểm lại khi tab hiện lại
+const datGio = async (page, d) => { await page.clock.setFixedTime(d); await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange'))); await page.waitForTimeout(500); };
+const daiMocText = async (page) => { const e = page.locator('.dai-moc'); return (await e.count()) ? doiMau(await e.first().innerText()) : ''; };
+const dateTextV96 = async (page) => doiMau(await page.locator('.ph-head .muted.small, .pc-side .muted.small').first().innerText());
+const hangDb = async (page, bang, loc) => (await docBang(page, bang)).filter(loc);
+
+// độ tương phản + vùng chạm + cỡ chữ cho một màn hình v9.6
+async function kiemManV96(page, ten, sel, T, dark, E) {
+  const nho = await nutNhoTrang(page);
+  if (nho.length) E(`${ten} có nút < 44px — ${nho.join('; ')}`);
+  for (const x of await doCoChu(page)) E(`${ten}: cỡ chữ ngoài thang 5 bậc — ${x}`);
+  for (const s of [].concat(sel)) {
+    const r = await doTuongPhanChu(page, s);
+    (T.tuongPhan ||= {})[ten + ' ' + s] = r;
+    if (r.loi || r.min < 4.5) E(`tương phản chữ ${ten} (${s}) ${r.loi || r.min + ' (' + r.worst + ')'} < 4,5`);
+  }
+}
+
+async function luongIphoneV96(dark) {
+  const sfx = dark ? '-toi' : '-sang';
+  const E = (s) => ketQua.loi.push(`v9.6${dark ? ' tối' : ''}: ${s}`);
+  const { ctx, page } = await moAppHaiNgay({ ...IPHONE96, colorScheme: dark ? 'dark' : 'light' });
+  const cdp = await ctx.newCDPSession(page);
+  const T = (ketQua.thuChucNang['haiNgay' + (dark ? 'Toi' : 'Sang')] = {});
+  if ((await laToiLuc(page)) !== dark) E('app không ở đúng chế độ sáng/tối');
+  const h1 = async () => doiMau(await page.locator('h1').first().textContent());
+  const S0 = await chupDb(page);
+  const gatNut = (ten) => page.getByRole('group', { name: 'Phạm vi xem' }).getByRole('button', { name: ten, exact: true });
+  const tab = (ten) => page.getByRole('button', { name: ten, exact: true });
+  const the = (ma) => page.locator('.hn-the', { has: page.locator('.pat-code', { hasText: new RegExp('^' + ma + '$') }) });
+
+  // === A. Việc: nút gạt, mặc định "Hôm nay", dòng ngày; đang SAU mốc nên không có dải "Ngày làm việc" ===
+  T.macDinh = await page.evaluate(() => [...document.querySelectorAll('.gat-hn button')].map((e) => [e.textContent, e.getAttribute('aria-pressed'), Math.round(e.getBoundingClientRect().width), Math.round(e.getBoundingClientRect().height)]));
+  if (T.macDinh.map((x) => x[0] + ':' + x[1]).join() !== 'Hôm nay:true,2 ngày:false') E('mặc định phải là "Hôm nay" (mỗi lần mở app): ' + JSON.stringify(T.macDinh));
+  if (T.macDinh.some((x) => x[2] < 44 || x[3] < 44)) E('nút gạt Hôm nay / 2 ngày < 44px: ' + JSON.stringify(T.macDinh));
+  if (await daiMocText(page)) E('đang sau mốc (08:00) mà vẫn có dải "Ngày làm việc": ' + (await daiMocText(page)));
+  if (!/05\/11\/2026/.test(await dateTextV96(page)) || (await h1()) !== 'Việc hôm nay') E('đầu trang Việc 1 ngày: ' + (await dateTextV96(page)) + ' / ' + (await h1()));
+  if (await page.locator('.hq-khung').count()) E('chế độ Hôm nay mà vẫn có khung "Còn từ hôm qua"');
+
+  // === B. Việc 2 ngày (bảng 17c) ===
+  await gatNut('2 ngày').tap();
+  await page.waitForTimeout(500);
+  T.viec = await page.evaluate(() => {
+    const k = document.querySelector('.hq-khung');
+    if (!k) return null;
+    return {
+      tieuDe: k.querySelector('.hq-tieu-de').textContent.trim(), nut: k.querySelector('.hq-doi').textContent.trim(), nutCao: Math.round(k.querySelector('.hq-doi').getBoundingClientRect().height),
+      hang: [...k.querySelectorAll('.hq-hang')].map((e) => [e.querySelector('.task-text').textContent.trim(), e.querySelector('.hq-sub').textContent.trim()]),
+      ghi: k.querySelector('.hq-ghi').textContent.trim(), nen: getComputedStyle(k).backgroundColor,
+      denNhomDau: k.getBoundingClientRect().bottom <= document.querySelector('.ph-main .group').getBoundingClientRect().top + 1,
+      homNay: [...document.querySelectorAll('.ph-main .group .task-text')].map((e) => e.textContent.trim()),
+      ngay: document.querySelector('.ph-head .muted.small').textContent.trim()
+    };
+  });
+  const v = T.viec;
+  if (!v) E('chế độ 2 ngày không có khung "Còn từ hôm qua"');
+  else {
+    if (v.tieuDe !== 'Còn từ hôm qua, 3 việc') E('tiêu đề khung: "' + v.tieuDe + '"');
+    if (v.nut !== 'Dời hết sang hôm nay' || v.nutCao < 44) E('nút Dời hết: ' + v.nut + ' cao ' + v.nutCao);
+    const can = [['Gọi người nhà giường 12', '04/11, HP'], ['Theo dõi đường huyết G05', 'Ghi lúc 23:40 đêm qua, NICU'], ['Kháng sinh lần 2 cho G05', 'Ghi lúc 03:10 đêm qua, NICU']];
+    if (JSON.stringify(v.hang) !== JSON.stringify(can)) E('các việc còn từ hôm qua (chỉ việc chưa xong, chưa xoá, của đúng ngày làm việc trước): ' + JSON.stringify(v.hang));
+    if (!v.denNhomDau) E('khung "Còn từ hôm qua" phải đứng đầu, trên các nhóm');
+    if (v.homNay.join('|') !== 'Xem lại khí máu giường 3|Ký y lệnh truyền máu') E('việc của hôm nay trong chế độ 2 ngày: ' + v.homNay.join('|'));
+    if (v.ngay !== 'Hôm qua 04/11 và hôm nay 05/11') E('dòng ngày ở đầu trang: ' + v.ngay);
+    if (v.ghi !== 'Vuốt phải là xong luôn. Chạm 2 lần để dời riêng một việc.') E('chú thích khung: ' + v.ghi);
+  }
+  await kiemManV96(page, 'Việc 2 ngày', ['.hq-khung', '.ph-main'], T, dark, E);
+  await chup(page, 'iphone-viec-hai-ngay' + sfx, true);
+  // chỉ xem, không ghi gì
+  const S1 = await chupDb(page);
+  T.xemViecKhongGhi = { doi: dbDoi(S0, S1), moi: dbMoi(S0, S1) };
+  if (T.xemViecKhongGhi.doi.length || T.xemViecKhongGhi.moi) E('mở Việc 2 ngày làm đổi dữ liệu cũ: ' + JSON.stringify(T.xemViecKhongGhi));
+
+  // === C. Khám 2 ngày (bảng 17a): giữ chế độ khi đổi tab ===
+  await tab('Khám').tap();
+  await page.waitForTimeout(700);
+  T.giuCheDo = await gatNut('2 ngày').getAttribute('aria-pressed');
+  if (T.giuCheDo !== 'true') E('đổi sang tab Khám mà chế độ 2 ngày không được giữ');
+  T.kham = await page.evaluate(() => ({
+    chip: [...document.querySelectorAll('nav[aria-label="Lọc"] .chip')].map((e) => e.innerText.replace(/\s+/g, ' ').trim() + (e.getAttribute('aria-pressed') === 'true' ? '*' : '')),
+    ghep: document.querySelector('.gat-hn-ghi')?.textContent.trim(),
+    phong: [...document.querySelectorAll('.nt-phong-h')].map((e) => e.innerText.replace(/\s+/g, ' ').trim()),
+    soThe: document.querySelectorAll('.hn-the').length, soChep: document.querySelectorAll('.hn-chep').length,
+    ngay: document.querySelector('.ph-head .muted.small').textContent.trim(), h1: document.querySelector('h1').textContent.trim(),
+    chepCao: [...document.querySelectorAll('.hn-chep')].map((e) => Math.round(e.getBoundingClientRect().height))
+  }));
+  const k = T.kham;
+  if (k.chip.join('|') !== 'Tất cả 13*|Mới đêm qua 1|Còn việc 3|Chưa chép 6') E('chip lọc (13 bé, 1 mới đêm qua, 3 còn việc, 6 chưa chép): ' + k.chip.join('|'));
+  if (k.ghep !== 'Ghép theo phòng và mã') E('thiếu chữ "Ghép theo phòng và mã": ' + k.ghep);
+  if (k.phong.join('|') !== 'Phòng 1 4 bé|Phòng 2 4 bé|Phòng 3 4 bé|Phòng cũ (đã xoá) 1 bé') E('các phòng và số bé (phòng đã xoá vẫn hiện): ' + k.phong.join('|'));
+  if (k.soThe !== 13 || k.soChep !== 6) E('13 thẻ, 6 nút Chép sang — thực tế ' + k.soThe + ' thẻ, ' + k.soChep + ' nút');
+  if (k.chepCao.some((c) => c < 44)) E('nút Chép sang < 44px: ' + k.chepCao.join());
+  if (k.ngay !== 'Hôm qua 04/11 và hôm nay 05/11' || k.h1 !== 'Khám bệnh hôm nay') E('đầu trang Khám 2 ngày: ' + k.ngay + ' / ' + k.h1);
+  T.theG05 = await page.evaluate(() => {
+    const e = [...document.querySelectorAll('.hn-the')].find((x) => x.querySelector('.pat-code')?.textContent === 'G05');
+    const cs = getComputedStyle(e);
+    return { chu: e.innerText.replace(/\n+/g, ' | '), vien: cs.borderTopWidth, kieu: cs.borderTopStyle, mau: cs.borderTopColor, lop: e.className };
+  });
+  const noteLine = await mauBien(page, '--noteLine');
+  if (!/Vào 02:30 đêm qua/.test(T.theG05.chu) || !['1px', '1.5px'].includes(T.theG05.vien) || T.theG05.mau !== noteLine) E('thẻ bé vào đêm: viền vàng 1,5px + "Vào 02:30 đêm qua": ' + JSON.stringify(T.theG05));
+  if (!/Đêm qua \| Sinh mổ 34w2d/.test(T.theG05.chu) || !/Hôm nay \| Chưa khám\. Còn 2 việc, tăng 30 g/.test(T.theG05.chu) || !/34w2d, 1980 g/.test(T.theG05.chu)) E('thẻ G05 thiếu dòng Đêm qua / Hôm nay / số đo: ' + T.theG05.chu);
+  T.theG12 = await page.evaluate(() => { const e = [...document.querySelectorAll('.hn-the')].find((x) => x.querySelector('.pat-code')?.textContent === 'G12'); return { kieu: getComputedStyle(e).borderTopStyle, chu: e.innerText.replace(/\n+/g, ' | ') }; });
+  if (T.theG12.kieu !== 'dashed' || !/Chỉ có hôm qua\. Chưa có trong danh sách hôm nay/.test(T.theG12.chu) || !/Chép sang/.test(T.theG12.chu)) E('thẻ bé chỉ có hôm qua: viền gạch đứt + Chép sang: ' + JSON.stringify(T.theG12));
+  const chuThe = async (ma) => doiMau(await the(ma).first().innerText());
+  T.theG03 = await chuThe('G03'); T.theG01 = await chuThe('G01');
+  if (!/Hôm nay Đã khám, tăng 20 g/.test(T.theG03)) E('thẻ G03 thiếu "Đã khám, tăng 20 g": ' + T.theG03);
+  if (!/31w0d, 1830 g/.test(T.theG01) || !/giảm 20 g/.test(T.theG01) || !/Còn: Đo bilirubin/.test(T.theG01)) E('thẻ G01 (31w0d, 1830 g, giảm 20 g, còn Đo bilirubin): ' + T.theG01);
+  T.trungMa = await page.evaluate(() => [...document.querySelectorAll('.hn-the .pat-code')].filter((e) => e.textContent === 'G07').length);
+  T.khongMa = await page.evaluate(() => [...document.querySelectorAll('.hn-the .pat-code')].filter((e) => e.textContent === 'Chưa có mã').length);
+  T.khacNgaySinh = await page.evaluate(() => [...document.querySelectorAll('.hn-the .pat-code')].filter((e) => e.textContent === 'G20').length);
+  if (T.trungMa !== 3) E('trùng mã G07 (2 hôm qua + 1 hôm nay) phải hiện đủ 3 thẻ, không ghép: ' + T.trungMa);
+  if (T.khongMa !== 2) E('bé không mã (1 hôm qua + 1 hôm nay) phải là 2 thẻ riêng: ' + T.khongMa);
+  if (T.khacNgaySinh !== 2) E('G20 khác ngày sinh hai bên phải là 2 thẻ riêng: ' + T.khacNgaySinh);
+  await kiemManV96(page, 'Khám 2 ngày', ['.ph-main', '.chips', '.gat-hn-hang'], T, dark, E);
+  await chup(page, 'iphone-kham-hai-ngay' + sfx, true);
+  // chip lọc
+  for (const [nhan, can] of [['Mới đêm qua', 1], ['Còn việc', 3], ['Chưa chép', 6], ['Tất cả', 13]]) {
+    await page.locator('nav[aria-label="Lọc"] .chip', { hasText: nhan }).tap();
+    await page.waitForTimeout(250);
+    const n = await page.locator('.hn-the').count();
+    if (n !== can) E(`chip "${nhan}" phải còn ${can} thẻ, đang ${n}`);
+  }
+  const S2 = await chupDb(page);
+  T.xemKhamKhongGhi = { doi: dbDoi(S0, S2), moi: dbMoi(S0, S2) };
+  if (T.xemKhamKhongGhi.doi.length || T.xemKhamKhongGhi.moi) E('mở Khám 2 ngày + lọc làm đổi dữ liệu cũ: ' + JSON.stringify(T.xemKhamKhongGhi));
+
+  // === D. Tổng hợp giao tour (bảng 17d) ===
+  await page.getByRole('button', { name: 'Tổng hợp giao tour', exact: true }).tap();
+  const hopT = page.getByRole('dialog', { name: 'Tổng hợp giao tour' });
+  await hopT.waitFor();
+  await page.waitForTimeout(700);
+  const vanT = () => hopT.locator('#gt-text').inputValue();
+  T.tour = await page.evaluate(() => ({
+    tieuDe: document.querySelector('.sheet-tour .h2').textContent.trim(), phu: document.querySelector('.sheet-tour .nhieu-dau .muted').textContent.trim(),
+    chip: [...document.querySelectorAll('.tour-chip')].map((e) => e.textContent.trim() + ':' + e.getAttribute('aria-pressed') + ':' + Math.round(e.getBoundingClientRect().height)),
+    coChu: getComputedStyle(document.querySelector('#gt-text')).fontSize
+  }));
+  if (T.tour.tieuDe !== 'Giao tour 04/11 sang 05/11' || T.tour.phu !== '13 bé, 1 mới đêm qua, 4 việc còn lại') E('đầu bảng giao tour: ' + JSON.stringify([T.tour.tieuDe, T.tour.phu]));
+  if (T.tour.chip.join('|') !== 'Bé mới:true:44|Việc còn lại:true:44|Bé ổn định:true:44|Ghi chú:false:44') E('bốn chip giao tour (Ghi chú mặc định tắt, cao 44px): ' + T.tour.chip.join('|'));
+  if (T.tour.coChu !== '16px') E('ô văn bản giao tour phải 16px: ' + T.tour.coChu);
+  const van0 = await vanT();
+  T.van0 = van0;
+  const khoi = (van, dau) => (van.split('\n\n').find((b) => b.startsWith(dau)) || '');
+  const dongBe = (b) => b.split('\n').filter((l) => /^(P\d|Phòng cũ) - /.test(l));
+  if (!van0.startsWith('GIAO TOUR 04/11 - 05/11/2026\n13 bé. 1 mới đêm qua. 4 việc còn lại.')) E('đầu văn bản giao tour: ' + van0.slice(0, 120));
+  const bMoi = khoi(van0, 'BÉ MỚI ĐÊM QUA'), bViec = khoi(van0, 'VIỆC CÒN TỪ HÔM QUA'), bOn = khoi(van0, 'BÉ ỔN ĐỊNH');
+  if (dongBe(bMoi).join('|') !== 'P1 - G05 - vào 02:30 - 34w2d - 1980 g, tăng 30 g' || !/- Chụp X-quang ngực/.test(bMoi) || !/- Khí máu sau 6 giờ CPAP/.test(bMoi)) E('nhóm BÉ MỚI ĐÊM QUA: ' + bMoi);
+  if (dongBe(bViec).join('|') !== 'P1 - G01 - 31w0d - 1830 g, giảm 20 g|P2 - G12 - 40w0d - 3200 g - chưa có trong danh sách hôm nay' || !/- Đo bilirubin/.test(bViec) || !/- Theo dõi vàng da/.test(bViec)) E('nhóm VIỆC CÒN TỪ HÔM QUA: ' + bViec);
+  if (dongBe(bOn).length !== 10 || !dongBe(bOn).includes('P1 - G03 - 39w2d - 2100 g, tăng 20 g')) E('nhóm BÉ ỔN ĐỊNH phải có 10 bé gồm "P1 - G03 - 39w2d - 2100 g, tăng 20 g": ' + dongBe(bOn).length + ' / ' + bOn);
+  if (dongBe(van0).length !== 13) E('mỗi bé đúng một nhóm: tổng dòng bé ' + dongBe(van0).length + ' ≠ 13');
+  if (!dongBe(bOn).some((l) => /^Phòng cũ - G99 /.test(l)) || !dongBe(bOn).some((l) => /^P3 - Chưa có mã/.test(l))) E('bé phòng đã xoá / bé không mã thiếu trong văn bản giao tour');
+  await kiemManV96(page, 'Giao tour', ['.sheet'], T, dark, E);
+  await chup(page, 'iphone-giao-tour' + sfx, true);
+  // bật/tắt chip khi CHƯA sửa: văn bản đi theo ngay; dòng đầu vẫn đếm đủ
+  await hopT.getByRole('button', { name: 'Việc còn lại', exact: true }).tap();
+  await page.waitForTimeout(250);
+  const van1 = await vanT();
+  if (/VIỆC CÒN TỪ HÔM QUA/.test(van1) || !van1.includes('13 bé. 1 mới đêm qua. 4 việc còn lại.')) E('tắt chip Việc còn lại (chưa sửa): nhóm phải biến mất, dòng đầu vẫn đếm đủ: ' + van1.slice(0, 160));
+  if (await hopT.getByRole('alert').count()) E('chưa sửa mà đã hiện báo "chưa soạn lại"');
+  await hopT.getByRole('button', { name: 'Việc còn lại', exact: true }).tap();
+  await page.waitForTimeout(250);
+  if ((await vanT()) !== van0) E('bật lại chip phải ra đúng văn bản ban đầu');
+  // ĐÃ SỬA: đổi chip không đụng vào chữ; báo rõ; "Soạn lại" mới soạn theo chip mới
+  await hopT.locator('#gt-text').fill(van0 + '\nGHI THÊM CỦA TÔI');
+  await hopT.getByRole('button', { name: 'Ghi chú', exact: true }).tap();
+  await page.waitForTimeout(300);
+  const van2 = await vanT();
+  T.baoChuaSoanLai = (await hopT.getByRole('alert').count()) ? doiMau(await hopT.getByRole('alert').innerText()) : '';
+  if (!van2.includes('GHI THÊM CỦA TÔI') || /Ghi chú:|Ghi chú hôm qua:/.test(van2)) E('đã sửa rồi đổi chip: chữ đã sửa phải còn nguyên và chưa soạn theo chip mới');
+  if (!/chưa được áp dụng.*Soạn lại/.test(T.baoChuaSoanLai)) E('đã sửa rồi đổi chip: phải báo rõ chip đã đổi mà văn bản chưa soạn lại: "' + T.baoChuaSoanLai + '"');
+  if (!/can-soan/.test(await hopT.getByRole('button', { name: 'Soạn lại', exact: true }).getAttribute('class'))) E('nút Soạn lại phải nổi bật khi chip đã đổi');
+  await kiemManV96(page, 'Giao tour có báo', ['.sheet'], T, dark, E);
+  await hopT.getByRole('button', { name: 'Soạn lại', exact: true }).tap();
+  await page.waitForTimeout(300);
+  const van3 = await vanT();
+  if (van3.includes('GHI THÊM CỦA TÔI') || !/Ghi chú hôm qua: Sinh mổ 34w2d/.test(van3) || (await hopT.getByRole('alert').count())) E('bấm Soạn lại: phải soạn theo chip mới (có ghi chú), bỏ bản sửa, hết báo');
+  await hopT.getByRole('button', { name: 'Sao chép', exact: true }).tap();
+  await page.waitForTimeout(500);
+  T.saoChep = doiMau(await hopT.locator('[role=status].status').innerText().catch(() => ''));
+  if (!/^(Đã sao chép|Chưa sao chép được)/.test(T.saoChep)) E('bấm Sao chép không có thông báo: "' + T.saoChep + '"');
+  try { const cb = await page.evaluate(() => navigator.clipboard.readText()); if (T.saoChep.startsWith('Đã') && cb.replace(/\r\n/g, '\n').trim() !== van3.replace(/\r\n/g, '\n').trim()) ketQua.luuY.push('v9.6: clipboard khác văn bản giao tour (có thể do môi trường thử)'); } catch { ketQua.luuY.push('v9.6: không đọc được clipboard để so với văn bản giao tour'); }
+  await hopT.getByRole('button', { name: 'Đóng tổng hợp giao tour', exact: true }).tap();
+  await page.waitForTimeout(700);
+
+  // === E. Chi tiết bé ở chế độ 2 ngày (bảng 17b) ===
+  await the('G05').locator('.hn-mo').tap();
+  const hopB = page.getByRole('dialog', { name: 'Chi tiết bệnh nhân' });
+  await hopB.waitFor();
+  await page.waitForTimeout(700);
+  T.be = await page.evaluate(() => {
+    const s = document.querySelector('.sheet-be');
+    const d = s.querySelector('.be-dem');
+    return {
+      ma: s.querySelector('#be-ma').value, vao: s.querySelector('.be-vao')?.textContent.trim(), dem: d ? d.querySelector('summary').innerText.replace(/\s+/g, ' ').trim() : null, demMo: d?.open,
+      demCoONhap: d ? d.querySelectorAll('input,textarea,select').length : -1, demChu: d ? d.querySelector('.be-dem-nd').innerText.replace(/\n+/g, ' | ') : '',
+      can: s.querySelector('.be-dcan')?.textContent.trim(), viec: [...s.querySelectorAll('.todo-row')].map((e) => e.innerText.replace(/\n+/g, ' ').trim()),
+      nhanGhiChu: s.querySelector('label[for=ghichu-be]').textContent.trim(), tieuDeViec: s.querySelector('.be-viec-h').innerText.replace(/\s+/g, ' ').trim(),
+      ds: [...s.querySelectorAll('.be-3 input')].map((e) => e.value)
+    };
+  });
+  const b = T.be;
+  if (b.ma !== 'G05' || b.vao !== 'Vào 02:30') E('chi tiết G05: mã / chip "Vào 02:30": ' + JSON.stringify([b.ma, b.vao]));
+  if (b.dem !== 'Đêm qua, ghi lúc 02:30 chỉ xem' || !b.demMo || b.demCoONhap !== 0) E('khung "Đêm qua, ghi lúc 02:30" chỉ xem, không ô nhập, đang mở: ' + JSON.stringify([b.dem, b.demMo, b.demCoONhap]));
+  if (!/Ghi chú: Sinh mổ 34w2d/.test(b.demChu) || !/Kháng sinh lần đầu 03:00/.test(b.demChu) || !/Chụp X-quang ngực, đã chép sang hôm nay/.test(b.demChu)) E('khung Đêm qua thiếu ghi chú / việc đã xong / việc đã chép: ' + b.demChu);
+  if (b.can !== 'Cân nặng so với hôm qua: tăng 30 g') E('mức cân so với hôm qua (1980 − 1950): ' + b.can);
+  if (!b.viec[0].includes('Chụp X-quang ngực') || !b.viec[0].includes('từ đêm qua') || b.viec[1].includes('từ đêm qua')) E('thẻ "từ đêm qua" chỉ cho việc cùng chữ: ' + JSON.stringify(b.viec));
+  if (b.nhanGhiChu !== 'Ghi chú hôm nay' || b.tieuDeViec !== 'Việc hôm nay Còn 2/2') E('nhãn Ghi chú hôm nay / Việc hôm nay: ' + JSON.stringify([b.nhanGhiChu, b.tieuDeViec]));
+  if (b.ds.join() !== '0511,342,1980') E('ba ô Ngày sinh/Tuổi thai/Cân nặng phải là của dòng HÔM NAY: ' + b.ds.join());
+  await kiemManV96(page, 'Chi tiết bé 2 ngày', ['.sheet-be'], T, dark, E);
+  await chup(page, 'iphone-be-hai-ngay' + sfx, true);
+  // sửa: ghi vào dòng HÔM NAY, không đụng dòng hôm qua
+  const dQ0 = (await docBang(page, 'exam_patients')).find((p) => p.id === 'q-g05');
+  await hopB.locator('#ghichu-be').fill('Ghi chú thử hôm nay');
+  await hopB.getByLabel('Cân nặng, g').fill('1900');
+  await page.waitForTimeout(900);
+  const dQ1 = (await docBang(page, 'exam_patients')).find((p) => p.id === 'q-g05');
+  const dH1 = (await docBang(page, 'exam_patients')).find((p) => p.id === 'h-g05');
+  T.suaDung = { homNay: [dH1.note, dH1.wt], homQuaGiu: JSON.stringify(dQ0) === JSON.stringify(dQ1) };
+  if (dH1.note !== 'Ghi chú thử hôm nay' || dH1.wt !== '1900') E('sửa ghi chú / cân nặng không vào dòng hôm nay: ' + JSON.stringify(T.suaDung));
+  if (!T.suaDung.homQuaGiu) E('sửa trong chi tiết bé làm đổi dòng HÔM QUA (nguy hiểm): ' + JSON.stringify([dQ0, dQ1]));
+  const canMoi = doiMau(await hopB.locator('.be-dcan').innerText());
+  if (canMoi !== 'Cân nặng so với hôm qua: giảm 50 g') E('mức cân phải đổi theo ô đang gõ (1900 − 1950): ' + canMoi);
+  await hopB.getByRole('button', { name: 'Tính tuần tuổi', exact: true }).tap();
+  await page.waitForTimeout(300);
+  T.tuoiBe = doiMau(await hopB.locator('.be-kq').innerText());
+  if (!/0 ngày/.test(T.tuoiBe) || !/34w2d/.test(T.tuoiBe)) E('G05 sinh 05/11 (ngày lịch 05/11) phải 0 ngày, 34w2d: ' + T.tuoiBe);
+  await hopB.getByRole('button', { name: 'Đóng chi tiết', exact: true }).tap();
+  await page.waitForTimeout(700);
+  // bé có từ hôm qua nhưng không ở đêm: khung "Hôm qua", không chip "Vào"
+  await the('G03').locator('.hn-mo').tap();
+  await hopB.waitFor();
+  await page.waitForTimeout(600);
+  T.beG03 = await page.evaluate(() => { const s = document.querySelector('.sheet-be'); return { dem: s.querySelector('.be-dem summary')?.innerText.replace(/\s+/g, ' ').trim(), vao: !!s.querySelector('.be-vao'), can: s.querySelector('.be-dcan')?.textContent.trim() }; });
+  if (T.beG03.dem !== 'Hôm qua chỉ xem' || T.beG03.vao || T.beG03.can !== 'Cân nặng so với hôm qua: tăng 20 g') E('chi tiết G03: ' + JSON.stringify(T.beG03));
+  await hopB.getByRole('button', { name: 'Đóng chi tiết', exact: true }).tap();
+  await page.waitForTimeout(700);
+  // bé chỉ có hôm qua: chi tiết CHỈ XEM, không ô nhập
+  await the('G12').locator('.hn-mo').tap();
+  const hopX = page.getByRole('dialog', { name: 'Chi tiết bé hôm qua, chỉ xem' });
+  await hopX.waitFor();
+  await page.waitForTimeout(600);
+  T.beChiXem = await page.evaluate(() => { const s = document.querySelector('.sheet-be'); return { oNhap: s.querySelectorAll('input,textarea,select').length, chu: s.innerText.replace(/\n+/g, ' | ') }; });
+  if (T.beChiXem.oNhap || !/Chỉ xem, ngày 04\/11/.test(T.beChiXem.chu) || !/Theo dõi vàng da/.test(T.beChiXem.chu)) E('chi tiết bé chỉ có hôm qua phải chỉ xem (không ô nhập): ' + JSON.stringify(T.beChiXem));
+  await hopX.getByRole('button', { name: 'Đóng chi tiết', exact: true }).tap();
+  await page.waitForTimeout(700);
+
+  // === F. Chép sang (chepMotBe): không trùng ===
+  const hangH = async () => (await docBang(page, 'exam_patients')).filter((p) => p.examDate === H96 && !p.deleted);
+  const nH0 = (await hangH()).length;
+  const chepNut = (ten) => page.getByRole('button', { name: ten, exact: true });
+  const thongBao = async () => { await page.waitForTimeout(500); return doiMau(await page.locator('.nt-msg').innerText().catch(() => '')); };
+  await chepNut('Chép G12 sang hôm nay').tap();
+  T.chepG12 = await thongBao();
+  const sauG12 = await hangH();
+  const g12 = sauG12.find((p) => p.code === 'G12');
+  const todoG12 = g12 ? (await docBang(page, 'patient_todos')).filter((t) => t.patientId === g12.id && !t.deleted).map((t) => t.text) : [];
+  if (sauG12.length !== nH0 + 1 || !g12 || g12.copiedFrom !== 'q-g12' || g12.roomId !== (await docBang(page, 'exam_patients')).find((p) => p.id === 'q-g12').roomId || g12.done !== false) E('Chép sang G12: phải thêm đúng 1 bé hôm nay, cùng phòng, copiedFrom, chưa khám: ' + JSON.stringify(g12));
+  if (todoG12.join() !== 'Theo dõi vàng da') E('Chép sang phải kèm việc chưa xong: ' + todoG12.join());
+  if (T.chepG12 !== 'Đã chép G12 sang hôm nay.') E('thông báo chép G12: "' + T.chepG12 + '"');
+  if (await chepNut('Chép G12 sang hôm nay').count()) E('G12 đã có hôm nay mà thẻ vẫn còn nút Chép sang (thẻ phải ghép)');
+  // bé không mã: chép được 1 lần, lần hai bị chặn (copiedFrom), không nhân đôi
+  await chepNut('Chép bé sang hôm nay').tap();
+  T.chepKhongMa1 = await thongBao();
+  const sauKM1 = (await hangH()).length;
+  await chepNut('Chép bé sang hôm nay').tap();
+  T.chepKhongMa2 = await thongBao();
+  const sauKM2 = (await hangH()).length;
+  if (sauKM1 !== nH0 + 2 || sauKM2 !== sauKM1 || T.chepKhongMa2 !== 'Bé này đã có trong danh sách hôm nay.') E('bé không mã: lần 1 thêm 1, lần 2 phải bị chặn: ' + JSON.stringify([nH0, sauKM1, sauKM2, T.chepKhongMa2]));
+  // trùng phòng + mã (G07 hai bé hôm qua, hôm nay đã có G07; G20 hôm nay đã có): không thêm
+  await chepNut('Chép G07 sang hôm nay').first().tap();
+  T.chepG07 = await thongBao();
+  await chepNut('Chép G20 sang hôm nay').tap();
+  T.chepG20 = await thongBao();
+  if ((await hangH()).length !== sauKM2 || T.chepG07 !== 'Bé này đã có trong danh sách hôm nay.' || T.chepG20 !== 'Bé này đã có trong danh sách hôm nay.') E('trùng phòng + mã phải bị chặn: ' + JSON.stringify([T.chepG07, T.chepG20, (await hangH()).length, sauKM2]));
+  // phòng đã xoá
+  await chepNut('Chép G99 sang hôm nay').tap();
+  T.chepG99 = await thongBao();
+  if ((await hangH()).length !== sauKM2 || T.chepG99 !== 'Phòng của bé đã bị xoá, không chép được.') E('bé ở phòng đã xoá không được chép: ' + JSON.stringify([T.chepG99, (await hangH()).length]));
+  // dòng hôm qua không bị đổi vì chép
+  const qSau = await docBang(page, 'exam_patients');
+  const qDoi = qSau.filter((p) => p.examDate === Q96).filter((p) => JSON.stringify(p) !== JSON.stringify((S0.exam_patients[p.id] ? JSON.parse(S0.exam_patients[p.id]) : null)));
+  if (qDoi.length) E('Chép sang làm đổi dòng hôm qua: ' + qDoi.map((p) => p.id).join());
+  await kiemManV96(page, 'Khám 2 ngày sau Chép sang', ['.ph-main', '.nt-chan'], T, dark, E);
+  await choHoanTacTat(page);
+
+  // === G. Việc 2 ngày: Dời hết + Hoàn tác trả đúng ngày cũ; dời riêng một việc; không đụng việc đã xong/đã xoá ===
+  await tab('Việc').tap();
+  await page.waitForTimeout(600);
+  if ((await gatNut('2 ngày').getAttribute('aria-pressed')) !== 'true') E('về tab Việc mà chế độ 2 ngày không được giữ');
+  const viecDb = async () => Object.fromEntries((await docBang(page, 'tasks')).map((t) => [t.id, t]));
+  const tD0 = await viecDb();
+  await page.getByRole('button', { name: 'Dời hết sang hôm nay', exact: true }).tap();
+  await page.waitForTimeout(700);
+  const tD1 = await viecDb();
+  T.doiHet = ['tq1', 'tq2', 'tq3'].map((id) => tD1[id].date);
+  if (T.doiHet.join() !== [H96, H96, H96].join()) E('Dời hết: 3 việc phải sang 05/11: ' + T.doiHet.join());
+  if (['tq4', 'tq5', 'tq6', 'th1', 'th2'].some((id) => tD1[id].date !== tD0[id].date || tD1[id].updatedAt !== tD0[id].updatedAt || tD1[id].deleted !== tD0[id].deleted || tD1[id].done !== tD0[id].done)) E('Dời hết đụng vào việc đã xong / đã xoá / ngày xa hơn / việc hôm nay');
+  if (['tq1', 'tq2', 'tq3'].some((id) => !(tD1[id].updatedAt > tD0[id].updatedAt))) E('Dời việc phải có updatedAt mới (để gộp sao lưu)');
+  if (await page.locator('.hq-khung').count()) E('dời hết xong thì khung "Còn từ hôm qua" phải ẩn');
+  T.thanhHoanTac = doiMau(await page.locator('.hoantac-chu').innerText().catch(() => ''));
+  if (T.thanhHoanTac !== 'Đã dời 3 việc sang hôm nay') E('thanh Hoàn tác sau Dời hết: "' + T.thanhHoanTac + '"');
+  await page.locator('.hoantac-nut').tap();
+  await page.waitForTimeout(700);
+  const tD2 = await viecDb();
+  T.hoanTacDoi = ['tq1', 'tq2', 'tq3'].map((id) => tD2[id].date);
+  if (T.hoanTacDoi.join() !== [Q96, Q96, Q96].join()) E('Hoàn tác phải trả đúng ngày cũ 04/11: ' + T.hoanTacDoi.join());
+  if (!(await page.locator('.hq-khung').count())) E('Hoàn tác xong khung "Còn từ hôm qua" phải hiện lại');
+  await choHoanTacTat(page);
+  // dời riêng một việc: chạm 2 lần mở chi tiết, có nút "Dời sang hôm nay"
+  const dong = page.locator('.hq-hang', { hasText: 'Theo dõi đường huyết G05' });
+  await chamDoi(page, await tamDiem(dong.locator('.task-text')));
+  const hopV = page.getByRole('dialog', { name: 'Chi tiết việc' });
+  await hopV.waitFor();
+  await page.waitForTimeout(700);
+  await kiemManV96(page, 'Chi tiết việc còn từ hôm qua', ['.sheet'], T, dark, E);
+  await hopV.getByRole('button', { name: 'Dời sang hôm nay', exact: true }).tap();
+  await page.waitForTimeout(900);
+  const tD3 = await viecDb();
+  if (tD3.tq2.date !== H96 || tD3.tq1.date !== Q96 || tD3.tq3.date !== Q96) E('Dời riêng một việc: chỉ tq2 sang 05/11: ' + [tD3.tq1.date, tD3.tq2.date, tD3.tq3.date].join());
+  if (!(await page.locator('.hq-khung .hq-tieu-de').innerText()).includes('2 việc')) E('sau khi dời riêng 1 việc khung phải còn 2 việc');
+  await page.locator('.hoantac-nut').tap();
+  await page.waitForTimeout(700);
+  if ((await viecDb()).tq2.date !== Q96) E('Hoàn tác dời riêng phải trả về 04/11');
+  await choHoanTacTat(page);
+  // vuốt phải = xong luôn
+  const dongXong = page.locator('.swipe', { has: page.locator('.hq-hang .task-text', { hasText: 'Gọi người nhà giường 12' }) });
+  await vuotDong(page, cdp, dongXong.first(), 150);
+  await page.waitForTimeout(400);
+  const tD4 = await viecDb();
+  T.vuotXong = { done: tD4.tq1.done, date: tD4.tq1.date, soHang: await page.locator('.hq-hang').count() };
+  if (tD4.tq1.done !== true || tD4.tq1.date !== Q96 || T.vuotXong.soHang !== 2) E('vuốt phải việc còn từ hôm qua = xong luôn (giữ ngày, hết khỏi khung): ' + JSON.stringify(T.vuotXong));
+  await demChamSauVuot(page);
+  // ẩn nút gạt khi đang xem một ngày khác (lịch 9.5)
+  await page.getByRole('button', { name: 'Mở lịch', exact: true }).tap();
+  const hopL = page.getByRole('dialog', { name: 'Lịch công việc' });
+  await hopL.waitFor();
+  await page.waitForTimeout(500);
+  await hopL.getByRole('button', { name: /^Ngày 3 tháng 11\b/ }).tap();
+  await page.waitForTimeout(900);
+  T.gatKhiXemNgayKhac = await page.locator('.gat-hn').count();
+  if (T.gatKhiXemNgayKhac !== 0 || (await h1()) !== 'Việc ngày 03/11' || (await page.locator('.hq-khung').count())) E('xem ngày khác (lịch) thì phải ẩn nút gạt và khung 2 ngày: ' + JSON.stringify([T.gatKhiXemNgayKhac, await h1()]));
+  await page.getByRole('button', { name: 'Về hôm nay', exact: true }).first().tap();
+  await page.waitForTimeout(500);
+  if (!(await page.locator('.gat-hn').count())) E('Về hôm nay xong phải hiện lại nút gạt');
+  await ctx.close();
+}
+for (const toi of [false, true]) { try { await luongIphoneV96(toi); } catch (e) { console.error('V96 ' + (toi ? 'tối' : 'sáng') + ' dừng: ' + String(e.stack).split('\n').slice(0, 6).join(' | ')); throw e; } }
+
+// ----- iPhone: trước mốc (02:30), đổi mốc có tác dụng ngay, bé "0511" ghi 02:30 phải ra 0 ngày 34w2d cả khi xem lại ngày 04/11 -----
+async function luongTruocMoc(dark) {
+  const sfx = dark ? '-toi' : '-sang';
+  const E = (s) => ketQua.loi.push(`v9.6 trước mốc${dark ? ' tối' : ''}: ${s}`);
+  const { ctx, page } = await moAppHaiNgay({ ...IPHONE96, colorScheme: dark ? 'dark' : 'light' }, gio96(5, 2, 30));
+  const T = (ketQua.thuChucNang['truocMoc' + (dark ? 'Toi' : 'Sang')] = {});
+  const h1 = async () => doiMau(await page.locator('h1').first().textContent());
+  const tab = (ten) => page.getByRole('button', { name: ten, exact: true });
+  // dải ghi rõ ngày làm việc
+  T.dai = await daiMocText(page);
+  T.ngay = await dateTextV96(page);
+  if (T.dai !== 'Ngày làm việc 04/11 (đang là 02:30, 05/11)') E('dải ngày làm việc: "' + T.dai + '"');
+  if (!/04\/11\/2026/.test(T.ngay)) E('dòng ngày ở đầu trang phải là ngày làm việc 04/11: ' + T.ngay);
+  T.viecHomNay = await page.evaluate(() => [...document.querySelectorAll('.ph-main .group .task-text')].map((e) => e.textContent.trim()));
+  if (!T.viecHomNay.includes('Gọi người nhà giường 12') || T.viecHomNay.includes('Xem lại khí máu giường 3')) E('02:30 thuộc ngày làm việc 04/11, việc hôm nay phải là việc của 04/11: ' + T.viecHomNay.join('|'));
+  await kiemManV96(page, 'Trước mốc', ['.ph-head', '.ph-main'], T, dark, E);
+  await chup(page, 'iphone-truoc-moc' + sfx, true);
+  // ghi việc lúc 02:30 → date = ngày làm việc 04/11, KHÔNG phải 05/11
+  await page.locator('#ph-draft').tap();
+  await page.locator('#ph-draft').fill('Việc thử lúc 02:30');
+  await page.getByRole('button', { name: 'Thêm việc', exact: true }).tap();
+  await page.waitForTimeout(700);
+  const vNew = (await docBang(page, 'tasks')).find((t) => t.text === 'Việc thử lúc 02:30');
+  T.viecMoi = vNew && vNew.date;
+  if (T.viecMoi !== Q96) E('việc ghi lúc 02:30 phải mang ngày làm việc 04/11: ' + T.viecMoi);
+  // ghi bé "0511" lúc 02:30: examDate 04/11, tuổi theo ngày lịch 05/11 = 0 ngày, 34w2d
+  await tab('Khám').tap();
+  await page.waitForTimeout(600);
+  if ((await daiMocText(page)) !== T.dai) E('tab Khám cũng phải có dải ngày làm việc: ' + (await daiMocText(page)));
+  await page.getByRole('button', { name: 'Thêm bé vào Phòng 1', exact: true }).tap();
+  const hopB = page.getByRole('dialog', { name: 'Chi tiết bệnh nhân' });
+  await hopB.waitFor();
+  await page.waitForTimeout(600);
+  await hopB.locator('#be-ma').fill('B0511');
+  await hopB.getByLabel('Ngày sinh').fill('0511');
+  await hopB.getByLabel('Tuổi thai lúc sinh').fill('342');
+  await page.waitForTimeout(900);
+  const be = (await docBang(page, 'exam_patients')).find((p) => p.code === 'B0511');
+  T.beMoi = be && { examDate: be.examDate, createdAt: new Date(be.createdAt).toString().slice(4, 21) };
+  if (!be || be.examDate !== Q96 || hhmm(new Date(be.createdAt)) !== '02:30' || new Date(be.createdAt).getDate() !== 5) E('bé ghi lúc 02:30 ngày 05/11 phải mang examDate 04/11, createdAt 05/11 02:30: ' + JSON.stringify(T.beMoi));
+  await hopB.getByRole('button', { name: 'Tính tuần tuổi', exact: true }).tap();
+  await page.waitForTimeout(300);
+  T.tuoiHomNay = doiMau(await hopB.locator('.be-kq').innerText());
+  if (!/0 ngày/.test(T.tuoiHomNay) || !/34w2d/.test(T.tuoiHomNay)) E('bé "0511" lúc 02:30 phải ra 0 ngày 34w2d (tuổi theo ngày lịch): ' + T.tuoiHomNay);
+  await hopB.getByRole('button', { name: 'Đóng chi tiết', exact: true }).tap();
+  await page.waitForTimeout(700);
+  // tổng hợp y lệnh hôm nay: tiêu đề "KHÁM SÁNG" theo ngày LỊCH 05/11, tuổi 34w2d
+  await page.getByRole('button', { name: 'Tổng hợp y lệnh', exact: true }).tap();
+  await page.locator('#tonghop-noidung').waitFor();
+  const vanY = await page.locator('#tonghop-noidung').inputValue();
+  T.tongHopHomNay = vanY.split('\n')[0];
+  if (!/^KHÁM SÁNG 05\/11\/2026 - Y LỆNH/.test(vanY) || !/B0511 - 34w2d/.test(vanY)) E('tổng hợp y lệnh lúc 02:30 phải theo ngày lịch 05/11 và bé B0511 34w2d: ' + vanY.slice(0, 160));
+  await page.getByRole('button', { name: 'Đóng tổng hợp', exact: true }).tap();
+  await page.waitForTimeout(700);
+
+  // đổi mốc trong cài đặt: có tác dụng ngay, ghi vào meta
+  const hop = await moCaiDat(page);
+  T.moc = await hop.evaluate((e) => {
+    const s = e.querySelector('#cd-moc');
+    const r = s.getBoundingClientRect();
+    return { opts: [...s.options].map((o) => o.textContent), val: s.value, cao: Math.round(r.height), co: getComputedStyle(s).fontSize, nhan: e.querySelector('label[for=cd-moc]').textContent.trim(), giaiThich: e.querySelector('#cd-moc-giai-thich').textContent.trim(), tieuDe: e.querySelector('h3:not(#gd-tieu-de)') ? [...e.querySelectorAll('h3')].map((h) => h.textContent.trim()) : [] };
+  });
+  if (T.moc.opts.join() !== '00:00,06:00,07:00,08:00' || T.moc.val !== '420' || T.moc.nhan !== 'Ngày làm việc bắt đầu lúc') E('ô chọn mốc: ' + JSON.stringify(T.moc));
+  if (T.moc.cao < 44 || T.moc.co !== '16px') E('ô chọn mốc phải cao ≥44px, chữ 16px: ' + T.moc.cao + ' / ' + T.moc.co);
+  if (T.moc.tieuDe.join('|') !== 'Sao lưu lên OneDrive|Giao diện|Ngày làm việc|Cử chỉ') E('thứ tự các mục trong bảng cài đặt (15f): ' + T.moc.tieuDe.join('|'));
+  if (!/Từ 00:00 đến 07:00 app vẫn tính là ngày làm việc hôm trước/.test(T.moc.giaiThich)) E('câu giải thích theo mốc 07:00: ' + T.moc.giaiThich);
+  await kiemManV96(page, 'Cài đặt mốc', ['.sheet'], T, dark, E);
+  await chup(page, 'iphone-cai-dat-moc' + sfx, true);
+  const mocDb = async () => (await docBang(page, 'meta')).find((r) => r.key === 'mocNgayLamViec')?.value;
+  await hop.locator('#cd-moc').selectOption('0');
+  await page.waitForTimeout(700);
+  T.moc00 = { dai: await daiMocText(page), giaiThich: doiMau(await hop.locator('#cd-moc-giai-thich').innerText()), db: await mocDb() };
+  if (T.moc00.db !== 0 || !/trùng ngày lịch/.test(T.moc00.giaiThich)) E('mốc 00:00: meta = 0 và giải thích "trùng ngày lịch": ' + JSON.stringify(T.moc00));
+  if (T.moc00.dai !== '') E('mốc 00:00 = ngày lịch: không còn dải ngày làm việc: "' + T.moc00.dai + '"');
+  await hop.locator('#cd-moc').selectOption('420');
+  await page.waitForTimeout(700);
+  if ((await daiMocText(page)) !== T.dai || (await mocDb()) !== 420) E('đổi lại 07:00: dải ngày làm việc quay lại và meta = 420');
+  await hop.locator('#cd-moc').selectOption('360');
+  await page.waitForTimeout(500);
+  if (!/Từ 00:00 đến 06:00 /.test(doiMau(await hop.locator('#cd-moc-giai-thich').innerText()))) E('giải thích phải đổi theo mốc 06:00');
+  await hop.locator('#cd-moc').selectOption('420');
+  await page.waitForTimeout(400);
+  await dongCaiDat(page, hop);
+
+  // thời gian trôi qua: tới 08:00 thì ngày làm việc sang 05/11 ngay, không cần mở lại app
+  await datGio(page, gio96(5, 8, 0));
+  T.sau0800 = { dai: await daiMocText(page), h1: await h1(), ngay: await dateTextV96(page) };
+  if (T.sau0800.dai !== '' || !/05\/11\/2026/.test(T.sau0800.ngay)) E('qua mốc 07:00 (giờ máy đổi 08:00): phải sang ngày làm việc 05/11 và hết dải: ' + JSON.stringify(T.sau0800));
+  // xem lại ngày 04/11: bé B0511 vẫn 0 ngày, 34w2d (KHÔNG ra 364 ngày)
+  await page.getByRole('button', { name: 'Lịch khám', exact: true }).tap();
+  const hopK = page.getByRole('dialog', { name: 'Lịch khám' });
+  await hopK.waitFor();
+  await page.waitForTimeout(500);
+  await hopK.getByRole('button', { name: /^Ngày 4 tháng 11/ }).tap();
+  await page.waitForTimeout(900);
+  T.xemLai = await page.evaluate(() => ({ h1: document.querySelector('h1').textContent.trim(), dong: [...document.querySelectorAll('.nt-be')].map((e) => e.innerText.replace(/\n+/g, ' | ')) }));
+  const dongB = T.xemLai.dong.find((d) => d.startsWith('B0511'));
+  if (T.xemLai.h1 !== 'Khám ngày 04/11' || !dongB || !/34w2d hôm đó/.test(dongB) || /364|44w|86w|87w/.test(dongB)) E('xem lại 04/11: dòng B0511 phải "34w2d hôm đó": ' + JSON.stringify(T.xemLai));
+  await page.locator('.nt-be', { hasText: 'B0511' }).tap();
+  await page.getByRole('dialog', { name: 'Chi tiết bé ngày trước' }).waitFor();
+  await page.waitForTimeout(600);
+  T.xemLaiChiTiet = doiMau(await page.locator('.sheet-be .be-kq').innerText());
+  if (!/0 ngày/.test(T.xemLaiChiTiet) || !/34w2d/.test(T.xemLaiChiTiet) || /364/.test(T.xemLaiChiTiet)) E('chi tiết xem lại 04/11 của B0511 phải 0 ngày, 34w2d (không 364 ngày): ' + T.xemLaiChiTiet);
+  await page.getByRole('button', { name: 'Đóng chi tiết', exact: true }).tap();
+  await page.waitForTimeout(700);
+  await page.getByRole('button', { name: 'Tổng hợp ngày này', exact: true }).tap();
+  await page.locator('#tonghop-noidung').waitFor();
+  T.tongHopNgayTruoc = (await page.locator('#tonghop-noidung').inputValue()).split('\n').filter((l) => /B0511/.test(l)).join('|');
+  if (!/B0511 - 34w2d/.test(T.tongHopNgayTruoc)) E('"Tổng hợp ngày này" 04/11 phải ghi B0511 - 34w2d: ' + T.tongHopNgayTruoc);
+  await ctx.close();
+}
+for (const toi of [false, true]) { try { await luongTruocMoc(toi); } catch (e) { console.error('V96 trước mốc ' + (toi ? 'tối' : 'sáng') + ' dừng: ' + String(e.stack).split('\n').slice(0, 6).join(' | ')); throw e; } }
+
+// ----- đồng hồ giả: 06:59 / 07:00, qua nửa đêm, qua tháng, qua năm, 29/02, và đúng lúc đang mở app thì qua mốc -----
+{
+  const { ctx, page } = await moAppHaiNgay(IPHONE96, gio96(5, 6, 59, 30));
+  const T = ketQua.thuChucNang.dongHoGia = {};
+  const E = (s) => ketQua.loi.push('v9.6 đồng hồ giả: ' + s);
+  const ca = [
+    [gio96(5, 6, 59, 30), 'Ngày làm việc 04/11 (đang là 06:59, 05/11)', '04/11/2026'],
+    [gio96(5, 7, 0, 0), '', '05/11/2026'],
+    [gio96(5, 23, 59, 50), '', '05/11/2026'],
+    [gio96(6, 0, 0, 10), 'Ngày làm việc 05/11 (đang là 00:00, 06/11)', '05/11/2026'],
+    [gio96(1, 3, 0, 0, 11), 'Ngày làm việc 30/11 (đang là 03:00, 01/12)', '30/11/2026'],
+    [gio96(1, 3, 0, 0, 0, 2027), 'Ngày làm việc 31/12 (đang là 03:00, 01/01)', '31/12/2026'],
+    [gio96(29, 3, 0, 0, 1, 2028), 'Ngày làm việc 28/02 (đang là 03:00, 29/02)', '28/02/2028'],
+    [gio96(1, 3, 0, 0, 2, 2028), 'Ngày làm việc 29/02 (đang là 03:00, 01/03)', '29/02/2028']
+  ];
+  T.ket = [];
+  for (const [g, dai, ngay] of ca) {
+    await page.clock.setFixedTime(g);
+    await page.reload();
+    await page.waitForSelector('.phone-app');
+    await page.waitForTimeout(400);
+    const got = { dai: await daiMocText(page), ngay: await dateTextV96(page) };
+    T.ket.push(hhmm(g) + ' ' + g.getDate() + '/' + (g.getMonth() + 1) + '/' + g.getFullYear() + ' → ' + (got.dai || '(không dải)') + ' | ' + got.ngay);
+    if (got.dai !== dai || !got.ngay.includes(ngay)) E(`${g.toString().slice(0, 21)}: cần dải "${dai}" và ngày ${ngay}, thực tế "${got.dai}" / "${got.ngay}"`);
+  }
+  // đang mở app lúc 06:59:55 rồi qua 07:00:05: tự đổi sang ngày làm việc mới
+  await page.clock.setFixedTime(gio96(5, 6, 59, 55));
+  await page.reload();
+  await page.waitForSelector('.phone-app');
+  await page.waitForTimeout(400);
+  const truoc = await daiMocText(page);
+  await datGio(page, gio96(5, 7, 0, 5));
+  const sau = { dai: await daiMocText(page), ngay: await dateTextV96(page) };
+  T.quaMocKhiMo = { truoc, sau };
+  if (!truoc || sau.dai !== '' || !/05\/11\/2026/.test(sau.ngay)) E('đang mở app, qua 07:00 phải tự sang ngày làm việc mới: ' + JSON.stringify(T.quaMocKhiMo));
+  await ctx.close();
+}
+
+// ----- PC: Việc và Khám 2 ngày, chi tiết bé ở cột phải, giao tour hộp giữa -----
+{
+  const { ctx, page } = await moAppHaiNgay({ viewport: { width: 1440, height: 900 } });
+  const T = ketQua.thuChucNang.haiNgayPc = {};
+  const E = (s) => ketQua.loi.push('v9.6 PC: ' + s);
+  const gatNut = (ten) => page.getByRole('group', { name: 'Phạm vi xem' }).getByRole('button', { name: ten, exact: true });
+  await gatNut('2 ngày').click();
+  await page.waitForTimeout(500);
+  T.viec = await page.evaluate(() => ({ tieuDe: document.querySelector('.hq-tieu-de')?.textContent.trim(), trongMain: !!document.querySelector('.pc-main .hq-khung'), nut: document.querySelector('.hq-doi')?.textContent.trim() }));
+  if (T.viec.tieuDe !== 'Còn từ hôm qua, 3 việc' || !T.viec.trongMain || T.viec.nut !== 'Dời hết sang hôm nay') E('Việc 2 ngày trên PC: ' + JSON.stringify(T.viec));
+  await chup(page, 'pc-viec-hai-ngay-sang', true);
+  await page.getByRole('button', { name: 'Khám', exact: true }).click();
+  await page.waitForTimeout(600);
+  if ((await gatNut('2 ngày').getAttribute('aria-pressed')) !== 'true') E('PC: đổi tab mà chế độ 2 ngày không được giữ');
+  T.kham = await page.evaluate(() => ({ the: document.querySelectorAll('.hn-the').length, chuaCoLay: !/Lấy danh sách|Quản lý phòng/.test(document.querySelector('.pc-side').textContent), ghep: document.querySelector('.gat-hn-ghi')?.textContent.trim() }));
+  if (T.kham.the !== 13 || !T.kham.chuaCoLay || T.kham.ghep !== 'Ghép theo phòng và mã') E('Khám 2 ngày trên PC: ' + JSON.stringify(T.kham));
+  await page.locator('.hn-the', { has: page.locator('.pat-code', { hasText: /^G05$/ }) }).locator('.hn-mo').click();
+  await page.locator('aside.pc-detail').waitFor();
+  await page.waitForTimeout(500);
+  T.chiTiet = await page.evaluate(() => { const a = document.querySelector('aside.pc-detail'); return { dem: a.querySelector('.be-dem summary')?.innerText.replace(/\s+/g, ' ').trim(), can: a.querySelector('.be-dcan')?.textContent.trim(), cotPhai: a.getBoundingClientRect().left > document.querySelector('main.pc-main').getBoundingClientRect().right - 2 }; });
+  if (T.chiTiet.dem !== 'Đêm qua, ghi lúc 02:30 chỉ xem' || T.chiTiet.can !== 'Cân nặng so với hôm qua: tăng 30 g' || !T.chiTiet.cotPhai) E('chi tiết bé 2 ngày trên PC: ' + JSON.stringify(T.chiTiet));
+  await chup(page, 'pc-kham-hai-ngay-sang', true);
+  await page.locator('aside.pc-detail').getByRole('button', { name: 'Đóng chi tiết', exact: true }).click();
+  await page.getByRole('button', { name: 'Tổng hợp giao tour', exact: true }).click();
+  await page.getByRole('dialog', { name: 'Tổng hợp giao tour' }).waitFor();
+  await page.waitForTimeout(500);
+  T.tour = await page.evaluate(() => ({ giua: !!document.querySelector('.sheet-wrap.center .sheet-tour'), coChu: getComputedStyle(document.querySelector('#gt-text')).fontSize }));
+  if (!T.tour.giua || T.tour.coChu !== '16px') E('giao tour trên PC phải là hộp giữa, chữ 16px: ' + JSON.stringify(T.tour));
+  await ctx.close();
+}
+
 
 await browser.close();
 server.close();

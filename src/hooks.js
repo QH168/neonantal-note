@@ -1,23 +1,60 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from './db.js';
-import { p2, todayIso } from './lib/dates.js';
-import { KHOA_CHE_DO, KHOA_LAN_MO, docCheDo, laToi, tangLanMo } from './lib/cai-dat.js';
+import { p2, cacNgay } from './lib/dates.js';
+import { KHOA_CHE_DO, KHOA_LAN_MO, docCheDo, laToi, tangLanMo, chuanHoaMoc, KHOA_MOC_NGAY_LAM_VIEC } from './lib/cai-dat.js';
 import { sapBe } from './lib/thu-tu.js';
 import { phongChoXem } from './lib/tong-hop.js';
+import { tachHaiNgay } from './lib/hai-ngay.js';
 
 const alive = (r) => !r.deleted;
 
-/** Ngày hôm nay, tự đổi khi qua nửa đêm hoặc khi mở lại app vào ngày mới. */
-export function useToday() {
-  const [t, setT] = useState(todayIso());
+/**
+ * NGÀY LÀM VIỆC (v9.6) — là "hôm nay" của Việc và Khám (useToday cũ theo ngày lịch đã bỏ) (ngày gán cho việc/bé mới, "Lấy danh sách
+ * hôm qua", lịch, khoá ngày tương lai, chế độ 2 ngày).
+ *
+ * `mocPhut` = mốc đọc từ meta ('mocNgayLamViec', phút). Quy ước để Dữ liệu và Giao diện nối:
+ *   - `undefined` hoặc `null` = CHƯA ĐỌC XONG meta  → { sanSang: false, homNay: null, homQua: null, ngayLich: <hôm nay lịch> }.
+ *     Giao diện KHÔNG được vẽ app hay ghi ngày gì khi sanSang là false (useLiveQuery trả undefined lúc đang tải: truyền thẳng được).
+ *   - Đã đọc xong thì phải truyền SỐ: Dữ liệu đổi "meta chưa có dòng" thành chuanHoaMoc(undefined) = 420 TRƯỚC khi truyền
+ *     (nếu không, "chưa có giá trị" bị hiểu là "chưa đọc xong" và app đứng mãi). Số lạ cũng được chuẩn hoá về 420 ở đây.
+ *   - Đổi mốc trong cài đặt có tác dụng ngay ở lần vẽ kế tiếp.
+ * Trả { sanSang, homNay, homQua, ngayLich }: homNay = ngày làm việc; homQua = ngày làm việc trước; ngayLich = ngày lịch của
+ * máy (để tính tuổi — KHÔNG theo mốc). Tự đổi khi qua mốc, qua nửa đêm (ngayLich) và khi mở lại app (kiểm mỗi 15 giây
+ * và khi tab hiện lại).
+ */
+export function useNgayLamViec(mocPhut) {
+  const sanSang = mocPhut !== undefined && mocPhut !== null;
+  const moc = sanSang ? chuanHoaMoc(mocPhut) : null;
+  const [, veLai] = useState(0);
+  const cuoi = useRef('');
+  const ngay = cacNgay(new Date(), moc === null ? 420 : moc);
+  const khoa = moc === null ? 'chua|' + ngay.ngayLich : ngay.homNay + '|' + ngay.ngayLich;
+  cuoi.current = khoa;
   useEffect(() => {
-    const check = () => setT((old) => (old === todayIso() ? old : todayIso()));
-    const iv = setInterval(check, 60 * 1000);
-    document.addEventListener('visibilitychange', check);
-    return () => { clearInterval(iv); document.removeEventListener('visibilitychange', check); };
-  }, []);
-  return t;
+    const kiem = () => {
+      const n = cacNgay(new Date(), moc === null ? 420 : moc);
+      if ((moc === null ? 'chua|' + n.ngayLich : n.homNay + '|' + n.ngayLich) !== cuoi.current) veLai((x) => x + 1);
+    };
+    const iv = setInterval(kiem, 15 * 1000);
+    document.addEventListener('visibilitychange', kiem);
+    return () => { clearInterval(iv); document.removeEventListener('visibilitychange', kiem); };
+  }, [moc]);
+  return {
+    sanSang,
+    homNay: sanSang ? ngay.homNay : null,
+    homQua: sanSang ? ngay.homQua : null,
+    ngayLich: ngay.ngayLich,
+  };
+}
+
+/**
+ * Mốc ngày làm việc (phút) đọc từ meta, tự cập nhật ngay khi đổi mốc (useLiveQuery trên db.meta).
+ * Trả `undefined` khi CHƯA đọc xong meta; khi đọc xong luôn trả SỐ đã qua chuanHoaMoc (meta chưa có dòng hoặc hỏng → 420).
+ * Callback luôn trả số (không bao giờ undefined) để phân biệt "chưa đọc xong" với "chưa có giá trị". Truyền thẳng cho useNgayLamViec.
+ */
+export function useMocNgayLamViec() {
+  return useLiveQuery(async () => chuanHoaMoc((await db.meta.get(KHOA_MOC_NGAY_LAM_VIEC))?.value), []);
 }
 
 /** Màn hình rộng (PC) hay hẹp (điện thoại). */
@@ -119,11 +156,13 @@ export function useLanMoApp() {
 export function useAppData(today) {
   const tasks = useLiveQuery(() => db.tasks.filter(alive).toArray(), []);
   const rooms = useLiveQuery(() => db.rooms.orderBy('order').filter(alive).toArray(), []);
+  // `today` = NGÀY LÀM VIỆC (useNgayLamViec().homNay). Chưa có (null) thì không truy vấn gì và ready = false.
   const patients = useLiveQuery(
-    () => db.exam_patients.where('examDate').equals(today).filter(alive).toArray().then(sapBe),
+    () => (today ? db.exam_patients.where('examDate').equals(today).filter(alive).toArray().then(sapBe) : []),
     [today]
   );
   const todos = useLiveQuery(async () => {
+    if (!today) return [];
     const ps = await db.exam_patients.where('examDate').equals(today).filter(alive).toArray();
     if (!ps.length) return [];
     return db.patient_todos.where('patientId').anyOf(ps.map((p) => p.id)).filter(alive).toArray();
@@ -131,6 +170,7 @@ export function useAppData(today) {
 
   // Ngày khám gần nhất trước hôm nay (thường là hôm qua) để "Lấy danh sách"
   const prev = useLiveQuery(async () => {
+    if (!today) return { date: null, count: 0 };
     const last = await db.exam_patients.where('examDate').below(today).filter(alive).last();
     if (!last) return { date: null, count: 0 };
     const roomIds = new Set((await db.rooms.filter(alive).toArray()).map((r) => r.id));
@@ -150,7 +190,7 @@ export function useAppData(today) {
 
   const lastExport = useLiveQuery(() => db.meta.get('lastExport'), [])?.value;
 
-  const ready = tasks && rooms && patients && todos && prev && roomUse;
+  const ready = !!today && tasks && rooms && patients && todos && prev && roomUse;
   const todosByPid = {};
   for (const t of todos || []) (todosByPid[t.patientId] ||= []).push(t);
   for (const k in todosByPid) todosByPid[k].sort((a, b) => (a.order || 0) - (b.order || 0) || (a.createdAt || 0) - (b.createdAt || 0));
@@ -183,6 +223,31 @@ export function useBeKhoang(tu, den) {
   }, [tu, den]);
   if (!tu || !den) return KHOANG_TRONG;
   return kq || { ...KHOANG_TRONG, ready: false };
+}
+
+/**
+ * CHỈ ĐỌC (v9.6): bé và việc của HAI ngày làm việc liền nhau cho chế độ 2 ngày và giao tour. Một truy vấn theo chỉ mục
+ * examDate cho cả hai ngày + một truy vấn theo chỉ mục patientId; không đọc cả bảng. homQua hoặc homNay là null/undefined
+ * (chế độ "Hôm nay", hoặc mốc chưa đọc xong) → không truy vấn gì, trả rỗng.
+ * Trả { ready, rooms (phongChoXem: phòng còn sống, phòng đã xoá có bé, phòng không tìm thấy), todosByPid,
+ * homQua: { ngay, patients }, homNay: { ngay, patients } } — đưa thẳng vào ghepHaiNgay của src/lib/hai-ngay.js.
+ */
+export function useHaiNgayKham(homQua, homNay) {
+  const coCa = !!homQua && !!homNay;
+  const k = useBeKhoang(coCa ? homQua : null, coCa ? homNay : null);
+  return useMemo(() => tachHaiNgay(k, homQua || null, homNay || null), [k, homQua, homNay]);
+}
+
+/**
+ * CHỈ ĐỌC (v9.6): việc (bảng tasks) còn sống của MỘT ngày, theo chỉ mục `date` — cho khung "Còn từ hôm qua".
+ * iso rỗng → rỗng. Trả { ready, tasks } (cả việc đã xong; lọc ở viecConTuHomQua).
+ */
+export function useViecNgay(iso) {
+  const ds = useLiveQuery(
+    () => (iso ? db.tasks.where('date').equals(iso).filter(alive).toArray() : []),
+    [iso]
+  );
+  return { ready: !!ds, tasks: ds || [] };
 }
 
 /** CHỈ ĐỌC: bé và việc của MỘT ngày (xem ngày trước). Cùng giá trị trả về với useBeKhoang. */

@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "chup": "npm run build && node scripts/chup-giao-dien.mjs dist",
-    "test": "node --test tests/merge.test.js tests/clinical.test.js tests/ca-chuan.test.js tests/luat.test.js tests/ban-do.test.js tests/thu-tu.test.js tests/viec.test.js tests/viet-tat.test.js tests/lich.test.js tests/tong-hop.test.js"
+    "test": "node --test tests/merge.test.js tests/clinical.test.js tests/ca-chuan.test.js tests/luat.test.js tests/ban-do.test.js tests/thu-tu.test.js tests/viec.test.js tests/viet-tat.test.js tests/lich.test.js tests/tong-hop.test.js tests/ngay-lam-viec.test.js tests/hai-ngay.test.js"
   },
   "dependencies": {
     "dexie": "^4.0.8",

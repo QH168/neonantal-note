@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseGa, gaFmt, calcAge, buildSummary } from '../src/lib/clinical.js';
+import { parseGa, gaFmt, calcAge, buildSummary, ngayTinhTuoi, tuoiCuaDong } from '../src/lib/clinical.js';
 import { addDays, isoOf } from '../src/lib/dates.js';
 
 const NOW = new Date(2026, 9, 20); // 20/10/2026
@@ -124,4 +124,99 @@ test('v9.5: buildSummary ngayTruoc: true đổi đúng dòng hai và câu danh s
   ].join('\n'));
   assert.equal(buildSummary({ rooms, patients: [], todosByPid: {}, now: ngay, ngayTruoc: true }),
     'KHÁM SÁNG 03/11/2026\nChưa có bệnh nhân trong danh sách ngày này.');
+});
+
+// ---- v9.6: ngày tính tuổi của dòng đã qua (bé sinh sau nửa đêm). Kết quả mong đợi tính tay, không gọi calcAge để sinh ra. ----
+const gio = (y, m, d, h = 0, mi = 0, s = 0, ms = 0) => new Date(y, m - 1, d, h, mi, s, ms).getTime(); // giờ máy
+
+test('v9.6 ngayTinhTuoi: createdAt 02:30 ngày 05/11 và examDate 04/11 thì lấy ngày lịch của createdAt', () => {
+  assert.equal(ngayTinhTuoi({ examDate: '2026-11-04', createdAt: gio(2026, 11, 5, 2, 30) }), '2026-11-05');
+});
+
+test('v9.6 ngayTinhTuoi: dữ liệu cũ tạo đúng ngày cho kết quả như trước', () => {
+  assert.equal(ngayTinhTuoi({ examDate: '2026-10-21', createdAt: gio(2026, 10, 21, 9, 0) }), '2026-10-21');
+  assert.equal(ngayTinhTuoi({ examDate: '2026-11-04', createdAt: gio(2026, 11, 4, 23, 59, 59, 999) }), '2026-11-04');
+  assert.equal(ngayTinhTuoi({ examDate: '2026-11-04', createdAt: gio(2026, 11, 4, 0, 0) }), '2026-11-04');
+});
+
+test('v9.6 ngayTinhTuoi: createdAt sớm hơn examDate thì giữ examDate', () => {
+  assert.equal(ngayTinhTuoi({ examDate: '2026-10-21', createdAt: gio(2026, 10, 20, 23, 0) }), '2026-10-21');
+  assert.equal(ngayTinhTuoi({ examDate: '2026-10-21', createdAt: 1 }), '2026-10-21');
+});
+
+test('v9.6 ngayTinhTuoi: không có createdAt hoặc createdAt hỏng thì lấy examDate', () => {
+  for (const c of [undefined, null, 0, NaN, '', 'abc', -5]) {
+    assert.equal(ngayTinhTuoi({ examDate: '2026-11-04', createdAt: c }), '2026-11-04', JSON.stringify(c));
+  }
+  assert.equal(ngayTinhTuoi({ examDate: '2026-11-04' }), '2026-11-04');
+});
+
+test('v9.6 ngayTinhTuoi: tính theo ngày lịch giờ máy, không UTC (00:30 và 00:00 đúng nửa đêm)', () => {
+  assert.equal(ngayTinhTuoi({ examDate: '2026-11-04', createdAt: gio(2026, 11, 5, 0, 30) }), '2026-11-05');
+  assert.equal(ngayTinhTuoi({ examDate: '2026-11-04', createdAt: gio(2026, 11, 5, 0, 0) }), '2026-11-05');
+  assert.equal(ngayTinhTuoi({ examDate: '2026-12-31', createdAt: gio(2027, 1, 1, 1, 0) }), '2027-01-01');
+  assert.equal(ngayTinhTuoi({ examDate: '2028-02-28', createdAt: gio(2028, 2, 29, 3, 0) }), '2028-02-29');
+});
+
+test('v9.6 ngayTinhTuoi: thiếu examDate thì dùng ngày lịch của createdAt, thiếu cả hai thì null', () => {
+  assert.equal(ngayTinhTuoi({ createdAt: gio(2026, 11, 5, 2, 30) }), '2026-11-05');
+  assert.equal(ngayTinhTuoi({}), null);
+  assert.equal(ngayTinhTuoi(null), null);
+});
+
+test('v9.6 bẫy nửa đêm: sinh "0511", GA 342, ghi 02:30 ngày 05/11 với examDate 04/11 → 0 ngày, 34w2d (không phải 364 ngày)', () => {
+  // Tính tay: 34*7+2 = 240 ngày; ngày tính 05/11, sinh 05/11 → 0 ngày tuổi → 240 = 34w2d.
+  const p = { dob: '0511', ga: '342', examDate: '2026-11-04', createdAt: gio(2026, 11, 5, 2, 30) };
+  assert.deepEqual(tuoiCuaDong(p), { days: '0 ngày', pma: '34w2d' });
+  // Cách cũ (tính theo examDate): 05/11 sau 04/11 nên lùi một năm, ra 05/11/2025 → 364 ngày. Giữ làm bằng chứng của cái bẫy.
+  assert.equal(calcAge(p, new Date(2026, 10, 4)).days, '364 ngày');
+});
+
+test('v9.6 tuoiCuaDong qua năm: sinh "3112", GA 300, ghi 01:00 ngày 01/01/2027 với examDate 31/12/2026 → 1 ngày, 30w1d', () => {
+  // 30*7 = 210; sinh 31/12/2026, ngày tính 01/01/2027 → 1 ngày → 211 = 30w1d.
+  const p = { dob: '3112', ga: '300', examDate: '2026-12-31', createdAt: gio(2027, 1, 1, 1, 0) };
+  assert.deepEqual(tuoiCuaDong(p), { days: '1 ngày', pma: '30w1d' });
+});
+
+test('v9.6 tuoiCuaDong ngày nhuận: sinh "2902", GA 280, ghi 03:00 ngày 29/02/2028 với examDate 28/02 → 0 ngày, 28w0d', () => {
+  // 28*7 = 196 → 28w0d.
+  const p = { dob: '2902', ga: '280', examDate: '2028-02-28', createdAt: gio(2028, 2, 29, 3, 0) };
+  assert.deepEqual(tuoiCuaDong(p), { days: '0 ngày', pma: '28w0d' });
+});
+
+test('v9.6 tuoiCuaDong: dòng cũ tạo đúng ngày ra đúng kết quả của ca chuẩn (77 ngày, 36w0d)', () => {
+  // Ca chuẩn đã thống nhất: tính ngày 21/10/2026, sinh 0508, 25 tuần → 77 ngày, 36w0d.
+  const p = { dob: '0508', ga: '25', examDate: '2026-10-21', createdAt: gio(2026, 10, 21, 9, 0) };
+  assert.deepEqual(tuoiCuaDong(p), { days: '77 ngày', pma: '36w0d' });
+});
+
+test('v9.6 tuoiCuaDong: không có examDate thì tính theo now truyền vào', () => {
+  const p = { dob: '0508', ga: '25' };
+  assert.deepEqual(tuoiCuaDong(p, new Date(2026, 9, 21, 9, 0)), { days: '77 ngày', pma: '36w0d' });
+});
+
+test('v9.6 tuoiCuaDong: báo lỗi như calcAge khi thiếu tuổi thai', () => {
+  const r = tuoiCuaDong({ dob: '0511', ga: '', examDate: '2026-11-04', createdAt: gio(2026, 11, 5, 2, 30) });
+  assert.ok(r.err);
+});
+
+test('v9.6 buildSummary ngayTruoc: bé sinh sau nửa đêm có tuổi đúng theo ngày ghi, không lùi một năm', () => {
+  const rooms = [{ id: 'r1', name: 'Phòng 1' }];
+  const patients = [{ id: 'a', roomId: 'r1', code: 'G05', dob: '0511', ga: '342', wt: '1950', note: '', examDate: '2026-11-04', createdAt: gio(2026, 11, 5, 2, 30) }];
+  assert.equal(buildSummary({ rooms, patients, todosByPid: {}, now: new Date(2026, 10, 4), ngayTruoc: true }), [
+    'KHÁM SÁNG 04/11/2026 - Y LỆNH',
+    'Tuổi thai ghi là tuổi thai hiệu chỉnh ngày 04/11.',
+    'Không có việc mới, tiếp tục y lệnh cũ.',
+    '',
+    'PHÒNG 1',
+    'G05 - 34w2d - 1950 g - Tiếp tục y lệnh cũ'
+  ].join('\n'));
+});
+
+test('v9.6 buildSummary hôm nay (không ngayTruoc) vẫn tính theo ngày lịch của now, kể cả khi dòng có createdAt', () => {
+  const rooms = [{ id: 'r1', name: 'Phòng 1' }];
+  const patients = [{ id: 'a', roomId: 'r1', code: 'G05', dob: '0511', ga: '342', wt: '', note: '', examDate: '2026-11-04', createdAt: gio(2026, 11, 5, 2, 30) }];
+  // Đang 02:30 ngày 05/11 (ngày làm việc là 04/11): tuổi theo NGÀY LỊCH 05/11 → 0 ngày, 34w2d.
+  const txt = buildSummary({ rooms, patients, todosByPid: {}, now: new Date(2026, 10, 5, 2, 30) });
+  assert.ok(txt.includes('G05 - 34w2d - Tiếp tục y lệnh cũ'), txt);
 });

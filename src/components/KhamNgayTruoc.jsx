@@ -1,11 +1,11 @@
 // Khám: xem lại một ngày trước (v9.5, bảng 16d). TUYỆT ĐỐI CHỈ XEM.
 // - Chỉ có MỘT thao tác ghi: "Chép sang hôm nay" (copyPatientsFrom). Không nút "+", không vuốt, không quản lý phòng.
 // - Chi tiết bé viết riêng (BeChiXem): không dùng PatientDetail hay useTuLuu, không có ô nhập, không tự lưu.
-// - Tuổi tính theo NGÀY ĐÓ (parseIso(p.examDate)), không bao giờ theo hôm nay.
+// - Tuổi tính theo NGÀY ĐÓ của chính dòng (tuoiCuaDong: bé ghi sau nửa đêm không bị lùi một năm), không bao giờ theo hôm nay.
 // - Bé nào cũng hiện: phòng đã xoá, phòng không tìm thấy (hook trả phongChoXem).
 import { useState } from 'react';
 import { copyPatientsFrom } from '../lib/actions.js';
-import { buildSummary, calcAge, gaFmt } from '../lib/clinical.js';
+import { buildSummary, tuoiCuaDong, ngayTinhTuoi, gaFmt } from '../lib/clinical.js';
 import { fmtDM, parseIso } from '../lib/dates.js';
 import { gioXong } from '../lib/viec.js';
 import { useBeNgay } from '../hooks.js';
@@ -14,15 +14,16 @@ import { Sheet, DongBtn, TickOk, XIcon } from './ui.jsx';
 
 /** Dòng số đo của bé ở ngày trước: "38w0d hôm đó, 1850 g" — tuổi tính theo ngày khám của chính dòng đó. */
 export function soDoNgayTruoc(p) {
-  const c = calcAge(p, parseIso(p.examDate));
+  const c = tuoiCuaDong(p, parseIso(p.examDate));
   const tuoi = c.err ? '' : c.pma + ' hôm đó';
   return [tuoi, p.wt ? p.wt + ' g' : ''].filter(Boolean).join(', ') || 'Chưa có thông tin';
 }
 
 /** Chi tiết bé CHỈ XEM: mã, phòng, ngày sinh, tuổi thai, cân nặng, tuổi tính sẵn theo ngày đó, ghi chú, việc, trạng thái khám. */
-function BeChiXem({ p, phong, todos, onClose }) {
+export function BeChiXem({ p, phong, todos, onClose }) {
   const dm = fmtDM(p.examDate);
-  const c = calcAge(p, parseIso(p.examDate));
+  const dmTuoi = fmtDM(ngayTinhTuoi(p) || p.examDate); // bé ghi sau nửa đêm: tuổi tính tới ngày lịch bé được ghi
+  const c = tuoiCuaDong(p, parseIso(p.examDate));
   const xong = todos.filter((t) => t.done).length;
   const o = (nhan, gt) => (
     <div className="field"><span className="muted small">{nhan}</span><div className="be-gt">{gt || '—'}</div></div>
@@ -42,11 +43,11 @@ function BeChiXem({ p, phong, todos, onClose }) {
       </div>
       <div className="be-tuoi">
         {c.err ? (
-          <div className="be-kq be-kq-trong">Chưa tính được tuổi ngày {dm}. {c.err}</div>
+          <div className="be-kq be-kq-trong">Chưa tính được tuổi ngày {dmTuoi}. {c.err}</div>
         ) : (
           <div className="be-kq" role="status">
-            <span>Ngày tuổi (ngày {dm})<b>{c.days}</b></span>
-            <span>Hiệu chỉnh (ngày {dm})<b>{c.pma}</b></span>
+            <span>Ngày tuổi (ngày {dmTuoi})<b>{c.days}</b></span>
+            <span>Hiệu chỉnh (ngày {dmTuoi})<b>{c.pma}</b></span>
           </div>
         )}
       </div>

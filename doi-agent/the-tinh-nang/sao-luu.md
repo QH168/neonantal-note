@@ -9,7 +9,7 @@
   `validateBackup`, `backupFileName` (ghichu_YYYY-MM-DD_HHMM_thiet-bi.json).
 - `src/lib/backup.js` — xuất (`prepareBackupFile`, `shareFile` cho iPhone, `saveToFolder` cho PC, `downloadFile` dự phòng),
   nhập (`importBackupFile`, một giao dịch), thư mục OneDrive trên PC (`chooseBackupFolder`, `getBackupFolder`, `findLatestInFolder`).
-- `src/components/BackupPanel.jsx` — bảng "Sao lưu và cài đặt" (từ v9.1; trước đó tên "Sao lưu & OneDrive"; `aria-label` nút đám mây và nhãn nút đóng cũng đổi theo). Phần "Sao lưu lên OneDrive" giữ đủ chức năng cũ, logic sao lưu không đổi; thêm mục "Giao diện" với nút gạt Sáng / Tối / Theo máy (nhận `cheDo`, `onDoiCheDo` từ `App.jsx`; lưu ở `localStorage`, KHÔNG nằm trong file sao lưu). Mục "Cử chỉ" (v9.2, 4 dòng: vuốt phải, vuốt trái, chạm 2 lần, gõ /) đã có; mục "Ngày làm việc bắt đầu lúc" (đợt 9.6) chưa có.
+- `src/components/BackupPanel.jsx` — bảng "Sao lưu và cài đặt" (từ v9.1; trước đó tên "Sao lưu & OneDrive"; `aria-label` nút đám mây và nhãn nút đóng cũng đổi theo). Phần "Sao lưu lên OneDrive" giữ đủ chức năng cũ, logic sao lưu không đổi; thêm mục "Giao diện" với nút gạt Sáng / Tối / Theo máy (nhận `cheDo`, `onDoiCheDo` từ `App.jsx`; lưu ở `localStorage`, KHÔNG nằm trong file sao lưu). Mục "Cử chỉ" (v9.2, 4 dòng: vuốt phải, vuốt trái, chạm 2 lần, gõ /) đã có; mục "Ngày làm việc" (v9.6): nút chọn 00:00 / 06:00 / 07:00 / 08:00 (`MOC_HOP_LE`, nhãn `nhanMoc`, giải thích `giaiThichMoc`), ghi qua `datMocNgayLamViec` (`src/lib/actions.js`) vào bảng `meta` khoá `mocNgayLamViec`; đọc bằng `useMocNgayLamViec`. Mốc KHÔNG vào file sao lưu (quyết định bác sĩ câu 1), mỗi máy tự đặt.
 
 ## Ba luật cứng
 1. Không đổi tên CSDL, không sửa `db.version(1)` (⚙ `tests/luat.test.js`).
@@ -27,7 +27,11 @@
 - File sao lưu cũ (dòng không có `doneAt`) vẫn hợp lệ và nhập được; dòng cũ gộp bình thường, việc cũ đã xong vẫn là đã xong, chỉ không có giờ.- `doneAt` đi theo bản sửa sau cùng như mọi trường: đánh dấu xong và bỏ đánh dấu đều qua `updateRow` (có `updatedAt` mới), bỏ xong đưa `doneAt` về null và thắng khi gộp nếu mới hơn.
 - Hoàn tác xoá chỉ đổi `deleted` true thành false qua `updateRow` (`khoiPhuc`, `khoiPhucNhieu`, `khoiPhucAbbrev` trong `src/lib/actions.js`) nên `updatedAt` mới hơn bản xoá và thắng khi gộp; nhãn, ghi chú, trạng thái giữ nguyên. Bài kiểm: `tests/merge.test.js` (các bài `doneAt` và "hoàn tác xoá").
 
+## Ngày làm việc (v9.6)
+- Mốc chỉ nằm trong `meta`; không thuộc `DATA_TABLES` nên không xuất, không nhập, không gộp. Máy chưa đặt thì mốc là 07:00 (420).
+- `db.version`, `BACKUP_VERSION` (vẫn 1), `merge.js`, `backup.js` không đổi. File sao lưu cũ và mới đều nhập được.
+
 ## Điểm dễ hỏng
 - iOS chỉ cho mở bảng Chia sẻ ngay trong lần bấm nút (`NotAllowedError` → hiện nút "Chia sẻ file").
-- `meta` (deviceId, lastExport, thư mục) không nằm trong file sao lưu — cố ý.
+- `meta` (deviceId, lastExport, thư mục, mocNgayLamViec) không nằm trong file sao lưu — cố ý.
 - Chấm đỏ đám mây: `App.jsx` tính `backupDue` khi quá 24 giờ.

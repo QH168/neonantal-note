@@ -57,6 +57,22 @@ export function TrangThaiXong({ xong, gio, onDanhDau, onBo, chuaChu = 'Chưa xon
   );
 }
 
+/**
+ * Nút gạt "Hôm nay / 2 ngày" (v9.6, bảng 17a, 17c). Mỗi nút cao 44px (canvas vẽ 38px: nâng lên để vùng chạm đủ 44px).
+ * `ghiChu`: chữ nhỏ bên phải (ở tab Khám: "Ghép theo phòng và mã").
+ */
+export function GatHaiNgay({ haiNgay, onDoi, ghiChu = '' }) {
+  return (
+    <div className="gat-hn-hang">
+      <div role="group" aria-label="Phạm vi xem" className="gat-hn">
+        <button type="button" aria-pressed={!haiNgay} onClick={() => onDoi(false)}>Hôm nay</button>
+        <button type="button" aria-pressed={haiNgay} onClick={() => onDoi(true)}>2 ngày</button>
+      </div>
+      {ghiChu && <span className="gat-hn-ghi">{ghiChu}</span>}
+    </div>
+  );
+}
+
 export const PRI_NAME = { 1: 'đỏ', 2: 'vàng', 3: 'xanh lá', 4: 'xanh dương', 5: 'NV' };
 export const PRI_LEVELS = [1, 2, 3, 4, 5];
 /** Chữ hiện trên nút/huy hiệu: số 1–4, riêng mức 5 ghi "NV". */

@@ -10,7 +10,10 @@ import { boDemCham, themCham, gioXong, chuanTenViec } from '../lib/viec.js';
 import { useVietTat } from './VietTat.jsx';
 import { useHoanTac } from './HoanTac.jsx';
 import { useTuLuu } from './Tasks.jsx';
+import { mucTangGiamCan } from '../lib/hai-ngay.js';
 import { Chevron, XIcon, SheetHead, SwipeRow, Sheet, DongBtn, TickOk, TrangThaiXong, TrashIcon, PlusIcon } from './ui.jsx';
+
+const chuanChuViec = (s) => String(s ?? '').normalize('NFC').trim().replace(/\s+/g, ' ').toLowerCase();
 
 /** Nút "Lấy danh sách hôm qua" + "Quản lý phòng". */
 export function ExamActions({ prev, today, roomEdit, onToggleRoomEdit, compact }) {
@@ -154,7 +157,7 @@ export function RoomList({ rooms, patients, todosByPid, collapsed, onToggle, sel
 }
 
 /** Một việc cần làm của bé: vuốt phải = xong, vuốt trái = xoá (có Hoàn tác), chạm 2 lần = bảng nhỏ sửa tên / bỏ đánh dấu xong / xoá. */
-function TodoRow({ t, onOpen }) {
+function TodoRow({ t, onOpen, nhan = '' }) {
   const hoanTac = useHoanTac();
   const taps = useRef([]);
   const tap = () => {
@@ -171,6 +174,7 @@ function TodoRow({ t, onOpen }) {
       <div className="todo-main" role="button" tabIndex={0} aria-label={'Mở chi tiết việc của bé: ' + t.text}
         onClick={tap} onKeyDown={(e) => { if (e.key === 'Enter' && e.target === e.currentTarget) onOpen(t.id); }}>
         <span className={'todo-text' + (t.done ? ' done' : '')}>{t.text}</span>
+        {nhan && <span className="be-tu-dem">{nhan}</span>}
       </div>
       {t.done && <TickOk />}
     </SwipeRow>
@@ -212,8 +216,11 @@ function TodoDetail({ t, wide, onClose }) {
  * Chi tiết một bé (v9.4, bảng 16b). Gõ tới đâu lưu tới đó (sau 0,4 giây ngừng gõ).
  * `wide`: PC (bảng nhỏ mở giữa màn hình). `phong`: tên phòng của bé (chip cạnh ô mã).
  * Đóng (nút X, "Xong", Esc, chạm nền): lưu nốt rồi đóng; trên iPhone có chuyển động trượt xuống, trên PC (cột phải) đóng ngay.
+ * `dem` (chế độ 2 ngày, v9.6, bảng 17b): { p: dòng bé HÔM QUA, todos: việc của dòng đó, moiDemQua, gioVao } hoặc null.
+ * Có `dem` thì thêm khung gập "Đêm qua" CHỈ XEM (không ô nhập, không sửa dòng hôm qua), thẻ "từ đêm qua" cho việc cùng chữ,
+ * và mức tăng giảm cân. `p` và `todos` LUÔN là dòng của hôm nay: mọi ô sửa chỉ ghi vào p.id.
  */
-export function PatientDetail({ p, todos, onClose, wide = false, phong = '' }) {
+export function PatientDetail({ p, todos, onClose, wide = false, phong = '', dem = null }) {
   const [todoMoId, setTodoMoId] = useState(null);
   const todoMo = todoMoId ? todos.find((t) => t.id === todoMoId) : null;
   const [f, setF] = useState({ code: p.code, dob: p.dob, ga: p.ga, wt: p.wt, note: p.note });
@@ -260,6 +267,12 @@ export function PatientDetail({ p, todos, onClose, wide = false, phong = '' }) {
     onClose();
   };
   const left = todos.filter((t) => !t.done).length;
+  // 2 ngày: việc chưa xong của hôm qua; việc hôm nay cùng chữ được gắn thẻ "từ đêm qua"; mức cân so với hôm qua (cân đang gõ)
+  const quaTodos = dem ? dem.todos : [];
+  const chuQuaChua = new Set(quaTodos.filter((t) => !t.done).map((t) => chuanChuViec(t.text)));
+  const chuHomNay = new Set(todos.map((t) => chuanChuViec(t.text)));
+  const nhanTu = dem?.moiDemQua ? 'từ đêm qua' : 'từ hôm qua';
+  const mucCan = dem ? mucTangGiamCan(dem.p.wt, f.wt) : null;
   const giuConTro = (e) => e.preventDefault(); // chạm "+" không làm ô gõ mất con trỏ (bàn phím iPhone không tụt)
   const field = (k, label, extra = {}) => (
     <label className="field">
@@ -275,14 +288,35 @@ export function PatientDetail({ p, todos, onClose, wide = false, phong = '' }) {
         <input id="be-ma" ref={maRef} type="text" className="be-ma" value={f.code} onChange={set('code')} onBlur={flush}
           autoComplete="off" placeholder="Mã / giường" />
         {phong && <span className="be-phong">{phong}</span>}
+        {dem?.moiDemQua && dem.gioVao && <span className="be-vao">Vào {dem.gioVao}</span>}
         <DongBtn className="icon-btn" aria-label="Đóng chi tiết" onClose={dong}><XIcon /></DongBtn>
       </div>
+
+      {dem && (
+        <details className="be-dem" open>
+          <summary className="be-dem-s">
+            <Chevron dir="down" size={16} />
+            <span>{dem.moiDemQua && dem.gioVao ? `Đêm qua, ghi lúc ${dem.gioVao}` : 'Hôm qua'}</span>
+            <span className="muted small">chỉ xem</span>
+          </summary>
+          <div className="be-dem-nd">
+            <span className="be-dem-note"><span className="muted">Ghi chú:</span> {dem.p.note?.trim() || 'không có'}</span>
+            {quaTodos.map((t) => (
+              <span key={t.id} className="be-dem-viec">
+                {t.done ? <TickOk /> : <span className="be-dem-o" aria-hidden="true" />}
+                <span>{t.text}{!t.done && (chuHomNay.has(chuanChuViec(t.text)) ? ', đã chép sang hôm nay' : ', chưa xong')}</span>
+              </span>
+            ))}
+          </div>
+        </details>
+      )}
 
       <div className="be-3">
         {field('dob', 'Ngày sinh', { ph: '0810' })}
         {field('ga', 'Tuổi thai', { ph: '346', ten: 'Tuổi thai lúc sinh' })}
         {field('wt', 'Cân nặng, g', { ph: '1850' })}
       </div>
+      {mucCan && <p className="be-dcan" role="status">Cân nặng so với hôm qua: <b>{mucCan.text}</b></p>}
 
       <div className="be-tuoi">
         <button type="button" className="btn outline-accent" onClick={() => setCalc(calcAge(f))}>Tính tuần tuổi</button>
@@ -297,10 +331,10 @@ export function PatientDetail({ p, todos, onClose, wide = false, phong = '' }) {
       </div>
       {calc?.err && <div className="err-box" role="alert">{calc.err}</div>}
 
-      <h3 className="be-viec-h">Việc cần làm{todos.length > 0 && <span className="muted small">Còn {left}/{todos.length}</span>}</h3>
+      <h3 className="be-viec-h">{dem ? 'Việc hôm nay' : 'Việc cần làm'}{todos.length > 0 && <span className="muted small">Còn {left}/{todos.length}</span>}</h3>
       {todos.length > 0 && (
         <div className="stack8">
-          {todos.map((t) => <TodoRow key={t.id} t={t} onOpen={setTodoMoId} />)}
+          {todos.map((t) => <TodoRow key={t.id} t={t} onOpen={setTodoMoId} nhan={dem && chuQuaChua.has(chuanChuViec(t.text)) ? nhanTu : ''} />)}
         </div>
       )}
       {vtTodo.strip}
@@ -312,7 +346,7 @@ export function PatientDetail({ p, todos, onClose, wide = false, phong = '' }) {
         <button type="submit" className="tf-plus" aria-label="Thêm việc của bé" onPointerDown={giuConTro} onMouseDown={giuConTro}><PlusIcon /></button>
       </form>
 
-      <label htmlFor="ghichu-be" className="sheet-nhan">Ghi chú</label>
+      <label htmlFor="ghichu-be" className="sheet-nhan">{dem ? 'Ghi chú hôm nay' : 'Ghi chú'}</label>
       {vtNote.strip}
       <textarea id="ghichu-be" rows={3} className="be-note" placeholder="Ghi chú… (gõ / để viết tắt)" {...vtNote.props} />
 

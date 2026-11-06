@@ -1,8 +1,8 @@
 // Mục Việc: khu vực, danh sách theo khu, form thêm việc, lịch.
 import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { ZONES, LEGACY_ZONES } from '../db.js';
-import { addTask, toggleTask, cycleUrgency, removeTask, khoiPhucTask, setTaskTags, setTaskNote, setTaskText, setTaskZone } from '../lib/actions.js';
-import { parseIso } from '../lib/dates.js';
+import { addTask, toggleTask, cycleUrgency, removeTask, khoiPhucTask, setTaskTags, setTaskNote, setTaskText, setTaskZone, doiViecSangHomNay, hoanTacDoiViec } from '../lib/actions.js';
+import { parseIso, fmtDM } from '../lib/dates.js';
 import { demViecChuaXong, ngaySotGanNhat } from '../lib/lich.js';
 import { TAGS, laViecMoi, batTatNhan, sapViec, khuHienThi, khuDeChon, boDemCham, themCham, gioXong, chuanTenViec, khiRoiOThemViec } from '../lib/viec.js';
 import { useBanPhim } from '../hooks.js';
@@ -70,7 +70,7 @@ export function useTuLuu(goc, luu) {
  * Bảng "chi tiết việc" (chạm 2 lần vào việc): sửa tên, khu, nhãn, ghi chú; đánh dấu xong / bỏ; xoá việc. Mọi ô tự lưu.
  * Việc cũ (có urgency, chưa có tags): hiện 5 nút nhãn chưa bật; bật nhãn đầu tiên thì thành kiểu mới.
  */
-function TaskDetail({ t, wide, onClose }) {
+function TaskDetail({ t, wide, onClose, onDoi = null }) {
   const hoanTac = useHoanTac();
   const [ten, doiTen, luuTen, datLaiTen, boTen] = useTuLuu(t.text, (x) => { setTaskText(t.id, x); });
   const [ghiChu, doiGhiChu, luuGhiChu, , boGhiChu] = useTuLuu(t.note || '', (x) => { setTaskNote(t.id, x); });
@@ -110,6 +110,8 @@ function TaskDetail({ t, wide, onClose }) {
       <textarea id="ghichu-viec" className="sheet-note" placeholder="Ghi chú… (gõ / để viết tắt)" {...vtNote.props} />
       {vtNote.strip}
       <TrangThaiXong xong={!!t.done} gio={gioXong(t.doneAt)} onDanhDau={() => toggleTask(t)} onBo={() => toggleTask(t)} />
+      {/* việc còn từ hôm qua (chế độ 2 ngày): dời riêng một việc sang hôm nay, có Hoàn tác */}
+      {onDoi && <DongBtn className="btn doi-hom-nay" onClose={async () => { await onDoi(t); onClose(); }}>Dời sang hôm nay</DongBtn>}
       <div className="row8 sheet-r4">
         <DongBtn className="sheet-del-task" onClose={xoaViec}><TrashIcon size={18} />Xoá việc</DongBtn>
         <span className="grow" />
@@ -194,6 +196,62 @@ export function TaskGroups({ dayTasks, active, collapsed, onToggle, chips }) {
           </section>
         );
       })}
+      {sheet}
+    </>
+  );
+}
+
+/** Một việc trong khung "Còn từ hôm qua": vuốt phải = xong; chạm 2 lần = chi tiết (có nút "Dời sang hôm nay"). Không vuốt trái, không xoá. */
+function HangConHomQua({ m, onOpen }) {
+  const taps = useRef([]);
+  const t = m.task;
+  const tags = laViecMoi(t) ? t.tags : [];
+  const tap = () => {
+    taps.current = themCham(taps.current, Date.now());
+    if (boDemCham(taps.current, 2)) { taps.current = []; onOpen(t.id); }
+  };
+  return (
+    <SwipeRow className="task-row compact hq-hang" label={t.text} onDone={() => toggleTask(t)}>
+      <div className="task-main" role="button" tabIndex={0} aria-label={'Mở chi tiết việc: ' + t.text}
+        onClick={tap} onKeyDown={(e) => { if (e.key === 'Enter' && e.target === e.currentTarget) onOpen(t.id); }}>
+        <span className="task-text">{t.text}</span>
+        <span className="hq-sub">{(m.nhan || fmtDM(t.date)) + (t.zone ? ', ' + t.zone : '')}</span>
+      </div>
+      {tags.length > 0 && <div className="tag-zone" onClick={tap}>{tags.map((x) => <TagDot key={x} tag={x} />)}</div>}
+      {!laViecMoi(t) && t.urgency && <div className="tag-zone" onClick={tap}><PriDot n={t.urgency} /></div>}
+    </SwipeRow>
+  );
+}
+
+/**
+ * Khung vàng "Còn từ hôm qua, n việc" (chế độ 2 ngày, bảng 17c). `muc` = viecConTuHomQua(...) (chỉ việc chưa xong, chưa xoá của ĐÚNG
+ * ngày làm việc trước). "Dời hết sang hôm nay" đổi date bằng doiViecSangHomNay, có Hoàn tác 6 giây trả đúng ngày cũ. Hết việc thì ẩn khung.
+ */
+export function ConTuHomQua({ muc, homNay, chips }) {
+  const hoanTac = useHoanTac();
+  const [chiTietId, setChiTietId] = useState(null);
+  const dangMo = chiTietId ? muc.find((m) => m.task.id === chiTietId) : null;
+  const doi = async (ids, nhan) => {
+    const daDoi = await doiViecSangHomNay(ids, homNay);
+    if (daDoi.length) hoanTac.hien({ nhan, lam: () => hoanTacDoiViec(daDoi) });
+  };
+  const sheet = dangMo && (
+    <TaskDetail key={dangMo.task.id} t={dangMo.task} wide={!chips} onClose={() => setChiTietId(null)}
+      onDoi={(t) => doi([t.id], 'Đã dời sang hôm nay: ' + t.text)} />
+  );
+  if (!muc.length) return <>{sheet}</>;
+  return (
+    <>
+      <section aria-label="Còn từ hôm qua" className="hq-khung">
+        <div className="hq-dau">
+          <h2 className="hq-tieu-de">Còn từ hôm qua, {muc.length} việc</h2>
+          <button type="button" className="hq-doi" onClick={() => doi(muc.map((m) => m.task.id), `Đã dời ${muc.length} việc sang hôm nay`)}>Dời hết sang hôm nay</button>
+        </div>
+        <div className="stack8">
+          {muc.map((m) => <HangConHomQua key={m.task.id} m={m} onOpen={setChiTietId} />)}
+        </div>
+        <p className="hq-ghi">Vuốt phải là xong luôn. Chạm 2 lần để dời riêng một việc.</p>
+      </section>
       {sheet}
     </>
   );

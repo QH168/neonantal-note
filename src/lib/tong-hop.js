@@ -1,6 +1,6 @@
 // Tổng hợp y lệnh nhiều ngày (v9.5). Hàm thuần, không chạm giao diện hay CSDL.
 // Tuổi của MỖI dòng bé tính theo examDate của chính dòng đó (không dùng hôm nay, không dùng đầu/cuối khoảng).
-import { calcAge } from './clinical.js';
+import { tuoiCuaDong } from './clinical.js';
 import { p2, parseIso } from './dates.js';
 import { soSanhBe } from './thu-tu.js';
 import { soNgayKhoang } from './lich.js';
@@ -68,7 +68,7 @@ export function tongHopNhieuNgay({ tuNgay, denNgay, rooms, patients, todosByPid,
     const todos = (todosByPid?.[p.id] || []).filter(alive)
       .slice().sort((a, b) => (a.order || 0) - (b.order || 0) || (a.createdAt || 0) - (b.createdAt || 0));
     const noiDung = todos.length ? todos.map((t) => t.text + (t.done ? '' : ' (chưa xong)')).join('; ') : 'Tiếp tục y lệnh cũ';
-    const c = calcAge(p, parseIso(p.examDate));
+    const c = tuoiCuaDong(p, parseIso(p.examDate)); // v9.6: ngày tính tuổi = ngayTinhTuoi(p) (bé sinh sau nửa đêm)
     const parts = [];
     if (!c.err) parts.push(c.pma);
     if (p.wt) parts.push(p.wt + ' g');

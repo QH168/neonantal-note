@@ -15,7 +15,7 @@
 - Giao diện Sáng / Tối / Theo máy chọn trong bảng "Sao lưu và cài đặt"; đầu trang không còn nút sáng/tối (bác sĩ duyệt 05/11/2026, v9.1). Lưu ở máy (localStorage khoá `theme`: light|dark|auto), người đã chọn sáng/tối từ trước giữ nguyên, chưa chọn thì Theo máy; không vào sao lưu. ⚙ (luat.test.js v9.1) Thay quyết định cũ "đầu trang có nút sáng/tối".
 - Đầu trang iPhone còn 3 nút: "/a", đám mây, lịch (PC: "/a", đám mây) (bác sĩ duyệt 05/11/2026, v9.1). Tab Việc/Khám, chip khu, nút đầu trang cao 44px; chip khu không có việc chữ nhạt, không ghi số 0 (bác sĩ duyệt 05/11/2026, v9.1).
 - Dòng nhắc cử chỉ ở tab Việc chỉ hiện trong 3 lần mở app đầu hoặc khi danh sách của ngày trống (bác sĩ duyệt 05/11/2026, v9.1).
-- Tiêu đề: "Việc hôm nay" (ngày khác: "Việc ngày dd/mm"), "Khám bệnh hôm nay"; luôn một dòng. ("Hôm nay" hiện vẫn theo ngày lịch 00:00; sẽ thay ở đợt 9.6 theo THIET_KE_V9 mục 9.)
+- Tiêu đề: "Việc hôm nay" (ngày khác: "Việc ngày dd/mm"), "Khám bệnh hôm nay"; luôn một dòng. (Từ v9.6, "hôm nay" là ngày làm việc, mốc 07:00 mặc định; xem mục "Ngày làm việc và xem 2 ngày" dưới đây.)
 - iPhone theo thang chữ 5 bậc (bác sĩ duyệt 05/11/2026, v9.1): tiêu đề 20px; tên bảng dưới 17px; nội dung việc, mã giường, nút, chip 15px; chữ phụ 13px; ghi chú nhỏ 12px; không còn cỡ 12,5 / 13,5 / 14 / 18. (Thay "chữ phụ 12–13px" của bảng "iPhone 15 – chữ gọn".) ⚙ (luat.test.js v9.1)
   Vùng chạm ≥44px ⚙ (ảnh chụp đo tự động); ⚙ ô nhập giữ 16px để Safari không phóng to. (Ô tick nhỏ 80% ở đầu dòng việc và việc của bé không còn từ 06/11/2026: xem mục "Việc".)
 - PC giữ cỡ chữ cũ.
@@ -83,3 +83,12 @@ Các điểm dưới do Điều phối đề xuất cho đợt 9.5; bác sĩ đ�
 - Bé ở phòng đã xoá vẫn hiện khi xem và khi tổng hợp, xếp sau các phòng còn sống.
 - Tổng hợp nhiều ngày có hai cách xếp, theo ngày hoặc theo mã giường (mặc định theo mã giường). Mỗi cách giữ bản sửa riêng; "Soạn lại" chỉ làm lại cách đang xem.
 - Lượt khám trong tổng hợp nhiều ngày tính mọi bé có trong danh sách (tạm, chờ bác sĩ chốt: "Chờ duyệt" #36).
+
+## Ngày làm việc và xem 2 ngày (v9.6 — bác sĩ duyệt 06/11/2026)
+- ⚙ "Hôm nay" của tab Việc và tab Khám là NGÀY LÀM VIỆC: ngày lịch của (giờ máy − mốc). Mốc mặc định 07:00, chọn được 00:00 / 06:00 / 07:00 / 08:00 trong "Sao lưu và cài đặt". Thay quyết định cũ "Hôm nay theo ngày lịch 00:00" (THIET_KE_V9 mục 9). (ngay-lam-viec.test.js)
+- Mốc ngày làm việc KHÔNG đưa vào file sao lưu; mỗi máy tự đặt (câu 1). File sao lưu giữ nguyên định dạng.
+- "Mới đêm qua" tính từ 16:00 hôm qua tới mốc (câu 2).
+- Cùng phòng, cùng mã mà hai bên ghi ngày sinh khác nhau thì KHÔNG ghép: hiện thành hai bé riêng, không tính tăng giảm cân (câu 3).
+- Việc ghi trước mốc thuộc ngày làm việc trước, nằm trong "Còn từ hôm qua" nếu chưa xong (câu 4; theo đặc tả mục 7, không theo bảng 17c).
+- Tuổi ở trang hôm nay, tính tuần tuổi và tổng hợp y lệnh hôm nay vẫn theo ngày lịch của máy, không theo mốc (đặc tả mục 7). Tuổi dòng đã qua tính theo ngày ghi nếu muộn hơn ngày khám (bé sinh sau nửa đêm).
+- "Dời hết sang hôm nay" và "Dời sang hôm nay" có Hoàn tác 6 giây, trả đúng ngày cũ.

@@ -6,6 +6,9 @@ import {
   chooseBackupFolder, getBackupFolder, saveToFolder, findLatestInFolder,
   importBackupFile, markExported
 } from '../lib/backup.js';
+import { datMocNgayLamViec } from '../lib/actions.js';
+import { nhanMoc, giaiThichMoc, MOC_HOP_LE } from '../lib/cai-dat.js';
+import { useMocNgayLamViec } from '../hooks.js';
 import { SheetHead } from './ui.jsx';
 
 const fmt = (ts) => (ts ? new Date(ts).toLocaleString('vi-VN') : 'chưa có');
@@ -18,6 +21,7 @@ export default function BackupPanel({ onClose, cheDo, onDoiCheDo }) {
   const [busy, setBusy] = useState(false);
   const [pendingFile, setPendingFile] = useState(null); // khi iOS chặn lần chia sẻ đầu
   const [persisted, setPersisted] = useState(null);
+  const moc = useMocNgayLamViec(); // mốc ngày làm việc của máy này (meta, không vào file sao lưu); đổi là App đổi ngay
 
   const lastExport = useLiveQuery(() => db.meta.get('lastExport'))?.value;
   const lastImport = useLiveQuery(() => db.meta.get('lastImport'))?.value;
@@ -125,6 +129,16 @@ export default function BackupPanel({ onClose, cheDo, onDoiCheDo }) {
           <button key={k} type="button" aria-pressed={cheDo === k} onClick={() => onDoiCheDo(k)}>{nhan}</button>
         ))}
       </div>
+
+      <hr className="hr" />
+      <h3 className="bold m0">Ngày làm việc</h3>
+      <div className="row10">
+        <label htmlFor="cd-moc" className="grow moc-nhan">Ngày làm việc bắt đầu lúc</label>
+        <select id="cd-moc" className="select moc-chon" value={moc ?? 420} onChange={(e) => datMocNgayLamViec(Number(e.target.value))}>
+          {MOC_HOP_LE.map((m) => <option key={m} value={m}>{nhanMoc(m)}</option>)}
+        </select>
+      </div>
+      <p className="m0 small muted" id="cd-moc-giai-thich">{giaiThichMoc(moc)}</p>
 
       <hr className="hr" />
       <h3 className="bold m0">Cử chỉ</h3>

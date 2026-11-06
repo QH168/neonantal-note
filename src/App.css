@@ -504,3 +504,71 @@ html.co-form-viec body:not(.co-bang) .hoantac-wrap{bottom:calc(var(--kb,0px) + v
 .xem-viec.xong .xem-viec-chu{color:var(--muted)}
 .xem-chua{flex:none;padding:3px 10px;border-radius:12px;background:var(--noteBg);color:var(--noteInk);font-size:12px;font-weight:600}
 .be-note-xem{padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--bg);font-size:15px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+/* ===== v9.6: ngày làm việc, chế độ 2 ngày (Việc, Khám), chi tiết bé "Đêm qua", tổng hợp giao tour, cài đặt mốc =====
+   Không có màu mới: dùng lại --note* (dải vàng), --tint*, --accent*, --muted… đã có bản sáng và tối. */
+/* dải ghi rõ ngày làm việc khi đang trước mốc: "Ngày làm việc 04/11 (đang là 02:30, 05/11)" */
+.dai-moc{padding:8px 12px;border:1px solid var(--noteLine);border-radius:12px;background:var(--noteBg);color:var(--noteInk);font-size:13px;line-height:1.4;font-weight:600}
+/* nút gạt Hôm nay / 2 ngày: mỗi nút cao 44px (vùng chạm) */
+.ph-gat{flex:none;padding:0 16px 8px}
+.gat-hn-hang{display:flex;align-items:center;gap:10px;min-width:0}
+.gat-hn{flex:none;display:flex;border:1px solid var(--edge);border-radius:24px;background:var(--surface);overflow:hidden}
+.gat-hn button{height:44px;min-width:64px;padding:0 16px;border:0;border-radius:22px;background:transparent;color:var(--muted);font-size:15px;font-weight:600}
+.gat-hn button[aria-pressed="true"]{background:var(--accent);color:var(--accentInk)}
+.gat-hn-ghi{min-width:0;font-size:13px;line-height:1.35;color:var(--muted)}
+/* Việc 2 ngày: khung vàng "Còn từ hôm qua" */
+.hq-khung{flex:none;display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:16px;background:var(--noteBg);color:var(--noteInk)}
+.hq-dau{display:flex;align-items:center;gap:8px}
+.hq-tieu-de{margin:0;flex:1;min-width:0;font-size:15px;font-weight:700;color:var(--noteInk)}
+.hq-doi{flex:none;height:44px;padding:0 12px;border:0;border-radius:12px;background:var(--surface);color:var(--noteInk);font-size:13px;font-weight:600}
+.hq-khung .task-row{border-color:transparent}
+.hq-sub{font-size:12px;line-height:1.35;color:var(--muted)}
+.hq-ghi{margin:0;font-size:12px;line-height:1.45;color:var(--noteInk)}
+.doi-hom-nay{flex:none}
+/* Khám 2 ngày: thẻ ghép hôm qua + hôm nay (bảng 17a) */
+.hn-trang{padding-top:6px}
+.chip.chip-dem{background:var(--noteBg);border-color:var(--noteLine);color:var(--noteInk)}
+.chip.chip-dem .zone-count{color:var(--noteInk)}
+.pc-main .hn-chips{padding:0;flex-wrap:wrap;overflow:visible}
+.hn-the{display:flex;align-items:stretch;gap:6px;border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden}
+.hn-the.moi{border:1.5px solid var(--noteLine)}
+.hn-the.chi-qua{border:1px dashed var(--edge);padding-right:6px}
+.hn-mo{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;padding:10px 12px 10px 14px;border:0;background:transparent;color:var(--ink);text-align:left;touch-action:manipulation}
+.hn-mo:focus-visible{outline-offset:-2px;border-radius:12px}
+.hn-the.chi-qua .hn-mo{justify-content:center;gap:2px;padding:8px 6px 8px 14px}
+.hn-dau{display:flex;align-items:center;gap:8px;min-width:0}
+.hn-so{font-size:12px;color:var(--muted)}
+.hn-vao{margin-left:auto;padding:3px 10px;border-radius:12px;background:var(--noteBg);color:var(--noteInk);font-size:12px;font-weight:600;white-space:nowrap}
+.hn-dau .tick-ok{margin-left:auto}
+.hn-luoi{display:grid;grid-template-columns:62px minmax(0,1fr);row-gap:4px;font-size:13px;line-height:1.4}
+.hn-nhan{color:var(--muted)}
+.hn-chu{overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.hn-nay{color:var(--tintInk);font-weight:600}
+.hn-the.xong .pat-code,.hn-the.xong .hn-luoi,.hn-the.xong .hn-nay{color:var(--muted)}
+.hn-the.xong .hn-nay{font-weight:500}
+.hn-chi-qua{font-size:13px;line-height:1.4;color:var(--muted)}
+.hn-chep{flex:none;align-self:center;height:44px;padding:0 12px;border:1px solid var(--accent);border-radius:22px;background:var(--surface);color:var(--accent);font-size:13px;font-weight:600}
+.hn-chep:disabled{opacity:.5}
+.hn-tour{width:100%}
+/* chi tiết bé ở chế độ 2 ngày: chip "Vào hh:mm", khung gập "Đêm qua" chỉ xem, mức cân, thẻ "từ đêm qua" (bảng 17b) */
+.be-vao{flex:none;padding:4px 10px;border-radius:12px;background:var(--noteBg);color:var(--noteInk);font-size:13px;font-weight:600;white-space:nowrap}
+.be-dem{border-radius:14px;background:var(--bg);padding:0 12px 12px}
+.be-dem:not([open]){padding-bottom:0}
+.be-dem-s{min-height:44px;display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;cursor:pointer;list-style:none}
+.be-dem-s::-webkit-details-marker{display:none}
+.be-dem-s svg{flex:none;transition:transform .15s}
+.be-dem:not([open]) .be-dem-s svg{transform:rotate(-90deg)}
+.be-dem-nd{display:flex;flex-direction:column;gap:6px;font-size:13px;line-height:1.5}
+.be-dem-note{white-space:pre-wrap;overflow-wrap:anywhere}
+.be-dem-viec{display:flex;align-items:center;gap:8px}
+.be-dem-viec .tick-ok{width:22px;height:22px;margin:0}
+.be-dem-o{flex:none;width:22px;height:22px;border:1.5px dashed var(--edge);border-radius:50%}
+.be-dcan{margin:-4px 0 0;font-size:13px;color:var(--muted)}
+.be-dcan b{color:var(--tintInk)}
+.be-tu-dem{flex:none;margin-left:6px;padding:2px 8px;border-radius:10px;background:var(--surface);font-size:12px;color:var(--muted)}
+/* tổng hợp giao tour (17d) */
+.tour-chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip.tour-chip[aria-pressed="true"]{border:2px solid var(--accent);background:var(--tint);color:var(--tintInk);font-weight:600}
+.btn.can-soan{border:2px solid var(--accent);color:var(--tintInk)}
+/* cài đặt mốc ngày làm việc (15f) */
+.moc-nhan{font-size:15px}
+.moc-chon{flex:none;width:104px}
