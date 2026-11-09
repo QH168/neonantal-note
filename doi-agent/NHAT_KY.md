@@ -43,6 +43,25 @@
 | 45 | Hai bé cùng phòng + mã mà một bên để trống ngày sinh vẫn ghép; mức cân có thể sai nếu là hai bé khác nhau. | Lưu ý | Lưu ý; giao diện đã ghi "Ghép theo phòng và mã". | Thuật toán |
 | 46 | Thẻ 2 ngày không có vuốt đã khám; dùng "Hoàn tất khám" trong chi tiết. | Lưu ý | Lưu ý. | Giao diện |
 | 47 | Giao tour: bé mới vào hôm nay sau mốc, chưa có việc, nằm trong nhóm "BÉ ỔN ĐỊNH", kèm chữ "mới vào hôm nay". Tên nhóm có thể gây hiểu nhầm về tình trạng bé. | Lưu ý | Hỏi bác sĩ có muốn tách nhóm riêng "Bé mới hôm nay" không. | Thuật toán |
+| 48 | Phòng bị khoá vì có bé ở ngày SAU hôm nay (dữ liệu gộp) nhưng danh sách hôm nay không hiện bé nào; nhãn "hôm nay còn 1 bé" dễ khó hiểu. | Lưu ý | Lưu ý, chưa sửa. | Giao diện |
+| 49 | Xoá 2 phòng liên tiếp: Hoàn tác chỉ trả phòng xoá sau cùng; bé của phòng xoá trước vẫn xem được ở Lịch Khám. | Lưu ý | Lưu ý, chưa sửa. | Giao diện |
+| 50 | Xoá phòng, thêm phòng mới trong 6 giây rồi Hoàn tác: hai phòng cùng thứ tự, vị trí giữa hai phòng không xác định. | Lỗi nhỏ | Đề xuất khôi phục với thứ tự mới. | Thuật toán |
+| 51 | Nhóm phòng đã xoá ghi "(đã xoá)" ở danh sách hôm nay nhưng Tổng hợp y lệnh chỉ ghi tên phòng. | Lưu ý | Lưu ý, chưa sửa. | Giao diện |
+
+## 09/11/2026 — Xoá được phòng khi hôm nay không còn bé
+- Bác sĩ báo không xoá được phòng đã từng có bé. Điều phối tái hiện trên bản 625a8b9. Nguyên nhân: luật cũ đếm bé ở mọi ngày.
+- Phiếu: `doi-agent/phieu-viec/2026-11-09-xoa-phong-da-tung-co-be.json`. Bác sĩ duyệt phương án A ngày 09/11/2026.
+- Đã đổi (lời thường):
+  1. Xoá được phòng khi hôm nay và các ngày sau không còn bé. Bé ngày trước vẫn xem được dưới tên phòng cũ trong Lịch Khám.
+  2. Phòng hôm nay còn bé thì nút xoá bị khoá, có nhãn nói rõ số bé.
+  3. Phòng hôm nay trống mà có bé ngày trước: hỏi xác nhận, rồi xoá có thanh Hoàn tác 6 giây.
+  4. Phòng đã xoá mà có bé hôm nay vẫn hiện trong danh sách hôm nay, ghi "(đã xoá)", không có nút "+".
+- Kỹ thuật: `src/lib/phong.js` (mới: `phongXoaDuoc`, `phongHomNay`); `src/lib/actions.js` (`removeRoom(id, homNay)` đếm lại và xoá trong một giao dịch; `khoiPhucRoom`); `src/hooks.js` (`roomUse` chỉ đếm từ hôm nay, `roomUsePast`, `roomsHomNay`); `src/components/Exam.jsx` (RoomManager, RoomList); `src/App.jsx`, `src/App.css`, `scripts/chup-giao-dien.mjs`, `package.json`, `tests/luat.test.js`; tests mới `tests/phong.test.js`. Khi xoá CSDL chỉ đổi dòng phòng (`deleted`, `updatedAt`). Không đổi `db.version` hay định dạng sao lưu.
+- Kết quả: kiểm thử độc lập ĐẠT, không vòng sửa nào. `npm test` 256/256. Script chụp ĐẠT 110 ảnh. Quanh mốc 07:00 đúng.
+- Lưới an toàn: bé hôm nay ở phòng đã xoá (do gộp sao lưu) vẫn hiện trong danh sách hôm nay (gộp vào `phongHomNay`).
+- Chưa kiểm: hộp xác nhận trên Safari iPhone thật; so ảnh chuẩn bỏ qua vì thiếu `sharp`. Ảnh chuẩn chưa lưu.
+- Ghi rõ: kể từ 06/11/2026 bác sĩ tắt credential helper, phải được bác sĩ bật lại mới đẩy lên GitHub.
+- Chờ duyệt mới: #48–#51 (phòng khoá do bé ngày sau, xoá hai phòng liên tiếp, thứ tự sau Hoàn tác, "(đã xoá)" ở Tổng hợp).
 
 ## 06/11/2026 — v9.6 — Ngày làm việc, xem 2 ngày, giao tour
 - Phiếu: `doi-agent/phieu-viec/2026-11-06-v9-6-ngay-lam-viec-hai-ngay-giao-tour.json` (đợt 6/6 của v9, đợt cuối; đặc tả `doi-agent/thiet-ke-v9/THIET_KE_V9.md` mục 2, 4, 5, 7, 8, 9). Bác sĩ đã duyệt phiếu 06/11/2026, kèm 4 quyết định.

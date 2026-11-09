@@ -1,4 +1,5 @@
 // Mọi thao tác ghi dữ liệu của app. Luôn đi qua addRow/updateRow/softDelete để có updatedAt.
+import { phongXoaDuoc } from './phong.js';
 import { chuanHoaTags, chuanTenViec } from './viec.js';
 import { sapBe, orderTiepTheo } from './thu-tu.js';
 import { chuanKey, BO_MAU } from './viet-tat.js';
@@ -96,12 +97,25 @@ export async function addRoom(name) {
   return addRow('rooms', { name, order });
 }
 export const renameRoom = (id, name) => updateRow('rooms', id, { name });
-export async function removeRoom(id) {
-  const used = await db.exam_patients.where('roomId').equals(id).filter(alive).count();
-  if (used > 0) return false; // phòng đã có bệnh nhân (kể cả ngày cũ) thì không xoá
-  await softDelete('rooms', id);
-  return true;
+// Xoá mềm phòng khi từ homNay (ngày làm việc) trở đi không còn bé sống trong phòng; bé ngày trước giữ nguyên, vẫn xem được.
+// Đọc lại bé của phòng và ghi trong CÙNG một giao dịch (đếm lại ngay lúc xoá). Thiếu/sai homNay thì không xoá.
+// Trả { ok:true, soBeNgayTruoc } hoặc { ok:false, soBeHomNay } (ok:false vì thiếu homNay thì soBeHomNay = 0).
+export async function removeRoom(id, homNay) {
+  await getDeviceId();
+  let kq = { ok: false, soBeHomNay: 0 };
+  await db.transaction('rw', db.rooms, db.exam_patients, db.meta, async () => {
+    const room = await db.rooms.get(id);
+    if (!room || room.deleted) return;
+    const be = await db.exam_patients.where('roomId').equals(id).filter(alive).toArray();
+    const x = phongXoaDuoc(id, be, homNay);
+    if (!x.duoc) { kq = { ok: false, soBeHomNay: x.soBeHomNay }; return; }
+    await softDelete('rooms', id);
+    kq = { ok: true, soBeNgayTruoc: x.soBeNgayTruoc };
+  });
+  return kq;
 }
+// Hoàn tác xoá phòng: phòng về đúng chỗ cũ vì `order` không bị đổi.
+export const khoiPhucRoom = (id) => khoiPhuc('rooms', id);
 
 // ---------- Bệnh nhân ----------
 export async function addPatient(roomId, examDate) {

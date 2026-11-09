@@ -3824,6 +3824,208 @@ for (const toi of [false, true]) { try { await luongTruocMoc(toi); } catch (e) {
   await ctx.close();
 }
 
+// ---------- Phiếu 2026-11-09: xoá phòng khi HÔM NAY không còn bé (bé ngày trước giữ nguyên, vẫn xem được) ----------
+// Thay luật cũ "Chỉ xoá được phòng chưa có bệnh nhân nào" (phòng từng có bé ở bất kỳ ngày nào thì khoá). Mẫu: bộ mẫu chung (21/10/2026 08:00):
+// Phòng 1 (G01, G03) và Phòng 2 (G12) chỉ có bé ngày 20/10; Phòng 3 trống. Thêm bé hôm nay (21/10) vào Phòng 2 → Phòng 2 bị khoá.
+// Sau lần kiểm đầu sẽ tắt dần: kiểm cũ không còn chỗ nào đòi chữ "chưa có bệnh nhân nào" nên không có phép kiểm cũ cần sửa.
+const chenDb = (page, bang, rows) => page.evaluate(async ({ b, rs }) => {
+  const db = await new Promise((res) => { const r = indexedDB.open('ghichu-sosinh'); r.onsuccess = () => res(r.result); });
+  const tx = db.transaction(b, 'readwrite');
+  rs.forEach((r) => tx.objectStore(b).put(r));
+  await new Promise((res) => { tx.oncomplete = res; });
+  db.close();
+}, { b: bang, rs: rows });
+const hangBeMoi = (id, roomId, code, examDate, extra = {}) => {
+  const t = Date.now();
+  return { id, roomId, code, examDate, dob: '0508', ga: '300', wt: '1900', note: '', done: false, order: 99, deleted: false, createdAt: t, updatedAt: t, deviceId: 'mau', ...extra };
+};
+async function luongXoaPhong(dark) {
+  const sfx = dark ? '-toi' : '-sang';
+  const E = (s) => ketQua.loi.push(`xoá phòng${dark ? ' tối' : ''}: ${s}`);
+  const { ctx, page } = await moApp({ ...IPHONE_OPTS, colorScheme: dark ? 'dark' : 'light' });
+  const cdp = await ctx.newCDPSession(page);
+  const T = (ketQua.thuChucNang['xoaPhong' + (dark ? 'Toi' : 'Sang')] = {});
+  if ((await laToiLuc(page)) !== dark) E('app không ở đúng chế độ sáng/tối');
+  const phong = (await docBang(page, 'rooms')).sort((a, b) => a.order - b.order);
+  const [p1, p2, p3] = phong;
+  if (phong.length !== 3 || p1.name !== 'Phòng 1') { E('bộ mẫu phải có Phòng 1–3: ' + phong.map((r) => r.name)); await ctx.close(); return; }
+  await chenDb(page, 'exam_patients', [hangBeMoi('xp-g40', p2.id, 'G40', '2026-10-21')]);
+  await page.reload();
+  await page.waitForSelector('.phone-app');
+  await page.waitForTimeout(400);
+  const hop = []; let cach = 'accept';
+  page.on('dialog', async (d) => { hop.push(d.message()); await (cach === 'accept' ? d.accept() : d.dismiss()); });
+  const nutXoa = (ten, khoa = false) => page.getByRole('button', { name: khoa ? ten : 'Xoá ' + ten, exact: true });
+  const nutHoanTac = page.getByRole('button', { name: 'Hoàn tác', exact: true });
+  const thanhHT = async () => doiMau(await page.locator('.hoantac').first().innerText().catch(() => ''));
+  const docPhongDb = async (ten) => (await docBang(page, 'rooms')).find((r) => r.name === ten);
+  const tenTrongKhung = () => page.evaluate(() => [...document.querySelectorAll('section[aria-label="Quản lý phòng"] .row4 input')].map((i) => i.value));
+  const S0 = await chupDb(page);
+  await page.getByRole('button', { name: 'Khám', exact: true }).tap();
+  await page.waitForTimeout(500);
+  await page.getByRole('button', { name: 'Quản lý phòng', exact: true }).tap();
+  await page.locator('section[aria-label="Quản lý phòng"]').waitFor();
+  await page.waitForTimeout(400);
+
+  // === Trạng thái nút: Phòng 1 (chỉ bé ngày trước) mở, Phòng 2 (có bé hôm nay) khoá, Phòng 3 (trống) mở ===
+  T.nut = await page.evaluate(() => [...document.querySelectorAll('section[aria-label="Quản lý phòng"] .icon-btn')].map((b) => [b.getAttribute('aria-label'), b.disabled]));
+  const canNut = [['Xoá Phòng 1', false], ['Không xoá được Phòng 2 vì hôm nay còn 1 bé', true], ['Xoá Phòng 3', false]];
+  if (JSON.stringify(T.nut) !== JSON.stringify(canNut)) E('nút xoá phòng (Phòng 1 chỉ có bé ngày trước phải mở; Phòng 2 có bé hôm nay phải khoá): ' + JSON.stringify(T.nut));
+  T.chuDuoi = doiMau(await page.locator('section[aria-label="Quản lý phòng"] .muted.xsmall').last().innerText());
+  if (T.chuDuoi !== 'Chỉ xoá được phòng hôm nay không còn bé.') E('chữ dưới khung: "' + T.chuDuoi + '"');
+  if (/chưa có bệnh nhân nào/.test(await page.locator('.phone-app').innerText())) E('còn chữ cũ "chưa có bệnh nhân nào"');
+  await nutNhoV95(page, 'quản lý phòng', dark);
+  await chup(page, 'iphone-quan-ly-phong' + sfx, true);
+
+  // === (b) phòng có bé hôm nay: khoá, bấm ép cũng không xoá ===
+  await nutXoa('Không xoá được Phòng 2 vì hôm nay còn 1 bé', true).click({ force: true, timeout: 3000 }).catch(() => {});
+  await page.evaluate(() => document.querySelector('section[aria-label="Quản lý phòng"] .icon-btn:disabled')?.click());
+  await page.waitForTimeout(300);
+  if ((await docPhongDb('Phòng 2')).deleted) E('(b) Phòng 2 còn bé hôm nay mà bấm ép vẫn bị xoá');
+  if (hop.length || (await page.locator('.hoantac').count())) E('(b) bấm nút khoá mà hiện hỏi/Hoàn tác: ' + JSON.stringify(hop));
+
+  // === (c) phòng trống mọi ngày: xoá ngay (không hỏi), có Hoàn tác 6 giây, Hoàn tác trả về ===
+  await nutXoa('Phòng 3').tap();
+  await page.waitForTimeout(500);
+  T.xoaTrong = { hoi: hop.length, thanh: await thanhHT(), db: (await docPhongDb('Phòng 3')).deleted, ten: await tenTrongKhung() };
+  if (T.xoaTrong.hoi || !T.xoaTrong.db || T.xoaTrong.thanh !== 'Đã xoá Phòng 3 Hoàn tác' || T.xoaTrong.ten.join() !== 'Phòng 1,Phòng 2') E('(c) xoá phòng trống: ' + JSON.stringify(T.xoaTrong));
+  await nutHoanTac.tap();
+  await page.waitForTimeout(500);
+  T.hoanTacTrong = { db: (await docPhongDb('Phòng 3')).deleted, ten: await tenTrongKhung(), thanh: await thanhHT() };
+  if (T.hoanTacTrong.db || T.hoanTacTrong.ten.join() !== 'Phòng 1,Phòng 2,Phòng 3' || T.hoanTacTrong.thanh) E('(c) Hoàn tác phòng trống: ' + JSON.stringify(T.hoanTacTrong));
+
+  // === (a) phòng chỉ có bé ngày trước: hỏi đúng số bé; Không đồng ý thì giữ; đồng ý thì xoá; Hoàn tác về đúng vị trí ===
+  const cauHoi = 'Xoá Phòng 1? 2 bé ở các ngày trước vẫn xem được trong Lịch Khám, nhưng không chép sang hôm nay được nữa.';
+  cach = 'dismiss';
+  await nutXoa('Phòng 1').tap();
+  await page.waitForTimeout(400);
+  T.khongDongY = { hoi: [...hop], db: (await docPhongDb('Phòng 1')).deleted };
+  if (hop.length !== 1 || hop[0] !== cauHoi || T.khongDongY.db) E('(a) câu hỏi xác nhận / bấm Không đồng ý phải giữ phòng: ' + JSON.stringify(T.khongDongY));
+  cach = 'accept';
+  await nutXoa('Phòng 1').tap();
+  await page.waitForTimeout(500);
+  T.xoaCoBeCu = { hoi: hop.length, thanh: await thanhHT(), db: (await docPhongDb('Phòng 1')).deleted, ten: await tenTrongKhung() };
+  if (hop.length !== 2 || hop[1] !== cauHoi || !T.xoaCoBeCu.db || T.xoaCoBeCu.thanh !== 'Đã xoá Phòng 1 Hoàn tác' || T.xoaCoBeCu.ten.join() !== 'Phòng 2,Phòng 3') E('(a) xoá phòng chỉ có bé ngày trước: ' + JSON.stringify(T.xoaCoBeCu));
+  await chup(page, 'iphone-quan-ly-phong-hoan-tac' + sfx, true);
+  const thuTuTruoc = p1.order;
+  await nutHoanTac.tap();
+  await page.waitForTimeout(500);
+  const p1Sau = await docPhongDb('Phòng 1');
+  T.hoanTacCoBeCu = { deleted: p1Sau.deleted, order: p1Sau.order, ten: await tenTrongKhung() };
+  if (p1Sau.deleted || p1Sau.order !== thuTuTruoc || T.hoanTacCoBeCu.ten.join() !== 'Phòng 1,Phòng 2,Phòng 3') E('(a) Hoàn tác phải trả Phòng 1 về đúng vị trí đầu: ' + JSON.stringify(T.hoanTacCoBeCu));
+  // xoá lại, lần này giữ nguyên: bé ngày trước phải còn trong dữ liệu và hiện ở xem ngày trước dưới tên phòng cũ
+  await nutXoa('Phòng 1').tap();
+  await page.waitForTimeout(500);
+  const beTruoc = (await docBang(page, 'exam_patients')).filter((p) => p.roomId === p1.id);
+  if (beTruoc.length !== 2 || beTruoc.some((p) => p.deleted)) E('(a) xoá phòng không được đụng bé ngày trước: ' + JSON.stringify(beTruoc.map((p) => [p.code, p.deleted])));
+  await choHoanTacTat(page);
+  await page.reload();
+  await page.waitForSelector('.phone-app');
+  await page.getByRole('button', { name: 'Khám', exact: true }).tap();
+  await page.waitForTimeout(400);
+  await page.getByRole('button', { name: 'Lịch khám', exact: true }).tap();
+  const hopK = page.getByRole('dialog', { name: 'Lịch khám' });
+  await hopK.waitFor();
+  await page.waitForTimeout(600);
+  await hopK.getByRole('button', { name: /^Ngày 20 tháng 10\b/ }).tap();
+  await page.waitForTimeout(900);
+  T.ngayTruoc = await page.evaluate(() => ({ phong: [...document.querySelectorAll('.nt-phong-h')].map((h) => [...h.children].map((c) => c.textContent).join(' ')), ma: [...document.querySelectorAll('.nt-be .pat-code')].map((e) => e.textContent) }));
+  if (!T.ngayTruoc.phong.some((s) => /^Phòng 1\b/.test(s)) || !['G01', 'G03', 'G12'].every((m) => T.ngayTruoc.ma.includes(m))) E('(a) sau khi xoá Phòng 1, xem ngày 20/10 phải còn Phòng 1 với G01, G03: ' + JSON.stringify(T.ngayTruoc));
+  await chup(page, 'iphone-quan-ly-phong-ngay-truoc' + sfx);
+
+  // === (d) bé hôm nay nằm trong phòng đã xoá (vd. máy khác thêm rồi gộp sao lưu): vẫn hiện, ghi "(đã xoá)", không có "+" ===
+  await chenDb(page, 'exam_patients', [hangBeMoi('xp-g77', p1.id, 'G77', '2026-10-21')]);
+  await page.reload();
+  await page.waitForSelector('.phone-app');
+  await page.getByRole('button', { name: 'Khám', exact: true }).tap();
+  await page.waitForTimeout(600);
+  T.phongDaXoa = await page.evaluate(() => {
+    const nhom = [...document.querySelectorAll('section.group')];
+    const g = nhom.find((s) => /Phòng 1/.test(s.querySelector('.group-title')?.textContent || ''));
+    return { tieuDe: g?.querySelector('.group-title')?.textContent || null, ma: g ? [...g.querySelectorAll('.pat-code')].map((e) => e.textContent) : [], nutCong: g ? g.querySelectorAll('.room-add').length : -1, tatCaCong: [...document.querySelectorAll('.room-add')].map((e) => e.getAttribute('aria-label')) };
+  });
+  const d = T.phongDaXoa;
+  if (d.tieuDe !== 'Phòng 1 (đã xoá)' || d.ma.join() !== 'G77' || d.nutCong !== 0 || d.tatCaCong.join() !== 'Thêm bé vào Phòng 2,Thêm bé vào Phòng 3') E('(d) bé hôm nay trong phòng đã xoá: ' + JSON.stringify(d));
+  await kiemTuongPhan(page, '.phone-app', 'phòngĐãXoá', T, dark);
+  await chup(page, 'iphone-kham-phong-da-xoa' + sfx, true);
+  // bé trong phòng đã xoá vẫn vuốt đã khám, mở, sửa như bé khác
+  const dong = dongBe(page, 'G77');
+  await vuotDong(page, cdp, dong, 200);
+  await demChamSauVuot(page);
+  const g77 = (await docBang(page, 'exam_patients')).find((p) => p.id === 'xp-g77');
+  if (!g77.done) E('(d) vuốt đã khám bé trong phòng đã xoá không lưu');
+  await chamMot(page, dong.locator('.pat-open'));
+  await page.locator('#ghichu-be').waitFor({ timeout: 4000 });
+  await page.locator('#ghichu-be').fill('ghi chú thử phòng đã xoá');
+  await page.getByRole('button', { name: 'Xong', exact: true }).tap();
+  await page.waitForTimeout(700);
+  const g77b = (await docBang(page, 'exam_patients')).find((p) => p.id === 'xp-g77');
+  if (g77b.note !== 'ghi chú thử phòng đã xoá') E('(d) sửa ghi chú bé trong phòng đã xoá không lưu: "' + g77b.note + '"');
+  // tổng hợp y lệnh hôm nay có bé đó
+  await page.getByRole('button', { name: 'Tổng hợp y lệnh', exact: true }).tap();
+  await page.waitForTimeout(700);
+  const tongHop = await page.evaluate(() => [...document.querySelectorAll('textarea')].map((t) => t.value).join('\n'));
+  if (!/PHÒNG 1/.test(tongHop) || !/G77/.test(tongHop)) E('(d) tổng hợp y lệnh hôm nay thiếu bé trong phòng đã xoá: ' + tongHop.slice(0, 120));
+  // trạng thái cuối: hai phòng sống còn lại không bị đụng
+  const phongCuoi = await docBang(page, 'rooms');
+  if (phongCuoi.filter((r) => !r.deleted).map((r) => r.name).sort().join() !== 'Phòng 2,Phòng 3') E('phòng sống cuối bài: ' + phongCuoi.map((r) => r.name + (r.deleted ? '(xoá)' : '')));
+  void S0;
+  await ctx.close();
+}
+for (const toi of [false, true]) { try { await luongXoaPhong(toi); } catch (e) { console.error('XOÁ PHÒNG ' + (toi ? 'tối' : 'sáng') + ' dừng: ' + String(e.stack).split('\n').slice(0, 6).join(' | ')); throw e; } }
+
+// (e) lúc 02:30 (sau nửa đêm, trước mốc 07:00): ngày làm việc vẫn là hôm qua theo lịch. Bé có examDate = ngày làm việc phải KHOÁ phòng,
+// dù ngày lịch đã sang ngày sau (nếu dùng nhầm ngày lịch thì bé này bị tính là "ngày trước" và phòng xoá được).
+{
+  const { ctx, page } = await moApp({ ...IPHONE_OPTS }, { gio: new Date(2026, 9, 22, 2, 30, 0) });
+  const T = (ketQua.thuChucNang.xoaPhong0230 = {});
+  const E = (s) => ketQua.loi.push('xoá phòng lúc 02:30: ' + s);
+  const [q1, q2, q3] = (await docBang(page, 'rooms')).sort((a, b) => a.order - b.order);
+  await chenDb(page, 'exam_patients', [hangBeMoi('xp-dem', q1.id, 'G55', '2026-10-21', { createdAt: new Date(2026, 9, 22, 2, 10).getTime() })]);
+  await page.reload();
+  await page.waitForSelector('.phone-app');
+  await page.waitForTimeout(500);
+  const hop = []; page.on('dialog', async (d) => { hop.push(d.message()); await d.accept(); });
+  await page.getByRole('button', { name: 'Khám', exact: true }).tap();
+  await page.waitForTimeout(500);
+  await page.getByRole('button', { name: 'Quản lý phòng', exact: true }).tap();
+  await page.locator('section[aria-label="Quản lý phòng"]').waitFor();
+  await page.waitForTimeout(400);
+  T.dai = await daiMocText(page);
+  T.nut = await page.evaluate(() => [...document.querySelectorAll('section[aria-label="Quản lý phòng"] .icon-btn')].map((b) => [b.getAttribute('aria-label'), b.disabled]));
+  const can = [['Không xoá được Phòng 1 vì hôm nay còn 1 bé', true], ['Xoá Phòng 2', false], ['Xoá Phòng 3', false]];
+  if (JSON.stringify(T.nut) !== JSON.stringify(can)) E('bé ngày làm việc 21/10 (đang 02:30 ngày 22/10) phải khoá Phòng 1: ' + JSON.stringify(T.nut));
+  await page.locator('section[aria-label="Quản lý phòng"] .icon-btn:disabled').first().click({ force: true, timeout: 3000 }).catch(() => {});
+  await page.evaluate(() => document.querySelector('section[aria-label="Quản lý phòng"] .icon-btn:disabled')?.click());
+  await page.waitForTimeout(300);
+  T.sau = (await docBang(page, 'rooms')).find((r) => r.id === q1.id).deleted;
+  if (T.sau || hop.length) E('bấm ép Phòng 1 lúc 02:30 mà phòng bị xoá / hiện hỏi');
+  void q2; void q3;
+  await ctx.close();
+}
+
+// PC: cùng luật (khoá phòng có bé hôm nay; phòng đã xoá còn bé hôm nay hiện "(đã xoá)", không "+")
+{
+  const { ctx, page } = await moApp({ viewport: { width: 1440, height: 900 } });
+  const T = (ketQua.thuChucNang.xoaPhongPc = {});
+  const E = (s) => ketQua.loi.push('xoá phòng PC: ' + s);
+  const [r1, r2] = (await docBang(page, 'rooms')).sort((a, b) => a.order - b.order);
+  await chenDb(page, 'rooms', [{ ...r1, deleted: true, updatedAt: Date.now() }]);
+  await chenDb(page, 'exam_patients', [hangBeMoi('xp-pc1', r1.id, 'G61', '2026-10-21'), hangBeMoi('xp-pc2', r2.id, 'G62', '2026-10-21')]);
+  await page.reload();
+  await page.waitForSelector('.pc');
+  await page.getByRole('button', { name: 'Khám', exact: true }).click();
+  await page.getByRole('button', { name: 'Quản lý phòng', exact: true }).click();
+  await page.locator('section[aria-label="Quản lý phòng"]').waitFor();
+  await page.waitForTimeout(500);
+  T.nut = await page.evaluate(() => [...document.querySelectorAll('section[aria-label="Quản lý phòng"] .icon-btn')].map((b) => [b.getAttribute('aria-label'), b.disabled]));
+  T.tieuDe = await page.evaluate(() => [...document.querySelectorAll('section.group .group-title')].map((e) => e.textContent));
+  T.nutCong = await page.evaluate(() => [...document.querySelectorAll('.room-add')].map((e) => e.getAttribute('aria-label')));
+  if (T.nut[0]?.join() !== 'Không xoá được Phòng 2 vì hôm nay còn 1 bé,true') E('nút xoá Phòng 2 trên PC: ' + JSON.stringify(T.nut));
+  if (T.tieuDe.join('|') !== 'Phòng 2|Phòng 3|Phòng 1 (đã xoá)') E('thứ tự phòng PC (phòng sống trước, phòng đã xoá sau): ' + JSON.stringify(T.tieuDe));
+  if (!T.tieuDe.includes('Phòng 1 (đã xoá)') || T.nutCong.some((s) => /Phòng 1$/.test(s))) E('phòng đã xoá còn bé hôm nay trên PC phải ghi "(đã xoá)" và không có "+": ' + JSON.stringify([T.tieuDe, T.nutCong]));
+  await ctx.close();
+}
 
 await browser.close();
 server.close();

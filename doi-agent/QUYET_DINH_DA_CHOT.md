@@ -37,7 +37,7 @@
 - Lịch tháng có số việc chưa xong mỗi ngày; nút "Xoá việc đã xong"; dòng "Khám: còn x việc" (bấm chuyển sang Khám).
 
 ## Khám
-- Phòng tự đặt tên, mặc định Phòng 1–3; phòng đã từng có bệnh nhân thì không xoá được.
+- Phòng tự đặt tên, mặc định Phòng 1–3; xoá được phòng khi hôm nay và các ngày sau không còn bé (bác sĩ duyệt 09/11/2026, thay quyết định cũ); bé ngày trước vẫn xem được dưới tên phòng cũ; có hỏi xác nhận và Hoàn tác 6 giây; bé hôm nay ở phòng đã xoá (do gộp sao lưu) vẫn hiện.
 - Mỗi bé: mã/giường, ngày sinh, tuổi thai lúc sinh, cân nặng, ghi chú, việc cần làm; đánh dấu đã khám; xoá bé có hỏi xác nhận.
   Việc cần làm của bé xoá bằng vuốt trái (không còn dấu ×) (bác sĩ duyệt 28/10/2026). (bác sĩ duyệt 05/11/2026, v9.2) Việc của bé dùng cùng cử chỉ với tab Việc: không còn ô tick, vuốt phải 1/3 = xong, vuốt trái 1/3 = xoá có Hoàn tác 6 giây (thay xoá kiểu C). Việc của bé CÓ chạm 2 lần (bác sĩ đưa từ đợt 9.4 lên 9.2; thay "chưa có chạm 2 lần"): mở bảng nhỏ sửa tên, dòng trạng thái ("Chưa xong" + "Hoàn thành" / "Đã xong lúc hh:mm" + "Bỏ đánh dấu xong"), "Xoá việc" có Hoàn tác 6 giây; dùng cả trên máy tính.
 - Dòng bé và chi tiết bé (bác sĩ duyệt 05/11/2026, v9.4; thay "ô tick và mũi tên ở dòng bé", "ô gạch đứt thêm bệnh nhân" và chi tiết bé cũ):

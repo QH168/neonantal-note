@@ -1,7 +1,7 @@
 // Mục Khám: phòng, bệnh nhân, chi tiết bé, tổng hợp y lệnh.
 import { useEffect, useRef, useState } from 'react';
 import {
-  addRoom, renameRoom, removeRoom, addPatient, updatePatient, setPatientDone, removePatient,
+  addRoom, renameRoom, removeRoom, khoiPhucRoom, addPatient, updatePatient, setPatientDone, removePatient,
   addTodo, toggleTodo, removeTodo, khoiPhucTodo, setTodoText, copyPatientsFrom
 } from '../lib/actions.js';
 import { calcAge, gaFmt, copyText } from '../lib/clinical.js';
@@ -55,8 +55,28 @@ function RoomNameInput({ room }) {
   );
 }
 
-export function RoomManager({ rooms, roomUse }) {
+/**
+ * Quản lý phòng (phiếu 2026-11-09). Khoá nút xoá khi HÔM NAY (ngày làm việc `homNay`) trở đi còn bé trong phòng (roomUse).
+ * Phòng hôm nay trống nhưng có bé ngày trước (roomUsePast > 0): hỏi xác nhận bằng hộp xác nhận của trình duyệt như "Xoá khỏi hôm nay".
+ * Mọi đường xoá đều gọi removeRoom(id, homNay) (đếm lại ngay lúc xoá) rồi hiện thanh Hoàn tác 6 giây.
+ */
+export function RoomManager({ rooms, roomUse, roomUsePast = {}, homNay }) {
+  const hoanTac = useHoanTac();
   const [draft, setDraft] = useState('');
+  const [bao, setBao] = useState('');
+  const baoTimer = useRef();
+  useEffect(() => () => clearTimeout(baoTimer.current), []);
+  const baoLoi = (s) => { setBao(s); clearTimeout(baoTimer.current); baoTimer.current = setTimeout(() => setBao(''), 6000); };
+  const xoa = async (r) => {
+    const nTruoc = roomUsePast[r.id] || 0;
+    if (nTruoc > 0 && !window.confirm(`Xoá ${r.name}? ${nTruoc} bé ở các ngày trước vẫn xem được trong Lịch Khám, nhưng không chép sang hôm nay được nữa.`)) return;
+    const kq = await removeRoom(r.id, homNay);
+    if (!kq.ok) {
+      baoLoi(kq.soBeHomNay > 0 ? `Không xoá được ${r.name} vì hôm nay vừa có ${kq.soBeHomNay} bé.` : `Không xoá được ${r.name}.`);
+      return;
+    }
+    hoanTac.hien({ nhan: 'Đã xoá ' + r.name, lam: () => khoiPhucRoom(r.id) });
+  };
   const submit = async (e) => {
     e.preventDefault();
     const name = draft.trim();
@@ -68,12 +88,13 @@ export function RoomManager({ rooms, roomUse }) {
     <section aria-label="Quản lý phòng" className="card stack8">
       <div className="bold">Danh sách phòng</div>
       {rooms.map((r) => {
-        const locked = (roomUse[r.id] || 0) > 0;
+        const nHom = roomUse[r.id] || 0;
+        const locked = nHom > 0;
         return (
           <div key={r.id} className="row4">
             <RoomNameInput room={r} />
             <button type="button" className="icon-btn muted" disabled={locked} style={{ opacity: locked ? 0.35 : 1 }}
-              aria-label={locked ? `Không xoá được ${r.name} vì còn bệnh nhân` : `Xoá ${r.name}`} onClick={() => removeRoom(r.id)}><XIcon /></button>
+              aria-label={locked ? `Không xoá được ${r.name} vì hôm nay còn ${nHom} bé` : `Xoá ${r.name}`} onClick={() => xoa(r)}><XIcon /></button>
           </div>
         );
       })}
@@ -84,7 +105,8 @@ export function RoomManager({ rooms, roomUse }) {
         </label>
         <button type="submit" className="btn primary">Thêm phòng</button>
       </form>
-      <div className="muted xsmall">Chỉ xoá được phòng chưa có bệnh nhân nào.</div>
+      {bao && <div role="alert" className="xsmall bold">{bao}</div>}
+      <div className="muted xsmall">Chỉ xoá được phòng hôm nay không còn bé.</div>
     </section>
   );
 }
@@ -135,14 +157,16 @@ export function RoomList({ rooms, patients, todosByPid, collapsed, onToggle, sel
           <h2 className="group-h">
             <button type="button" className="group-btn" aria-expanded={open} onClick={() => onToggle(r.id)}>
               <Chevron style={{ transform: `rotate(${open ? 90 : 0}deg)` }} />
-              <span className="group-title">{r.name}</span>
+              <span className="group-title">{r.daXoa && !/đã xoá/.test(r.name) ? r.name + ' (đã xoá)' : r.name}</span>
               <span className="muted small">{ps.length ? `Đã khám ${dn}/${ps.length}` : 'Chưa có bệnh nhân'}</span>
             </button>
           </h2>
-          {/* nút "+" nằm NGOÀI nút thu gọn: chạm "+" không làm thu gọn phòng */}
-          <button type="button" className="room-add" aria-label={'Thêm bé vào ' + r.name} onClick={() => add(r, open)}>
-            <span className="room-add-o"><PlusIcon size={16} /></span>
-          </button>
+          {/* nút "+" nằm NGOÀI nút thu gọn: chạm "+" không làm thu gọn phòng. Phòng đã xoá không có "+" (chỉ giữ bé đang nằm đó) */}
+          {!r.daXoa && (
+            <button type="button" className="room-add" aria-label={'Thêm bé vào ' + r.name} onClick={() => add(r, open)}>
+              <span className="room-add-o"><PlusIcon size={16} /></span>
+            </button>
+          )}
         </div>
         {open && ps.length > 0 && (
           <div className="stack8">

@@ -426,7 +426,8 @@ test('v9.6: App chờ mốc rồi mới vẽ, dùng homNay (không còn useToday
   assert.match(app, /useNgayLamViec\(mocPhut\)/);
   assert.match(app, /if \(!ngay\.sanSang\) return/);
   assert.match(app, /useAppData\(homNay\)/);
-  assert.match(app, /buildSummary\(\{ rooms, patients, todosByPid \}\)/, 'không đổi buildSummary mặc định (ngày lịch)');
+  // 2026-11-09: truyền roomsHomNay (có cả phòng đã xoá còn bé hôm nay) thay rooms; vẫn KHÔNG truyền now (ngày lịch mặc định)
+  assert.match(app, /buildSummary\(\{ rooms: roomsHomNay, patients, todosByPid \}\)/, 'không đổi buildSummary mặc định (ngày lịch)');
   assert.doesNotMatch(read('src/hooks.js'), /export function useToday\b/);
   for (const f of SRC) assert.doesNotMatch(boChuThich(read(f)), /\buseToday\(/, f);
 });
@@ -467,4 +468,21 @@ test('v9.6: màu của khung 2 ngày dùng token có cả sáng và tối, bản
     for (const [ten, a, b] of chu) assert.ok(tuongPhan(V[che]['--' + a], V[che]['--' + b]) >= 4.5, `${che} ${ten}`);
     assert.ok(tuongPhan(V[che]['--okInk'], V[che]['--okBg']) >= 3, `${che} tích xanh`);
   }
+});
+// ===== Phiếu 2026-11-09: xoá phòng khi hôm nay không còn bé =====
+test('xoá phòng: giao diện luôn gọi removeRoom kèm homNay; danh sách hôm nay dùng roomsHomNay; phòng đã xoá không có nút "+"', () => {
+  const ex = read('src/components/Exam.jsx');
+  const app = read('src/App.jsx');
+  const goi = ex.match(/await removeRoom\([^)]*\)/g) || [];
+  assert.ok(goi.length > 0 && goi.every((g) => /await removeRoom\(r\.id, homNay\)/.test(g)), 'removeRoom phải kèm homNay: ' + goi.join(' | '));
+  assert.match(ex, /khoiPhucRoom\(r\.id\)/); // Hoàn tác trả phòng về chỗ cũ
+  assert.match(ex, /Chỉ xoá được phòng hôm nay không còn bé\./);
+  assert.doesNotMatch(ex, /Chỉ xoá được phòng chưa có bệnh nhân nào/);
+  assert.match(ex, /vì hôm nay còn \$\{nHom\} bé/);
+  assert.match(ex, /bé ở các ngày trước vẫn xem được trong Lịch Khám, nhưng không chép sang hôm nay được nữa\./);
+  const demRoomList = (app.match(/<RoomList rooms=\{roomsHomNay\}/g) || []).length;
+  assert.equal(demRoomList, 2, 'RoomList (iPhone và PC) phải dùng roomsHomNay');
+  const demManager = (app.match(/<RoomManager rooms=\{rooms\} roomUse=\{roomUse\} roomUsePast=\{roomUsePast\} homNay=\{homNay\} \/>/g) || []).length;
+  assert.equal(demManager, 2, 'RoomManager (iPhone và PC) phải nhận roomUsePast và homNay (ngày làm việc, không phải ngày lịch)');
+  assert.match(ex, /\{!r\.daXoa && \(\s*<button type="button" className="room-add"/);
 });

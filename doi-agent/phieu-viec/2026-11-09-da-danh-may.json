@@ -1,0 +1,38 @@
+{
+  "ten": "Tab Khám: đánh dấu 'Đã đánh máy'",
+  "ngay": "2026-11-09",
+  "khuVuc": "Khám, Tổng hợp y lệnh, Sao lưu",
+  "loai": "vua",
+  "canBacSiDuyet": true,
+  "trangThai": "NHÁP, chờ bác sĩ trả lời câu hỏi; chưa sửa mã",
+  "hieuCuaDieuPhoi": "Đánh dấu bé (hoặc việc) đã được đánh máy y lệnh vào máy tính bệnh viện, để biết còn bé nào chưa đánh máy. Cần bác sĩ xác nhận.",
+  "cauHoiBacSi": [
+    "1. 'Đã đánh máy' nghĩa là gì: đã nhập y lệnh vào máy tính bệnh viện, hay việc khác?",
+    "2. Đánh dấu theo từng bé hay từng việc của bé?",
+    "3. Cách đánh dấu: nút trong chi tiết bé (đề xuất), hay vuốt? Vuốt phải đang dùng cho 'đã khám'.",
+    "4. Khi đổi ngày sinh, cân hoặc thêm việc sau khi đã đánh máy: tự bỏ dấu (để nhắc đánh máy lại), hay giữ?",
+    "5. Có cần lọc 'Chưa đánh máy' và ghi trong Tổng hợp y lệnh không?"
+  ],
+  "deXuatNeuTheoTungBe": {
+    "duLieu": "Thêm trường thường typedAt (giờ đánh dấu) vào exam_patients, giống doneAt: không đổi db.version, không thêm bảng, file sao lưu cũ nhập được, gộp theo updatedAt như cũ. Agent Dữ liệu kiểm gộp và file cũ.",
+    "giaoDien": [
+      "Chi tiết bé: dòng trạng thái thứ hai 'Chưa đánh máy' + nút 'Đã đánh máy' / 'Đã đánh máy lúc hh:mm' + 'Bỏ đánh dấu', vùng chạm 44px.",
+      "Dòng bé: biểu tượng nhỏ (bàn phím) cạnh tích đã khám, khác màu, có aria-label.",
+      "Đầu tab Khám: đếm 'Đánh máy 3/7'; chip lọc 'Chưa đánh máy'.",
+      "Ngày trước (chỉ xem) và Khám 2 ngày hiện trạng thái, không sửa được."
+    ],
+    "thuatToan": "Hàm thuần đếm, lọc. 'Chép sang hôm nay' và 'Lấy danh sách hôm qua' KHÔNG mang dấu đánh máy sang ngày mới (giống doneAt).",
+    "fileDuKien": ["src/lib/actions.js", "src/lib/kham.js", "src/hooks.js", "src/components/Exam.jsx", "src/components/KhamHaiNgay.jsx", "src/components/KhamNgayTruoc.jsx", "src/App.jsx", "src/App.css", "tests/kham.test.js", "tests/merge.test.js", "tests/luat.test.js", "scripts/chup-giao-dien.mjs", "package.json", "doi-agent/BAN_DO.md"]
+  },
+  "agent": ["du-lieu", "thuat-toan", "giao-dien", "kiem-thu", "ghi-chep"],
+  "khongLam": [
+    "Không đổi db.version, không đổi tên CSDL, không đổi định dạng file sao lưu.",
+    "Không kết nối máy tính bệnh viện; app chỉ ghi dấu do bác sĩ tự bấm.",
+    "Không đẩy lên GitHub khi bác sĩ chưa bật lại credential helper."
+  ],
+  "tieuChiDat": [
+    "Dữ liệu cũ không đổi khi mở bản mới; file sao lưu cũ nhập được",
+    "Dấu đánh máy không lẫn giữa các ngày, không theo bé khi chép sang ngày mới",
+    "Kiểm thử độc lập ĐẠT; ảnh sáng/tối gửi bác sĩ duyệt"
+  ]
+}

@@ -82,13 +82,13 @@ function AppChinh({ mocPhut, homNay, homQua, ngayLich, cheDo, setCheDo }) {
   // Qua ngày làm việc mới (qua mốc, hoặc mở lại app): đưa mục Việc và Khám về hôm nay
   useEffect(() => { setViewDate(homNay); setCalMonth(monthOf(homNay)); setNgayTruoc(null); }, [homNay]);
 
-  const { tasks, rooms, patients, todosByPid, prev, roomUse, lastExport } = data;
+  const { tasks, rooms, roomsHomNay, patients, todosByPid, prev, roomUse, roomUsePast, lastExport } = data;
   const dayTasks = useMemo(() => tasks.filter((t) => t.date === viewDate), [tasks, viewDate]);
   const overdue = tasks.filter((t) => t.date < homNay && !t.done).length;
   const isTask = tab === 'task';
   const isToday = viewDate === homNay;
   const sel = patients.find((p) => p.id === selPid);
-  const tenPhong = (p) => rooms.find((r) => r.id === p.roomId)?.name || '';
+  const tenPhong = (p) => roomsHomNay.find((r) => r.id === p.roomId)?.name || '';
   const examLeft = patients.reduce((n, p) => n + (todosByPid[p.id] || []).filter((t) => !t.done).length, 0);
   const backupDue = !lastExport || Date.now() - lastExport.at > 24 * 3600 * 1000;
 
@@ -126,7 +126,7 @@ function AppChinh({ mocPhut, homNay, homQua, ngayLich, cheDo, setCheDo }) {
   const veHomNayKham = () => setNgayTruoc(null);
   // đổi Hôm nay / 2 ngày: đóng bé và bảng tổng hợp đang mở của chế độ kia, khỏi lẫn dòng hai ngày
   const doiPhamVi = (v) => { setSelPid(null); setSumOpen(false); setHaiNgay(v); };
-  const summary = () => buildSummary({ rooms, patients, todosByPid });
+  const summary = () => buildSummary({ rooms: roomsHomNay, patients, todosByPid });
   // Xoá việc đã xong: một lần Hoàn tác trả lại tất cả việc vừa xoá
   const xoaDaXong = async () => {
     const ids = await clearDone(viewDate);
@@ -231,8 +231,8 @@ function AppChinh({ mocPhut, homNay, homQua, ngayLich, cheDo, setCheDo }) {
         ) : (
           <>
             <main className="pc-main exam">
-              {roomEdit && <RoomManager rooms={rooms} roomUse={roomUse} />}
-              <RoomList rooms={rooms} patients={patients} todosByPid={todosByPid} collapsed={roomCollapsed}
+              {roomEdit && <RoomManager rooms={rooms} roomUse={roomUse} roomUsePast={roomUsePast} homNay={homNay} />}
+              <RoomList rooms={roomsHomNay}patients={patients} todosByPid={todosByPid} collapsed={roomCollapsed}
                 onToggle={toggleIn(setRoomCollapsed)} selPid={selPid} onOpen={setSelPid} today={homNay} />
               <div className="tong-hop-wrap"><button type="button" className="btn" aria-expanded={sumOpen} onClick={() => setSumOpen(true)}>Tổng hợp y lệnh</button></div>
               {sumOpen && <section className="card stack10" aria-label="Tổng hợp y lệnh"><SummaryPanel build={summary} onClose={() => setSumOpen(false)} /></section>}
@@ -305,8 +305,8 @@ function AppChinh({ mocPhut, homNay, homQua, ngayLich, cheDo, setCheDo }) {
       ) : (
         <main className="ph-main exam">
           <ExamActions compact prev={prev} today={homNay} roomEdit={roomEdit} onToggleRoomEdit={() => setRoomEdit(!roomEdit)} />
-          {roomEdit && <RoomManager rooms={rooms} roomUse={roomUse} />}
-          <RoomList rooms={rooms} patients={patients} todosByPid={todosByPid} collapsed={roomCollapsed}
+          {roomEdit && <RoomManager rooms={rooms} roomUse={roomUse} roomUsePast={roomUsePast} homNay={homNay} />}
+          <RoomList rooms={roomsHomNay}patients={patients} todosByPid={todosByPid} collapsed={roomCollapsed}
             onToggle={toggleIn(setRoomCollapsed)} selPid={selPid} onOpen={setSelPid} today={homNay} />
           <div className="tong-hop-wrap"><button type="button" className="btn" onClick={() => setSumOpen(true)}>Tổng hợp y lệnh</button></div>
         </main>

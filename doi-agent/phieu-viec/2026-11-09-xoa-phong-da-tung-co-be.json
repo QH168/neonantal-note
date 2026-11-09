@@ -1,0 +1,62 @@
+{
+  "ten": "Cho xoá phòng khi hôm nay không còn bé (phòng chỉ có bé ở ngày trước)",
+  "ngay": "2026-11-09",
+  "khuVuc": "Khám (Quản lý phòng)",
+  "loai": "vua",
+  "canBacSiDuyet": true,
+  "trangThai": "Bác sĩ duyệt phương án A ngày 09/11/2026",
+  "bacSiDaQuyet": [
+    "Phương án A: xoá được phòng khi hôm nay và các ngày sau không còn bé; bé ngày trước vẫn xem được; hỏi xác nhận + Hoàn tác 6 giây.",
+    "Thay quyết định cũ 'phòng đã từng có bệnh nhân thì không xoá được' bằng 'xoá được phòng khi hôm nay không còn bé; bé ngày trước vẫn xem được'."
+  ],
+  "daThu": {
+    "cachThu": "Bản 625a8b9 (đang chạy), đồng hồ giả 09/11/2026 10:00. Chèn bé G20 ngày 08/11 vào Phòng 3, hôm nay Phòng 3 trống. Script: cong-cu/thu-xoa-phong.cjs.",
+    "ketQua": "Nút xoá Phòng 3 bị khoá (mờ), nhãn 'Không xoá được Phòng 3 vì còn bệnh nhân', dù dòng Phòng 3 hôm nay ghi 'Chưa có bệnh nhân'. Bấm ép cũng không xoá. Phòng 1 chưa từng có bé thì xoá được.",
+    "nguyenNhan": "Đúng như mã đang viết, không phải hỏng ngẫu nhiên: removeRoom (src/lib/actions.js) và roomUse (src/hooks.js) đếm bé của phòng ở MỌI ngày. Đây là quyết định cũ trong QUYET_DINH_DA_CHOT.md: 'phòng đã từng có bệnh nhân thì không xoá được', đặt ra trước v9.5 để bé ngày cũ không bị mất khỏi màn hình. Từ v9.5, bé ở phòng đã xoá vẫn hiện khi xem ngày trước và khi tổng hợp, nên lý do khoá đó không còn cần."
+  },
+  "deXuat": "Phương án A: xoá được khi hôm nay và các ngày sau không còn bé sống trong phòng; bé ngày trước giữ nguyên, vẫn xem được dưới tên phòng cũ. Có hỏi xác nhận và Hoàn tác 6 giây.",
+  "phuongAnKhac": "Phương án B: thêm 'Ẩn phòng' (phòng ẩn khỏi danh sách hôm nay, không xoá). Phải thêm trường mới và giao diện riêng, nhiều việc hơn, không cần thiết vì xoá ở app là xoá mềm (đánh dấu deleted, không mất dữ liệu).",
+  "cauHoiBacSi": [
+    "Duyệt phương án A (đề xuất) hay B?",
+    "Đổi quyết định cũ thành: 'Xoá được phòng khi hôm nay không còn bé; bé ngày trước vẫn xem được.' Đồng ý không?"
+  ],
+  "fileDuocSua": [
+    "src/lib/phong.js",
+    "src/lib/actions.js",
+    "src/hooks.js",
+    "src/components/Exam.jsx",
+    "src/App.jsx",
+    "src/App.css",
+    "tests/phong.test.js",
+    "tests/luat.test.js",
+    "scripts/chup-giao-dien.mjs",
+    "package.json",
+    "doi-agent/BAN_DO.md"
+  ],
+  "agent": ["thuat-toan", "giao-dien", "kiem-thu", "ghi-chep"],
+  "viecCanLam": {
+    "thuatToan": [
+      "src/lib/phong.js, hàm thuần phongXoaDuoc(roomId, patients, homNay): chỉ đếm bé sống có examDate >= homNay (ngày làm việc). Trả { duoc, soBeHomNay, soBeNgayTruoc }.",
+      "removeRoom(id, homNay) dùng cùng luật trong một giao dịch: đếm lại ngay lúc xoá, tránh trường hợp vừa thêm bé ở máy khác. Xoá mềm như cũ; trả số bé ngày trước để giao diện báo.",
+      "roomUse trong hooks.js chỉ đếm bé từ hôm nay trở đi, dùng chỉ mục examDate (above/equals), không đọc mọi ngày của mọi phòng.",
+      "Lưới an toàn: danh sách hôm nay (RoomList) phải hiện cả bé đang nằm trong phòng đã xoá, dùng phongChoXem có sẵn. Hiện nay nếu máy khác thêm bé hôm nay vào phòng đã xoá rồi gộp sao lưu, bé đó sẽ không hiện trong tab Khám hôm nay.",
+      "Bài kiểm tests/phong.test.js: phòng chỉ có bé ngày trước xoá được; có bé hôm nay không xoá được; bé đã xoá không tính; bé ngày sau hôm nay không cho xoá; qua mốc 07:00."
+    ],
+    "giaoDien": [
+      "Nút xoá phòng: nhãn 'Không xoá được Phòng 3 vì hôm nay còn n bé'. Chữ dưới khung đổi thành 'Chỉ xoá được phòng hôm nay không còn bé.'",
+      "Bấm xoá phòng từng có bé: hỏi xác nhận 'Xoá Phòng 3? n bé ở các ngày trước vẫn xem được trong Lịch Khám, nhưng không chép sang hôm nay được nữa.' Xoá xong có thanh Hoàn tác 6 giây.",
+      "Script chụp: phép kiểm cho cả ba trường hợp, ảnh iphone-quan-ly-phong (sáng/tối)."
+    ]
+  },
+  "anhHuongDuLieu": "Không đổi CSDL, không đổi định dạng sao lưu. Xoá phòng là xoá mềm (deleted: true + updatedAt), Hoàn tác trả lại. Bé ngày trước không bị sửa. Sau khi xoá: 'Lấy danh sách hôm qua' và 'Chép sang' bỏ qua bé của phòng đã xoá (luật đã có).",
+  "khongLam": [
+    "Không xoá hẳn dòng nào; không sửa bé ngày trước; không đổi db.js, backup.js, merge.js, copyPatientsFrom.",
+    "Không chạy --luu-chuan khi bác sĩ chưa duyệt ảnh. Không đẩy lên GitHub khi bác sĩ chưa bật lại credential helper."
+  ],
+  "tieuChiDat": [
+    "npm test đạt; Kiểm thử độc lập ĐẠT",
+    "Phòng chỉ có bé ngày trước xoá được; bé ngày trước vẫn hiện ở Lịch Khám và tổng hợp nhiều ngày dưới tên phòng cũ",
+    "Phòng hôm nay còn bé thì không xoá được, kể cả bấm ép",
+    "Hoàn tác trả phòng về đúng vị trí cũ"
+  ]
+}

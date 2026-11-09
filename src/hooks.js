@@ -5,6 +5,7 @@ import { p2, cacNgay } from './lib/dates.js';
 import { KHOA_CHE_DO, KHOA_LAN_MO, docCheDo, laToi, tangLanMo, chuanHoaMoc, KHOA_MOC_NGAY_LAM_VIEC } from './lib/cai-dat.js';
 import { sapBe } from './lib/thu-tu.js';
 import { phongChoXem } from './lib/tong-hop.js';
+import { phongHomNay } from './lib/phong.js';
 import { tachHaiNgay } from './lib/hai-ngay.js';
 
 const alive = (r) => !r.deleted;
@@ -180,14 +181,27 @@ export function useAppData(today) {
     return { date: last.examDate, count };
   }, [today]);
 
-  // Phòng nào đang có bệnh nhân (bất kỳ ngày nào) thì khoá nút xoá
-  const roomUse = useLiveQuery(async () => {
-    const out = {};
+  // Phòng còn bé từ hôm nay trở đi thì khoá nút xoá (phiếu 2026-11-09). Một truy vấn theo chỉ mục examDate (>= today),
+  // không đọc các ngày trước. roomUsePast = số bé các ngày trước, CHỈ tính cho phòng hôm nay đã trống (phòng khác
+  // không xoá được nên không cần số): mỗi phòng một lần đếm theo chỉ mục roomId. Dùng cho câu hỏi xác nhận.
+  const roomStat = useLiveQuery(async () => {
+    const hom = {}, truoc = {};
+    if (!today) return { hom, truoc };
     const rs = await db.rooms.filter(alive).toArray();
-    for (const r of rs) out[r.id] = await db.exam_patients.where('roomId').equals(r.id).filter(alive).count();
-    return out;
-  }, []);
-
+    for (const r of rs) hom[r.id] = 0;
+    await db.exam_patients.where('examDate').aboveOrEqual(today).filter(alive).each((p) => {
+      if (p.roomId in hom) hom[p.roomId] += 1;
+    });
+    for (const r of rs) {
+      if (hom[r.id] === 0) truoc[r.id] = await db.exam_patients.where('roomId').equals(r.id).filter((p) => alive(p) && p.examDate < today).count();
+    }
+    return { hom, truoc };
+  }, [today]);
+  const roomUse = roomStat?.hom;
+  const roomUsePast = roomStat?.truoc;
+  // Mọi phòng kể cả đã xoá, để lưới an toàn hiện cả bé hôm nay nằm ở phòng đã xoá / không tìm thấy.
+  const allRooms = useLiveQuery(() => db.rooms.toArray(), []);
+  const roomsHomNay = useMemo(() => phongHomNay(allRooms || [], patients || []), [allRooms, patients]);
   const lastExport = useLiveQuery(() => db.meta.get('lastExport'), [])?.value;
 
   const ready = !!today && tasks && rooms && patients && todos && prev && roomUse;
@@ -195,7 +209,7 @@ export function useAppData(today) {
   for (const t of todos || []) (todosByPid[t.patientId] ||= []).push(t);
   for (const k in todosByPid) todosByPid[k].sort((a, b) => (a.order || 0) - (b.order || 0) || (a.createdAt || 0) - (b.createdAt || 0));
 
-  return { ready, tasks: tasks || [], rooms: rooms || [], patients: patients || [], todosByPid, prev: prev || { date: null, count: 0 }, roomUse: roomUse || {}, lastExport };
+  return { ready, tasks: tasks || [], rooms: rooms || [], roomsHomNay, patients: patients || [], todosByPid, prev: prev || { date: null, count: 0 }, roomUse: roomUse || {}, roomUsePast: roomUsePast || {}, lastExport };
 }
 
 const KHOANG_TRONG = { ready: true, patients: [], todosByPid: {}, rooms: [] };

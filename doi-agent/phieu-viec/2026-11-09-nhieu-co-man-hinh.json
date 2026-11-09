@@ -1,0 +1,43 @@
+{
+  "ten": "Chạy và kiểm app trên nhiều cỡ màn hình điện thoại",
+  "ngay": "2026-11-09",
+  "khuVuc": "Khung chung, toàn app",
+  "loai": "vua",
+  "canBacSiDuyet": true,
+  "trangThai": "NHÁP, chờ bác sĩ duyệt; chưa sửa mã",
+  "hienNay": "Script chụp chỉ thử iPhone 393×852 (iPhone 15/16), một số màn 320×700, và PC 1440×900. Chưa thử máy dài, máy to, Android, xoay ngang, phóng to chữ. Bước so ảnh chuẩn đang bị bỏ qua vì máy thiếu thư viện sharp.",
+  "cacCo": [
+    { "may": "iPhone SE 2/3", "co": "375×667", "lyDo": "máy ngắn: bảng dưới, bàn phím, nút đáy dễ bị che" },
+    { "may": "iPhone 12/13 mini", "co": "375×812" },
+    { "may": "iPhone 12–14", "co": "390×844" },
+    { "may": "iPhone 15/16 (đang dùng làm chuẩn)", "co": "393×852" },
+    { "may": "iPhone Plus / Pro Max", "co": "430×932", "lyDo": "máy to: chữ, ô lịch, chip có giãn hợp lý" },
+    { "may": "Android phổ biến", "co": "360×800 và 412×915", "lyDo": "nếu đồng nghiệp dùng Android" },
+    { "may": "Màn hẹp nhất", "co": "320×568", "lyDo": "giới hạn dưới, ô lịch ~41px đã ghi ở #38" },
+    { "may": "Xoay ngang", "co": "852×393", "lyDo": "chiều cao chỉ 393px: bảng dưới và bàn phím" },
+    { "may": "Phóng to chữ", "co": "393×852 với zoom 150% và 200%", "lyDo": "người dùng phóng to trong Safari" }
+  ],
+  "buoc": [
+    "1. Agent Giao diện thêm vào scripts/chup-giao-dien.mjs một vòng chạy theo bảng cỡ trên, chỉ với các màn chính: Việc, ô thêm việc bung + bàn phím giả, chi tiết việc, Khám, chi tiết bé, lịch, tổng hợp, Khám 2 ngày, giao tour, cài đặt. Mỗi cỡ chụp sáng; máy ngắn và máy to chụp thêm tối.",
+    "2. Phép kiểm tự động mỗi cỡ: không tràn ngang; nút ≥44px (trừ ô lịch ở 320 đã chấp nhận); ô nhập ≥16px; chữ không bị cắt; nút đáy của bảng dưới không bị che; thanh thêm việc nằm trên vùng vạch Home (safe area); bảng dưới cuộn được tới nút cuối.",
+    "3. So ảnh: viết bước so điểm ảnh bằng chính trình duyệt Playwright (vẽ hai ảnh lên canvas rồi đếm điểm khác), KHÔNG thêm thư viện npm. Nhờ vậy bước so ảnh chuẩn chạy lại được.",
+    "4. Chạy, gom lỗi theo cỡ, gửi bác sĩ ảnh ghép từng cỡ. Lỗi giao diện sửa theo phiếu riêng (Giao diện → Kiểm thử độc lập), không sửa lẫn trong phiếu kiểm này.",
+    "5. Bác sĩ thử thật trên iPhone đang dùng; nếu khoa có máy khác (SE, Pro Max, Android) thì mượn mở link app, xem 3 màn: Việc, Khám, chi tiết bé."
+  ],
+  "cauHoiBacSi": [
+    "Bác sĩ và đồng nghiệp đang dùng máy nào? Có ai dùng Android hay iPhone SE không?",
+    "Có cần dùng khi xoay ngang không?"
+  ],
+  "fileDuocSua": ["scripts/chup-giao-dien.mjs", "scripts/so-anh.mjs", "doi-agent/BAN_DO.md"],
+  "agent": ["giao-dien", "kiem-thu", "ghi-chep"],
+  "khongLam": [
+    "Không đổi mã app trong phiếu này; lỗi tìm thấy sửa ở phiếu sau.",
+    "Không thêm thư viện npm (kể cả sharp) khi bác sĩ chưa duyệt.",
+    "Không lưu ảnh chuẩn mới khi bác sĩ chưa duyệt."
+  ],
+  "tieuChiDat": [
+    "Script chạy hết các cỡ, báo lỗi rõ theo cỡ và màn",
+    "Bước so ảnh chuẩn chạy được không cần sharp",
+    "Bác sĩ nhận ảnh ghép từng cỡ"
+  ]
+}
