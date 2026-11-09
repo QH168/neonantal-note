@@ -1,0 +1,66 @@
+{
+  "ten": "Tinh gọn nút ở iPhone, mức 2 (tab Khám và tab Việc)",
+  "ngay": "2026-11-09",
+  "khuVuc": "Khung chung (đầu trang iPhone), Khám, Việc",
+  "loai": "vua",
+  "canBacSiDuyet": true,
+  "trangThai": "Bác sĩ duyệt bản vẽ bảng 20 và 21 ngày 09/11/2026; chờ duyệt ảnh",
+  "banVe": "Canvas https://claude.ai/artifact/VoCWWauYDwv66hFeK8aHJp, bảng 20 (KhamViecMuc2.dc.html) và bảng 21 (ViecMuc2.dc.html)",
+  "bacSiDaQuyet": [
+    "Thay quyết định v9.6 (06/11/2026) 'nút gạt Hôm nay / 2 ngày nằm ở hàng riêng' bằng nút bật/tắt '2 ngày' cùng hàng với tab Việc/Khám (chỉ iPhone).",
+    "iPhone: bỏ thanh tiến độ, số tiến độ lên dòng ngày; nút '/a' và đám mây vào bảng nút '…'; 'Lấy danh sách hôm qua' và 'Quản lý phòng' vào bảng '…' ở tab Khám. PC giữ nguyên."
+  ],
+  "mucTieu": "Danh sách (tab Việc: phần chip khu) bắt đầu cách đỉnh khoảng 132px thay vì khoảng 216px hiện nay. Đo bằng ảnh chụp, báo số thật.",
+  "fileDuocSua": [
+    "src/App.jsx",
+    "src/App.css",
+    "src/components/ui.jsx",
+    "src/components/MenuThem.jsx",
+    "src/components/Exam.jsx",
+    "tests/luat.test.js",
+    "scripts/chup-giao-dien.mjs",
+    "doi-agent/BAN_DO.md"
+  ],
+  "ghiChuFile": {
+    "src/components/MenuThem.jsx": "file mới: nút '…' và bảng xổ xuống (role=menu), chỉ dùng trên iPhone",
+    "src/components/Exam.jsx": "chỉ được tách phần dùng chung của ExamActions (nhãn, dòng phụ, hàm chép) để bảng '…' dùng lại; ExamActions trên PC phải chạy y như cũ",
+    "src/components/ui.jsx": "thêm biểu tượng ba chấm, chép/tải xuống, phòng nếu cần; GatHaiNgay giữ nguyên cho PC"
+  },
+  "agent": ["giao-dien", "kiem-thu", "ghi-chep"],
+  "viecCanLam": {
+    "giaoDien": [
+      "Chỉ nhánh iPhone trong src/App.jsx. Nhánh PC (wide) không đổi một chữ nào về hiển thị.",
+      "Hàng đầu: trái là dòng ngày 13px --muted kèm ' · ' và số tiến độ đậm màu --tintInk ('Đã khám 1/3' ở Khám, 'Đã xong 2/6' ở Việc); dưới là tiêu đề 20px một dòng. Ngày ghi dạng 'Thứ Hai, 09/11' (không năm) như lời bác sĩ. Khi xem ngày trước ở Khám (xemTruoc) không ghi số tiến độ (như hiện nay thanh tiến độ ẩn). Dòng ngày dài (chế độ 2 ngày) không được tràn: cắt bằng dấu … ở phần ngày, số tiến độ luôn thấy.",
+      "Phải hàng đầu: nút tròn 44px Lịch (giữ hành vi, aria-label, chấm số đỏ việc quá hạn ở tab Việc, trạng thái .on khi xem ngày trước ở Khám) rồi nút tròn 44px '…' mới.",
+      "Bỏ trên iPhone: thanh tiến độ (.bar), hàng riêng .ph-gat với GatHaiNgay, ExamActions, nút '/a' và đám mây ở đầu trang, nút 'Về hôm nay' nhỏ ở hàng tiến độ.",
+      "Hàng thứ hai: nút gạt Việc/Khám rộng 168px bên trái; bên phải nút viên thuốc '2 ngày' cao 52px, chữ 15px đậm, aria-pressed; bật: nền --accent, chữ --accentInk, viền --accent; tắt: nền --surface, viền --edge, chữ --ink. Bấm gọi doiPhamVi(!haiNgay). Chỉ hiện khi coGat. Tab Việc xem ngày khác hôm nay: thay bằng nút 'Về hôm nay' cao 52px nền --tint chữ --tintInk, gọi goToday. Tab Khám xem ngày trước: không có nút nào ở chỗ này.",
+      "Dải 'Ngày làm việc … (đang là …)' (daiMoc) giữ như cũ, nằm dưới hàng đầu.",
+      "Nút '…': aria-haspopup='menu', aria-expanded, aria-label 'Thêm: …' mô tả các mục (thêm '(nên sao lưu hôm nay)' khi cần). Chấm đỏ 10px góc trên phải khi backupDue (màu --p1 như .dot-alert hiện nay). Bảng mở: nền --tint, viền --accent, chữ --tintInk.",
+      "Bảng xổ xuống role='menu': rộng 304px (không vượt màn 320px: tối đa calc(100vw - 32px)), mép phải cách màn 16px, ngay dưới hàng đầu, nền --surface, viền --line, bo 16px, bóng rất nhẹ (dùng biến màu có sẵn hoặc màu bóng đã có trong App.css, không thêm mã màu cứng). Dòng role='menuitem' cao ≥52px, tên 15px đậm, chữ phụ 13px --muted, tên nhóm 12px --muted. Đóng khi chạm ngoài, Esc, bấm lại '…', hoặc chọn một dòng; đóng xong trả focus về nút '…'.",
+      "Tab Khám, chế độ Hôm nay (không 2 ngày, không xem ngày trước): nhóm 'Danh sách khám': (1) 'Lấy danh sách hôm qua' — giữ đúng nhãn như ExamActions (nếu ngày trước gần nhất không phải hôm qua thì 'Lấy danh sách ngày dd/mm'), dòng phụ 'Chép n bé và việc chưa xong.', gọi copyPatientsFrom(prev.date, homNay) y như ExamActions (luật không trùng bé giữ nguyên); chưa có danh sách ngày trước: dòng mờ, aria-disabled/disabled, dòng phụ 'Chưa có danh sách ngày trước.'; chép xong hiện dòng 'Đã chép n bệnh nhân.' (hoặc 'Không có bệnh nhân mới để chép.') 3 giây ngay dưới hàng nút, role='status'. (2) 'Quản lý phòng' / 'Đóng quản lý phòng' khi thẻ RoomManager đang mở, dòng phụ 'Đổi tên, thêm hoặc xoá phòng.', bật/tắt roomEdit như cũ.",
+      "Cả hai tab: nhóm 'Ứng dụng': 'Thư viện viết tắt' (mở ThuVien như nút /a cũ) và 'Sao lưu và cài đặt' (mở bảng như nút đám mây cũ; khi backupDue dòng phụ có chấm đỏ nhỏ 8px + 'Nên sao lưu hôm nay'). Tab Việc chỉ có nhóm 'Ứng dụng'. Tab Khám xem 2 ngày hoặc ngày trước: chỉ nhóm 'Ứng dụng'.",
+      "Giữ nguyên: nút 'Tổng hợp y lệnh' cuối danh sách Khám, hàng chip khu vực, ô thêm việc ở đáy tab Việc, thanh Hoàn tác 6 giây, examHint, dòng nhắc cử chỉ.",
+      "Chỉ dùng biến màu có sẵn trong App.css. Không màu cứng, không viền phát sáng, không chuyển động riêng. Vùng chạm ≥44px, chữ ≥15px (phụ 12–13px). Không cuộn ngang ở 393px và 320px. Sáng và tối.",
+      "tests/luat.test.js: thêm bài kiểm (đọc mã nguồn như các bài luật hiện có): nút '…' có aria-expanded và bảng có role=\"menu\"; nút '2 ngày' có aria-pressed; nhánh PC vẫn dùng ExamActions; nhánh iPhone không còn thanh tiến độ (.bar); MenuThem.jsx và phần mới không có mã màu cứng.",
+      "scripts/chup-giao-dien.mjs: sửa phép kiểm cũ đang tìm GatHaiNgay/thanh tiến độ/nút /a, đám mây, ExamActions trên iPhone cho khớp bố cục mới (PC giữ phép kiểm cũ); thêm ảnh iPhone sáng + tối cho: Khám đóng; Khám bấm '…'; Khám bật '2 ngày'; Việc đóng; Việc bấm '…'; Việc bật '2 ngày'; Việc xem ngày khác; Việc khi gõ việc mới (bàn phím mở/ô gõ đang chạm). Thêm phép kiểm: '…' mở/đóng bằng Esc và chạm ngoài, focus trả về nút; 'Lấy danh sách hôm qua' từ bảng '…' bấm 2 lần không trùng; không cuộn ngang ở 393 và 320; đo và in ra toạ độ đỉnh của phần danh sách (tab Việc: hàng chip khu; tab Khám: dòng phòng đầu tiên)."
+    ]
+  },
+  "khongKhopBanVe": [
+    "Bảng 21D (khi gõ) không vẽ hàng chip khu; lời bác sĩ bảo giữ nguyên hàng chip → giữ như app hiện nay, báo bác sĩ.",
+    "Bản vẽ vẽ đáy tab Việc là ô 'Thêm việc…' + nút chữ 'Thêm'; app thật là ô 'Ghi việc cần làm…' + nút tròn '+' (v9.3 đã duyệt) → giữ app, báo bác sĩ.",
+    "Bảng 21A (2 ngày) ghi dòng ngày 'Thứ Hai, 09/11 · Đã xong 2/6'; app hiện ghi 'Hôm qua 08/11 và hôm nay 09/11' khi bật 2 ngày → giữ chữ của app, báo bác sĩ."
+  ],
+  "anhHuongDuLieu": "Không đổi dữ liệu. Không đổi db.js, actions.js, copyPatientsFrom, luật xoá phòng, định dạng sao lưu.",
+  "khongLam": [
+    "Không đổi giao diện máy tính.",
+    "Không thêm thư viện npm; không đổi db.version(1); không đổi link app.",
+    "Không chạy --luu-chuan khi bác sĩ chưa duyệt ảnh. Không commit, không đẩy lên GitHub.",
+    "Chỉ mã/số giường trong dữ liệu mẫu và ảnh chụp."
+  ],
+  "tieuChiDat": [
+    "npm test đạt; npm run build thành công; kiem-pham-vi ĐẠT; Kiểm thử độc lập ĐẠT",
+    "Đỉnh danh sách tab Việc (hàng chip) ≈132px ở iPhone 393×852 (báo số đo thật trước/sau)",
+    "Không cuộn ngang ở 393px và 320px; vùng chạm ≥44px; ô nhập ≥16px",
+    "PC: ảnh chụp không đổi so với ảnh chuẩn"
+  ]
+}

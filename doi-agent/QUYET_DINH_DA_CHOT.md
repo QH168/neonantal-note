@@ -13,7 +13,7 @@
 ## Giao diện
 - 2 tab: Việc / Khám. Biểu tượng đám mây mở bảng "Sao lưu và cài đặt", chấm đỏ khi quá 24 giờ chưa sao lưu.
 - Giao diện Sáng / Tối / Theo máy chọn trong bảng "Sao lưu và cài đặt"; đầu trang không còn nút sáng/tối (bác sĩ duyệt 05/11/2026, v9.1). Lưu ở máy (localStorage khoá `theme`: light|dark|auto), người đã chọn sáng/tối từ trước giữ nguyên, chưa chọn thì Theo máy; không vào sao lưu. ⚙ (luat.test.js v9.1) Thay quyết định cũ "đầu trang có nút sáng/tối".
-- Đầu trang iPhone còn 3 nút: "/a", đám mây, lịch (PC: "/a", đám mây) (bác sĩ duyệt 05/11/2026, v9.1). Tab Việc/Khám, chip khu, nút đầu trang cao 44px; chip khu không có việc chữ nhạt, không ghi số 0 (bác sĩ duyệt 05/11/2026, v9.1).
+- Đầu trang iPhone còn 3 nút: "/a", đám mây, lịch (PC: "/a", đám mây) (bác sĩ duyệt 05/11/2026, v9.1). Đã thay ngày 09/11/2026 (xem mục cuối): iPhone nay có nút Lịch và nút "…"; "/a" và đám mây vào bảng "…". PC vẫn có "/a" và đám mây. Tab Việc/Khám, chip khu, nút đầu trang cao 44px; chip khu không có việc chữ nhạt, không ghi số 0 (bác sĩ duyệt 05/11/2026, v9.1).
 - Dòng nhắc cử chỉ ở tab Việc chỉ hiện trong 3 lần mở app đầu hoặc khi danh sách của ngày trống (bác sĩ duyệt 05/11/2026, v9.1).
 - Tiêu đề: "Việc hôm nay" (ngày khác: "Việc ngày dd/mm"), "Khám bệnh hôm nay"; luôn một dòng. (Từ v9.6, "hôm nay" là ngày làm việc, mốc 07:00 mặc định; xem mục "Ngày làm việc và xem 2 ngày" dưới đây.)
 - iPhone theo thang chữ 5 bậc (bác sĩ duyệt 05/11/2026, v9.1): tiêu đề 20px; tên bảng dưới 17px; nội dung việc, mã giường, nút, chip 15px; chữ phụ 13px; ghi chú nhỏ 12px; không còn cỡ 12,5 / 13,5 / 14 / 18. (Thay "chữ phụ 12–13px" của bảng "iPhone 15 – chữ gọn".) ⚙ (luat.test.js v9.1)
@@ -45,7 +45,7 @@
   - Dòng phòng: nút "+" tròn thay ô gạch đứt "+ Thêm bệnh nhân"; phòng đang thu gọn thì bấm "+" tự mở phòng rồi thêm bé và mở chi tiết bé.
   - Chi tiết bé mới theo bảng 16b: mã giường ở tiêu đề (sửa được, bé mới tự đặt con trỏ vào ô mã), chip tên phòng, hàng 3 ô Ngày sinh | Tuổi thai | Cân nặng, nút "Tính tuần tuổi" + ô kết quả (Ngày tuổi, Hiệu chỉnh). VẪN CHỈ TÍNH TUỔI KHI BẤM; sửa ngày sinh hoặc tuổi thai thì xoá kết quả cũ. Trạng thái "Chưa khám" + "Hoàn tất khám" / "Đã khám lúc hh:mm" + "Bỏ đánh dấu đã khám" (bé cũ chưa có giờ chỉ ghi "Đã khám"). "Xoá khỏi hôm nay" vẫn hỏi xác nhận. Nút "Tổng hợp" đổi thành "Tổng hợp y lệnh", nút trong bảng đổi thành "Soạn lại" (nội dung tổng hợp không đổi).
   - Dữ liệu bé cũ không đổi khi mở app.
-- "Lấy danh sách hôm qua": chép bé + việc chưa xong từ ngày khám gần nhất trước hôm nay, không trùng phòng + mã. ⚙ (ảnh chụp thử tự động)
+- "Lấy danh sách hôm qua": chép bé + việc chưa xong từ ngày khám gần nhất trước hôm nay, không trùng phòng + mã. ⚙ (ảnh chụp thử tự động) Từ 09/11/2026 trên iPhone nút này nằm trong bảng "…" (xem mục cuối); PC giữ nút.
   Giữ đúng thứ tự bé như ngày nguồn; bé thêm tay nằm cuối phòng (bác sĩ duyệt 28/10/2026). ⚙ (tests/thu-tu.test.js)
 - "Tổng hợp y lệnh": văn bản sửa được, có nút Sao chép; bé không có việc mới ghi "Tiếp tục y lệnh cũ". ⚙
 
@@ -85,6 +85,7 @@ Các điểm dưới do Điều phối đề xuất cho đợt 9.5; bác sĩ đ�
 - Lượt khám trong tổng hợp nhiều ngày tính mọi bé có trong danh sách (tạm, chờ bác sĩ chốt: "Chờ duyệt" #36).
 
 ## Ngày làm việc và xem 2 ngày (v9.6 — bác sĩ duyệt 06/11/2026)
+- Thay một phần ngày 09/11/2026 (mục cuối file): quyết định v9.6 về nút gạt "Hôm nay / 2 ngày" ở hàng riêng chỉ còn trên PC. Trên iPhone đó là nút "2 ngày" cùng hàng tab. Các luật dưới đây vẫn đúng.
 - ⚙ "Hôm nay" của tab Việc và tab Khám là NGÀY LÀM VIỆC: ngày lịch của (giờ máy − mốc). Mốc mặc định 07:00, chọn được 00:00 / 06:00 / 07:00 / 08:00 trong "Sao lưu và cài đặt". Thay quyết định cũ "Hôm nay theo ngày lịch 00:00" (THIET_KE_V9 mục 9). (ngay-lam-viec.test.js)
 - Mốc ngày làm việc KHÔNG đưa vào file sao lưu; mỗi máy tự đặt (câu 1). File sao lưu giữ nguyên định dạng.
 - "Mới đêm qua" tính từ 16:00 hôm qua tới mốc (câu 2).
@@ -92,3 +93,14 @@ Các điểm dưới do Điều phối đề xuất cho đợt 9.5; bác sĩ đ�
 - Việc ghi trước mốc thuộc ngày làm việc trước, nằm trong "Còn từ hôm qua" nếu chưa xong (câu 4; theo đặc tả mục 7, không theo bảng 17c).
 - Tuổi ở trang hôm nay, tính tuần tuổi và tổng hợp y lệnh hôm nay vẫn theo ngày lịch của máy, không theo mốc (đặc tả mục 7). Tuổi dòng đã qua tính theo ngày ghi nếu muộn hơn ngày khám (bé sinh sau nửa đêm).
 - "Dời hết sang hôm nay" và "Dời sang hôm nay" có Hoàn tác 6 giây, trả đúng ngày cũ.
+
+## Tinh gọn nút iPhone mức 2 (bác sĩ duyệt bản vẽ bảng 20 và 21, 09/11/2026)
+- Đã duyệt: đầu trang iPhone gọn. Bỏ thanh tiến độ; số tiến độ ghi trên dòng ngày ("Thứ Hai, 09/11 · Đã xong 2/6"; ở Khám "Đã khám 1/3"). Ngày không ghi năm.
+- Đã duyệt: đầu trang iPhone còn nút Lịch và nút "…" (44px). "/a" và đám mây vào bảng "…".
+- Đã duyệt: bảng "…" có nhóm "Danh sách khám" ở tab Khám hôm nay ("Lấy danh sách hôm qua", "Quản lý phòng") và nhóm "Ứng dụng" ở cả hai tab ("Thư viện viết tắt", "Sao lưu và cài đặt").
+- Đã duyệt: nút "2 ngày" là nút bật/tắt cùng hàng tab Việc/Khám trên iPhone (52px). Thay quyết định v9.6 (06/11/2026) về nút gạt "Hôm nay / 2 ngày" ở hàng riêng: chỉ trên iPhone. PC giữ hàng gạt riêng.
+- Đã duyệt: tab Việc xem ngày khác có nút "Về hôm nay" 52px. Tab Khám xem ngày trước không có nút ở chỗ đó.
+- Đã duyệt: dòng ngày dài ở chế độ 2 ngày cắt bằng "…" ở phần ngày; số tiến độ luôn thấy.
+- Đã duyệt: PC không đổi.
+- Chờ bác sĩ (app giữ như hiện nay, khác bản vẽ; xem "Chờ duyệt" #52–#54 trong `doi-agent/NHAT_KY.md`): (1) bảng 21D khi gõ việc: giữ hàng chip khu; (2) đáy tab Việc: giữ ô "Ghi việc cần làm…" và nút tròn "+" (v9.3), bản vẽ ghi "Thêm việc…" và nút chữ "Thêm"; (3) bảng 21A: giữ dòng ngày của app "Hôm qua 08/11 và hôm nay 09/11", bản vẽ ghi "Thứ Hai, 09/11 · Đã xong 2/6".
+- Chưa làm: ảnh chuẩn đợt này chưa lưu, chờ bác sĩ duyệt ảnh. Chưa thử trên iPhone thật.

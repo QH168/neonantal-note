@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAppData, useMocNgayLamViec, useNgayLamViec, useViecNgay, useWide, useGiaoDien, useLanMoApp } from './hooks.js';
 import { ensureSeed, clearDone, khoiPhucNhieu } from './lib/actions.js';
 import { buildSummary } from './lib/clinical.js';
@@ -6,7 +6,8 @@ import { ZONES } from './db.js';
 import { fmtLong, fmtDM, parseIso, p2 } from './lib/dates.js';
 import { viecConTuHomQua } from './lib/hai-ngay.js';
 import { ZoneNav, TaskGroups, TaskForm, LichViec, ConTuHomQua, monthOf } from './components/Tasks.jsx';
-import { ExamActions, RoomManager, RoomList, PatientDetail, SummaryPanel } from './components/Exam.jsx';
+import { ExamActions, RoomManager, RoomList, PatientDetail, SummaryPanel, thongTinLayDanhSach, chepDanhSach } from './components/Exam.jsx';
+import MenuThem from './components/MenuThem.jsx';
 import KhamNgayTruoc from './components/KhamNgayTruoc.jsx';
 import KhamHaiNgay from './components/KhamHaiNgay.jsx';
 import { LichKham } from './components/Lich.jsx';
@@ -15,7 +16,7 @@ import { VietTatProvider } from './components/VietTat.jsx';
 import { HoanTacProvider, useHoanTac } from './components/HoanTac.jsx';
 import BackupPanel from './components/BackupPanel.jsx';
 import { hienDongNhac } from './lib/cai-dat.js';
-import { Sheet, CalIcon, CloudIcon, Chevron, GatHaiNgay } from './components/ui.jsx';
+import { Sheet, CalIcon, CloudIcon, Chevron, GatHaiNgay, ChepIcon, PhongIcon } from './components/ui.jsx';
 
 // Dòng nhắc cử chỉ ở tab Việc (v9.2): một dòng ở 393px
 const CHU_NHAC_CU_CHI = 'Vuốt phải: xong · Vuốt trái: xoá · Chạm 2 lần: chi tiết';
@@ -76,6 +77,10 @@ function AppChinh({ mocPhut, homNay, homQua, ngayLich, cheDo, setCheDo }) {
   const [lichKham, setLichKham] = useState(false);
   // v9.6: chế độ "2 ngày" dùng chung cho Việc và Khám, giữ khi đổi tab; mỗi lần mở app là "Hôm nay"
   const [haiNgay, setHaiNgay] = useState(false);
+  // iPhone: câu báo "Đã chép n bệnh nhân." sau khi bấm "Lấy danh sách hôm qua" trong bảng "…" (3 giây)
+  const [baoChep, setBaoChep] = useState('');
+  const baoChepTimer = useRef();
+  useEffect(() => () => clearTimeout(baoChepTimer.current), []);
 
   useEffect(() => { ensureSeed(); }, []);
 
@@ -156,6 +161,30 @@ function AppChinh({ mocPhut, homNay, homQua, ngayLich, cheDo, setCheDo }) {
   const examHint = isTask && isToday && examLeft > 0 && (
     <button type="button" className="exam-hint" onClick={() => setTab('exam')}>Khám: còn {examLeft} việc</button>
   );
+  // ----- iPhone (mức 2): đầu trang gọn, việc ít dùng nằm trong bảng "…" -----
+  const tienDo = xemTruoc ? '' : `${isTask ? 'Đã xong' : 'Đã khám'} ${done}/${total}`;
+  const dateTextPh = (dang2Viec || dang2Kham) ? dateText : dateText.replace(/\/\d{4}$/, ''); // iPhone ghi "Thứ Hai, 09/11", không năm
+  const dsKham = !isTask && !xemTruoc && !dang2Kham;   // chỉ Khám ở chế độ Hôm nay mới có nhóm "Danh sách khám"
+  const layDs = thongTinLayDanhSach(prev, homNay);
+  const layDanhSach = async () => {
+    const kq = await chepDanhSach(prev, homNay);
+    setBaoChep(kq);
+    clearTimeout(baoChepTimer.current);
+    baoChepTimer.current = setTimeout(() => setBaoChep(''), 3000);
+  };
+  const nhomMenu = [
+    ...(dsKham ? [{ ten: 'Danh sách khám', muc: [
+      { khoa: 'lay', bieuTuong: <ChepIcon />, ten: layDs.label, phu: layDs.hintNgan, tat: layDs.none, chon: layDanhSach },
+      { khoa: 'phong', bieuTuong: <PhongIcon />, ten: roomEdit ? 'Đóng quản lý phòng' : 'Quản lý phòng', phu: 'Đổi tên, thêm hoặc xoá phòng.', chon: () => setRoomEdit(!roomEdit) }
+    ] }] : []),
+    { ten: 'Ứng dụng', muc: [
+      { khoa: 'vt', bieuTuong: <span className="mt-ic-chu">/a</span>, ten: 'Thư viện viết tắt', chon: () => setVtOpen(true) },
+      { khoa: 'sl', bieuTuong: <CloudIcon />, ten: 'Sao lưu và cài đặt',
+        phu: backupDue ? <><span className="mt-cham" aria-hidden="true" />Nên sao lưu hôm nay</> : null, chon: () => setBackupOpen(true) }
+    ] }
+  ];
+  const nhanMenu = 'Thêm: ' + nhomMenu.flatMap((g) => g.muc.map((m) => m.ten.toLowerCase())).join(', ') + (backupDue ? ' (nên sao lưu hôm nay)' : '');
+
   const backupSheet = backupOpen && (
     <Sheet label="Sao lưu và cài đặt" onClose={() => setBackupOpen(false)} wide={wide}>
       <BackupPanel onClose={() => setBackupOpen(false)} cheDo={cheDo} onDoiCheDo={setCheDo} />
@@ -255,36 +284,33 @@ function AppChinh({ mocPhut, homNay, homQua, ngayLich, cheDo, setCheDo }) {
   return (
     <div className="phone-app">
       <header className="ph-head">
-        <div className="row-between end">
-          <div className="stack2 min0">
-            <div className="muted small">{dateText}</div>
+        <div className="ph-r1">
+          <div className="ph-tieu">
+            <div className="ph-ngay">
+              <span className="ph-ngay-chu">{dateTextPh}</span>
+              {tienDo && <><span className="ph-ngay-cach" aria-hidden="true"> · </span><b className="ph-tiendo">{tienDo}</b></>}
+            </div>
             <h1 className="h1 h1-ph">{heading}</h1>
           </div>
-          <div className="row8 none">
-            {vtBtn}
-            {backupBtn}
-            {isTask ? (
-              <button type="button" className="round-btn rel" onClick={() => setCalSheet(true)} aria-label="Mở lịch">
-                <CalIcon />{overdue > 0 && <span className="badge">{overdue}</span>}
-              </button>
-            ) : (
-              <button type="button" className={'round-btn rel' + (xemTruoc ? ' on' : '')} onClick={() => setLichKham(true)} aria-label="Lịch khám">
-                <CalIcon />
-              </button>
-            )}
-          </div>
+          {isTask ? (
+            <button type="button" className="round-btn rel" onClick={() => setCalSheet(true)} aria-label="Mở lịch">
+              <CalIcon />{overdue > 0 && <span className="badge">{overdue}</span>}
+            </button>
+          ) : (
+            <button type="button" className={'round-btn rel' + (xemTruoc ? ' on' : '')} onClick={() => setLichKham(true)} aria-label="Lịch khám">
+              <CalIcon />
+            </button>
+          )}
+          <MenuThem key={tab + (dsKham ? 'k' : '')} nhan={nhanMenu} canhBao={backupDue} nhom={nhomMenu} />
         </div>
         {daiMoc}
-        {!xemTruoc && (
-          <div className="row10">
-            <div className="bar grow thin"><div style={{ width: pct + '%' }} /></div>
-            <div className="prog-text">{isTask ? 'Đã xong' : 'Đã khám'} {done}/{total}</div>
-            {isTask && !isToday && <button type="button" className="btn tint sm" onClick={goToday}>Về hôm nay</button>}
-          </div>
-        )}
+        <div className="ph-r2">
+          <div className="ph-seg">{tabs}</div>
+          {coGat && <button type="button" className="ph-2ngay" aria-pressed={haiNgay} onClick={() => doiPhamVi(!haiNgay)}>2 ngày</button>}
+          {isTask && !isToday && <button type="button" className="ph-vehn" onClick={goToday}>Về hôm nay</button>}
+        </div>
+        {baoChep && <div role="status" className="ph-chep">{baoChep}</div>}
       </header>
-      <div className="ph-tabs">{tabs}</div>
-      {gat && <div className="ph-gat">{gat}</div>}
 
       {isTask ? (
         <>
@@ -304,7 +330,6 @@ function AppChinh({ mocPhut, homNay, homQua, ngayLich, cheDo, setCheDo }) {
         <KhamHaiNgay homQua={homQua} homNay={homNay} mocPhut={mocPhut} ngayLich={ngayLich} />
       ) : (
         <main className="ph-main exam">
-          <ExamActions compact prev={prev} today={homNay} roomEdit={roomEdit} onToggleRoomEdit={() => setRoomEdit(!roomEdit)} />
           {roomEdit && <RoomManager rooms={rooms} roomUse={roomUse} roomUsePast={roomUsePast} homNay={homNay} />}
           <RoomList rooms={roomsHomNay}patients={patients} todosByPid={todosByPid} collapsed={roomCollapsed}
             onToggle={toggleIn(setRoomCollapsed)} selPid={selPid} onOpen={setSelPid} today={homNay} />

@@ -486,3 +486,58 @@ test('xoá phòng: giao diện luôn gọi removeRoom kèm homNay; danh sách h�
   assert.equal(demManager, 2, 'RoomManager (iPhone và PC) phải nhận roomUsePast và homNay (ngày làm việc, không phải ngày lịch)');
   assert.match(ex, /\{!r\.daXoa && \(\s*<button type="button" className="room-add"/);
 });
+
+// ===== Phiếu 2026-11-09: tinh gọn nút ở iPhone, mức 2 (nút "…", "2 ngày", bỏ thanh tiến độ) =====
+test('mức 2 iPhone: nút "…" có aria-expanded, bảng role="menu", dòng role="menuitem", đóng bằng Esc và trả focus về nút', () => {
+  const mt = read('src/components/MenuThem.jsx');
+  assert.match(mt, /aria-haspopup="menu"/);
+  assert.match(mt, /aria-expanded=\{mo\}/);
+  assert.match(mt, /aria-label=\{nhan\}/);
+  assert.match(mt, /role="menu"/);
+  assert.match(mt, /role="menuitem"/);
+  assert.match(mt, /e\.key === 'Escape'/);
+  assert.match(mt, /nutRef\.current\?\.focus\(/);
+  const app = read('src/App.jsx');
+  assert.match(app, /'Thêm: '/);
+  assert.match(app, /\(nên sao lưu hôm nay\)/);
+});
+
+test('mức 2 iPhone: nút "2 ngày" có aria-pressed; PC vẫn dùng ExamActions; iPhone không còn thanh tiến độ, hàng gạt riêng, ExamActions, nút /a và đám mây ở đầu trang', () => {
+  const app = read('src/App.jsx');
+  const iPhone = app.slice(app.indexOf('// ===================== iPhone'));
+  const pc = app.slice(app.indexOf('// ===================== PC'), app.indexOf('// ===================== iPhone'));
+  assert.match(iPhone, /className="ph-2ngay" aria-pressed=\{haiNgay\} onClick=\{\(\) => doiPhamVi\(!haiNgay\)\}/);
+  assert.match(pc, /<ExamActions /);
+  assert.match(pc, /\{gat\}/);                       // PC giữ GatHaiNgay
+  assert.match(pc, /className="bar"/);               // PC giữ thanh tiến độ
+  assert.doesNotMatch(iPhone, /ExamActions|GatHaiNgay|\{gat\}|ph-gat|ph-tabs|className="bar|prog-text|\{vtBtn\}|\{backupBtn\}/);
+  assert.match(iPhone, /<MenuThem /);
+  assert.match(iPhone, /className="ph-vehn" onClick=\{goToday\}/); // tab Việc xem ngày khác: "Về hôm nay" thay nút "2 ngày"
+});
+
+test('mức 2 iPhone: MenuThem.jsx và phần CSS mới không có mã màu cứng (chỉ dùng biến của App.css)', () => {
+  const mt = read('src/components/MenuThem.jsx');
+  assert.doesNotMatch(mt, /#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(/);
+  assert.doesNotMatch(mt, /style=\{\{[^}]*(color|background)/);
+  const css = read('src/App.css');
+  const a = css.indexOf('/* Đầu trang iPhone (phiếu 2026-11-09, mức 2');
+  const b = css.indexOf('.ph-main{', a);
+  assert.ok(a >= 0 && b > a, 'không thấy khối CSS mức 2');
+  const khoi = css.slice(a, b);
+  assert.doesNotMatch(khoi, /#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(/);
+  assert.doesNotMatch(khoi, /gradient|animation|@keyframes|text-shadow/);
+  // nút "…" 44px, nút "2 ngày" và "Về hôm nay" cao 52px, bảng rộng 304px
+  assert.match(css, /\.ph-2ngay,\.ph-vehn\{[^}]*height:52px/);
+  assert.match(css, /\.mt-bang\{[^}]*width:304px;max-width:calc\(100vw - 32px\)/);
+  assert.match(css, /\.mt-it\{[^}]*min-height:52px/);
+});
+
+test('mức 2: ExamActions tách phần dùng chung cho bảng "…" (nhãn, dòng phụ, hàm chép), luật không trùng bé vẫn ở copyPatientsFrom', () => {
+  const ex = read('src/components/Exam.jsx');
+  assert.match(ex, /export function thongTinLayDanhSach/);
+  assert.match(ex, /export async function chepDanhSach/);
+  assert.match(ex, /Chép \$\{prev\.count\} bé và việc chưa xong\./);
+  assert.match(ex, /await copyPatientsFrom\(prev\.date, today\)/);
+  assert.match(ex, /const \{ none, label, hint \} = thongTinLayDanhSach\(prev, today\)/); // ExamActions (PC) dùng lại, nhãn và dòng phụ như cũ
+  assert.match(ex, /Lấy danh sách ngày \$\{fmtDM\(prev\.date\)\}/);
+});

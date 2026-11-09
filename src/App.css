@@ -87,7 +87,6 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .bar{height:8px;border-radius:4px;background:var(--track);overflow:hidden}
 .bar.thin{height:6px}
 .bar>div{height:100%;background:var(--accent);border-radius:4px;transition:width .2s}
-.prog-text{font-size:14px;font-weight:600;color:var(--tintInk);white-space:nowrap}
 
 /* khu vực */
 .zone-col{display:flex;flex-direction:column;gap:4px}
@@ -184,10 +183,42 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 
 /* ===== iPhone ===== */
 .phone-app{height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden;overflow:clip}
-.ph-head{flex:none;padding:calc(12px + env(safe-area-inset-top)) 16px 8px;display:flex;flex-direction:column;gap:8px}
-.ph-tabs{flex:none;padding:0 16px 8px}
+/* Đầu trang iPhone (phiếu 2026-11-09, mức 2, bản vẽ bảng 20 và 21): hàng đầu = ngày · tiến độ + tiêu đề, Lịch, "…"; hàng hai = Việc/Khám + "2 ngày".
+   Đỉnh danh sách ở khoảng 132px (padding trên 14 + hàng đầu 44 + khe 10 + hàng hai 52 + 12). Không còn thanh tiến độ, hàng .ph-gat, nút /a và đám mây ở đầu trang. */
+.ph-head{position:relative;z-index:20;flex:none;padding:calc(14px + env(safe-area-inset-top)) 16px 0;display:flex;flex-direction:column;gap:10px}
+.ph-r1{display:flex;align-items:center;gap:8px;min-height:44px}
+.ph-tieu{flex:1;min-width:0}
+.ph-ngay{display:flex;min-width:0;font-size:13px;line-height:18px;color:var(--muted);white-space:nowrap}
+.ph-ngay-chu{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.ph-ngay-cach{flex:none;white-space:pre}
+.ph-tiendo{flex:none;font-weight:700;color:var(--tintInk)}
+.ph-tieu .h1-ph{line-height:24px}
+.ph-r2{display:flex;align-items:center;gap:10px}
+.ph-seg{flex:none;width:168px}
+.ph-2ngay,.ph-vehn{flex:none;margin-left:auto;height:52px;box-sizing:border-box;padding:0 18px;border-radius:26px;font-size:15px;font-weight:600;touch-action:manipulation}
+.ph-2ngay{border:1px solid var(--edge);background:var(--surface);color:var(--ink)}
+.ph-2ngay[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accentInk)}
+.ph-vehn{border:0;background:var(--tint);color:var(--tintInk)}
+.ph-chep{position:absolute;left:16px;right:16px;top:calc(100% + 4px);padding:10px 14px;border-radius:12px;background:var(--tint);color:var(--tintInk);font-size:13px;font-weight:600;line-height:1.4}
+.phone-app .ph-head + .chips{padding-top:12px}
+/* nút "…" và bảng xổ xuống (role="menu"): ngay dưới hàng đầu, mép phải cách màn hình 16px */
+.mt-btn{z-index:2}
+.mt-btn .dot-alert{top:6px;right:6px;width:10px;height:10px}
+.mt-nen{position:fixed;inset:0;z-index:1}
+.mt-bang{position:absolute;z-index:3;right:16px;top:calc(14px + env(safe-area-inset-top) + 44px + 4px);width:304px;max-width:calc(100vw - 32px);max-height:calc(100dvh - 120px);overflow-y:auto;box-sizing:border-box;padding-bottom:4px;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:0 4px 14px var(--shadow)}
+.mt-nhom.sau{margin-top:4px;border-top:1px solid var(--line)}
+.mt-grp{padding:10px 14px 2px;font-size:12px;font-weight:600;line-height:1.4;color:var(--muted)}
+.mt-it{display:flex;align-items:flex-start;gap:12px;width:100%;min-height:52px;box-sizing:border-box;padding:8px 14px;border:0;background:transparent;text-align:left;color:var(--ink);touch-action:manipulation}
+.mt-it+.mt-it{border-top:1px solid var(--line)}
+.mt-it:disabled{opacity:.5;cursor:default}
+.mt-ic{flex:none;width:20px;height:20px;margin-top:2px;color:var(--accent);display:flex;align-items:center;justify-content:center}
+.mt-ic-chu{font-size:15px;font-weight:700;line-height:20px}
+.mt-chu{min-width:0;display:flex;flex-direction:column;gap:1px}
+.mt-t{font-size:15px;font-weight:600;line-height:1.3}
+.mt-s{display:flex;align-items:center;gap:6px;font-size:13px;line-height:1.35;color:var(--muted)}
+.mt-cham{flex:none;width:8px;height:8px;border-radius:50%;background:var(--p1)}
 .ph-main{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 16px 16px;display:flex;flex-direction:column;gap:8px}
-.ph-main.exam{padding-top:4px;gap:12px;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+.ph-main.exam{padding-top:12px;gap:12px;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
 :is(.phone-app,.sheet-ph) .group-title{font-size:16px}
 :is(.phone-app,.sheet-ph) .btn{min-height:44px}
 .grow-ph{flex:1}
@@ -198,7 +229,6 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .phone-app{font-variant-numeric:tabular-nums}
 :is(.phone-app,.sheet-ph) .h1-ph{font-size:20px}
 :is(.phone-app,.sheet-ph) .ph-head .muted.small{font-size:13px}
-:is(.phone-app,.sheet-ph) .prog-text{font-size:13px}
 :is(.phone-app,.sheet-ph) .seg button{font-size:15px}
 :is(.phone-app,.sheet-ph) .badge{font-size:12px}
 :is(.phone-app,.sheet-ph) .chip{font-size:15px}
@@ -382,7 +412,6 @@ html.co-form-viec body:not(.co-bang) .hoantac-wrap{bottom:calc(var(--kb,0px) + v
 /* nút "/a" trên đầu (cạnh đám mây) */
 .vt-btn{color:var(--accent);font-size:15px;font-weight:700;letter-spacing:-.02em}
 /* iPhone: 3 nút trên đầu (/a, đám mây, lịch), mỗi nút 44px */
-:is(.phone-app,.sheet-ph) .ph-head .row8.none{gap:8px}
 /* dải gợi ý + thông báo "Đã thay" đặt ngay cạnh ô gõ */
 .vt-strip{display:flex;flex-direction:column;gap:8px}
 .vt-sug{display:flex;flex-wrap:nowrap;align-items:center;gap:8px;min-height:44px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}
@@ -509,7 +538,6 @@ html.co-form-viec body:not(.co-bang) .hoantac-wrap{bottom:calc(var(--kb,0px) + v
 /* dải ghi rõ ngày làm việc khi đang trước mốc: "Ngày làm việc 04/11 (đang là 02:30, 05/11)" */
 .dai-moc{padding:8px 12px;border:1px solid var(--noteLine);border-radius:12px;background:var(--noteBg);color:var(--noteInk);font-size:13px;line-height:1.4;font-weight:600}
 /* nút gạt Hôm nay / 2 ngày: mỗi nút cao 44px (vùng chạm) */
-.ph-gat{flex:none;padding:0 16px 8px}
 .gat-hn-hang{display:flex;align-items:center;gap:10px;min-width:0}
 .gat-hn{flex:none;display:flex;border:1px solid var(--edge);border-radius:24px;background:var(--surface);overflow:hidden}
 .gat-hn button{height:44px;min-width:64px;padding:0 16px;border:0;border-radius:22px;background:transparent;color:var(--muted);font-size:15px;font-weight:600}

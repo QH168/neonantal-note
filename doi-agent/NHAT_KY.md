@@ -47,6 +47,23 @@
 | 49 | Xoá 2 phòng liên tiếp: Hoàn tác chỉ trả phòng xoá sau cùng; bé của phòng xoá trước vẫn xem được ở Lịch Khám. | Lưu ý | Lưu ý, chưa sửa. | Giao diện |
 | 50 | Xoá phòng, thêm phòng mới trong 6 giây rồi Hoàn tác: hai phòng cùng thứ tự, vị trí giữa hai phòng không xác định. | Lỗi nhỏ | Đề xuất khôi phục với thứ tự mới. | Thuật toán |
 | 51 | Nhóm phòng đã xoá ghi "(đã xoá)" ở danh sách hôm nay nhưng Tổng hợp y lệnh chỉ ghi tên phòng. | Lưu ý | Lưu ý, chưa sửa. | Giao diện |
+| 52 | Bảng 21D (khi gõ việc) không vẽ hàng chip khu; lời bác sĩ bảo giữ hàng chip như app hiện nay. | Lưu ý | Giữ như app; bác sĩ xác nhận. | Giao diện |
+| 53 | Đáy tab Việc: bản vẽ ghi ô "Thêm việc…" và nút chữ "Thêm"; app là ô "Ghi việc cần làm…" và nút tròn "+" (v9.3 đã duyệt). | Lưu ý | Giữ app; bác sĩ xác nhận. | Giao diện |
+| 54 | Bảng 21A (2 ngày) ghi dòng ngày "Thứ Hai, 09/11 · Đã xong 2/6"; app ghi "Hôm qua 08/11 và hôm nay 09/11" khi bật 2 ngày. | Lưu ý | Giữ chữ của app; bác sĩ xác nhận. | Giao diện |
+| 55 | Đợt tinh gọn nút iPhone mức 2 chưa thử trên iPhone thật (cử chỉ, bàn phím, bảng "…", tai thỏ chưa tính). Ảnh chuẩn đợt này chưa lưu. | Lưu ý | Bác sĩ thử trên iPhone và duyệt ảnh; nếu vướng thì giao phiếu chỉnh. | Giao diện |
+
+## 09/11/2026 — Tinh gọn nút iPhone, mức 2
+- Phiếu: `doi-agent/phieu-viec/2026-11-09-tinh-gon-nut-iphone-muc-2.json`. Bác sĩ duyệt bản vẽ bảng 20 và 21 ngày 09/11/2026.
+- Đã đổi (lời thường):
+  1. Đầu trang iPhone: dòng ngày có số tiến độ ("Thứ Hai, 09/11 · Đã xong 2/6"; ở Khám là "Đã khám 1/3"). Bỏ thanh tiến độ.
+  2. Đầu trang iPhone còn nút Lịch và nút "…". "/a" và đám mây vào bảng "…". PC giữ "/a" và đám mây.
+  3. Bảng "…": tab Khám hôm nay có "Lấy danh sách hôm qua" và "Quản lý phòng". Cả hai tab có "Thư viện viết tắt" và "Sao lưu và cài đặt". Chấm đỏ trên "…" khi nên sao lưu.
+  4. Hàng dưới tiêu đề trên iPhone: tab Việc/Khám và nút "2 ngày" bật/tắt cùng một hàng. Thay hàng riêng "Hôm nay / 2 ngày" của v9.6 (chỉ iPhone; PC giữ). Tab Việc xem ngày khác có "Về hôm nay" 52px.
+  5. PC không đổi.
+- Kỹ thuật: `src/components/MenuThem.jsx` (mới: nút "…" và bảng role="menu"); `src/App.jsx` (nhánh iPhone); `src/components/Exam.jsx` (tách `thongTinLayDanhSach` và `chepDanhSach` để bảng "…" và ExamActions ở PC dùng chung); `src/components/ui.jsx` (DotsIcon, ChepIcon, PhongIcon); `src/App.css`; `tests/luat.test.js` (bài mức 2); `scripts/chup-giao-dien.mjs`; `doi-agent/BAN_DO.md`. Không đổi dữ liệu, `db.version` hay định dạng sao lưu.
+- Kết quả kiểm: kiểm thử độc lập ĐẠT. `npm test` 260/260 sau khi cập nhật bản đồ. Số đo ở iPhone 393px: tab Việc, đỉnh danh sách (hàng chip khu) 203px → 132px; tab Khám, dòng phòng đầu 302,6px → 132px (chưa tính tai thỏ). PC: 17 ảnh so ảnh chuẩn, không đổi.
+- Chưa làm: chưa thử trên iPhone thật. Ảnh chuẩn đợt này CHƯA lưu, chờ bác sĩ duyệt ảnh. Chưa commit, chưa đẩy lên GitHub, chưa đóng zip. Credential helper vẫn tắt (từ 06/11/2026).
+- Chờ duyệt mới: #52–#55 (ba điểm khác bản vẽ, và thử trên iPhone thật).
 
 ## 09/11/2026 — Xoá được phòng khi hôm nay không còn bé
 - Bác sĩ báo không xoá được phòng đã từng có bé. Điều phối tái hiện trên bản 625a8b9. Nguyên nhân: luật cũ đếm bé ở mọi ngày.

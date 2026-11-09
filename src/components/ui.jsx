@@ -19,6 +19,18 @@ export const CalIcon = () => (
 export const CloudIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" strokeWidth="1.7" {...S}><path d="M6 15.5H5.2a3.2 3.2 0 0 1-.4-6.4A4.8 4.8 0 0 1 14.2 8a3.8 3.8 0 0 1 .8 7.5H14" /><path d="M10 17V10.5M7.6 12.8 10 10.4l2.4 2.4" /></svg>
 );
+/** Ba chấm ngang (nút "…" ở đầu trang iPhone). */
+export const DotsIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><circle cx="4.5" cy="10" r="1.7" /><circle cx="10" cy="10" r="1.7" /><circle cx="15.5" cy="10" r="1.7" /></svg>
+);
+/** Mũi tên xuống khay (chép / tải xuống) cho dòng "Lấy danh sách" trong bảng "…". */
+export const ChepIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 20 20" strokeWidth="1.7" {...S}><path d="M10 3v9M6.5 8.8 10 12.3l3.5-3.5M4 16h12" /></svg>
+);
+/** Căn phòng, cho dòng "Quản lý phòng" trong bảng "…". */
+export const PhongIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 20 20" strokeWidth="1.7" {...S}><path d="M5 17V4.5A1.5 1.5 0 0 1 6.5 3h7A1.5 1.5 0 0 1 15 4.5V17M3.5 17h13M11.5 10v.5" /></svg>
+);
 export const PlusIcon = ({ size = 18 }) => (
   <svg width={size} height={size} viewBox="0 0 16 16" strokeWidth="2" {...S}><path d="M8 3v10M3 8h10" /></svg>
 );

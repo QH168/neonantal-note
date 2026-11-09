@@ -15,18 +15,32 @@ import { Chevron, XIcon, SheetHead, SwipeRow, Sheet, DongBtn, TickOk, TrangThaiX
 
 const chuanChuViec = (s) => String(s ?? '').normalize('NFC').trim().replace(/\s+/g, ' ').toLowerCase();
 
-/** Nút "Lấy danh sách hôm qua" + "Quản lý phòng". */
-export function ExamActions({ prev, today, roomEdit, onToggleRoomEdit, compact }) {
-  const [msg, setMsg] = useState('');
+/**
+ * Phần dùng chung của "Lấy danh sách hôm qua" (nút ở PC và dòng trong bảng "…" ở iPhone):
+ * nhãn, dòng phụ dài (PC), dòng phụ ngắn (bảng "…"), và hàm chép. Luật không trùng bé nằm ở copyPatientsFrom.
+ */
+export function thongTinLayDanhSach(prev, today) {
   const none = !prev.date || prev.count === 0;
   const isYesterday = prev.date === addDays(today, -1);
   const label = none || isYesterday ? 'Lấy danh sách hôm qua' : `Lấy danh sách ngày ${fmtDM(prev.date)}`;
   const hint = none
     ? 'Chưa có danh sách ngày trước.'
     : `Chép ${prev.count} bệnh nhân của ${isYesterday ? 'hôm qua' : 'ngày ' + fmtDM(prev.date)}, kèm việc chưa xong. Bệnh nhân đã có trong danh sách hôm nay sẽ không bị trùng.`;
+  const hintNgan = none ? 'Chưa có danh sách ngày trước.' : `Chép ${prev.count} bé và việc chưa xong.`;
+  return { none, label, hint, hintNgan };
+}
+/** Chép danh sách ngày trước sang hôm nay, trả câu báo kết quả. */
+export async function chepDanhSach(prev, today) {
+  const n = await copyPatientsFrom(prev.date, today);
+  return n ? `Đã chép ${n} bệnh nhân.` : 'Không có bệnh nhân mới để chép.';
+}
+
+/** Nút "Lấy danh sách hôm qua" + "Quản lý phòng". */
+export function ExamActions({ prev, today, roomEdit, onToggleRoomEdit, compact }) {
+  const [msg, setMsg] = useState('');
+  const { none, label, hint } = thongTinLayDanhSach(prev, today);
   const run = async () => {
-    const n = await copyPatientsFrom(prev.date, today);
-    setMsg(n ? `Đã chép ${n} bệnh nhân.` : 'Không có bệnh nhân mới để chép.');
+    setMsg(await chepDanhSach(prev, today));
     setTimeout(() => setMsg(''), 3000);
   };
   return (
