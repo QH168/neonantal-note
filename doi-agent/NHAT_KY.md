@@ -59,7 +59,7 @@
 - Kỹ thuật: `src/lib/phong.js` (mới: `phongXoaDuoc`, `phongHomNay`); `src/lib/actions.js` (`removeRoom(id, homNay)` đếm lại và xoá trong một giao dịch; `khoiPhucRoom`); `src/hooks.js` (`roomUse` chỉ đếm từ hôm nay, `roomUsePast`, `roomsHomNay`); `src/components/Exam.jsx` (RoomManager, RoomList); `src/App.jsx`, `src/App.css`, `scripts/chup-giao-dien.mjs`, `package.json`, `tests/luat.test.js`; tests mới `tests/phong.test.js`. Khi xoá CSDL chỉ đổi dòng phòng (`deleted`, `updatedAt`). Không đổi `db.version` hay định dạng sao lưu.
 - Kết quả: kiểm thử độc lập ĐẠT, không vòng sửa nào. `npm test` 256/256. Script chụp ĐẠT 110 ảnh. Quanh mốc 07:00 đúng.
 - Lưới an toàn: bé hôm nay ở phòng đã xoá (do gộp sao lưu) vẫn hiện trong danh sách hôm nay (gộp vào `phongHomNay`).
-- Chưa kiểm: hộp xác nhận trên Safari iPhone thật; so ảnh chuẩn bỏ qua vì thiếu `sharp`. Ảnh chuẩn chưa lưu.
+- Chưa kiểm: hộp xác nhận trên Safari iPhone thật; so ảnh chuẩn bỏ qua vì thiếu `sharp`. Bác sĩ duyệt ảnh 09/11/2026; ảnh chuẩn đã lưu.
 - Ghi rõ: kể từ 06/11/2026 bác sĩ tắt credential helper, phải được bác sĩ bật lại mới đẩy lên GitHub.
 - Chờ duyệt mới: #48–#51 (phòng khoá do bé ngày sau, xoá hai phòng liên tiếp, thứ tự sau Hoàn tác, "(đã xoá)" ở Tổng hợp).
 
