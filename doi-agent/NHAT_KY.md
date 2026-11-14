@@ -62,7 +62,9 @@ Phiếu: `doi-agent/phieu-viec/2026-11-14-don-ma-va-chep-ghi-chu.json`. Nhánh `
 - **Đợt 3, bớt vòng lặp và bớt đọc dữ liệu:** `useAppData` đọc bé hôm nay một lần (trước hai lần), dựng `todosByPid` trong truy vấn (trước dựng lại mỗi lần vẽ), đếm bé ngày trước của các phòng trống bằng một truy vấn (trước mỗi phòng một truy vấn). `actions.js`: ghi nhiều dòng trong một giao dịch (`ghiMotLuot`); `copyPatientsFrom` đọc việc của mọi bé một lần và tra mã trùng bằng `Set`. Chia nhóm một lượt bằng `nhomTheo` ở thanh khu vực, nhóm việc, danh sách phòng, xem ngày trước, `buildSummary`, `tongHopNhieuNgay`, `ghepHaiNgay`, `soanGiaoTour`. Số đếm ở đầu trang chỉ tính lại khi dữ liệu đổi.
 - **Đợt 4, `App.jsx`:** tách hàm thuần `chuDauTrang` và `taoMenuThem`, gom ba bảng dùng chung thành `bangChung`, xếp trạng thái theo nhóm. PC và iPhone vẫn nằm trong `AppChinh` (lý do ghi trong phiếu).
 - **Bài kiểm đã sửa:** `tests/luat.test.js` một dòng (chữ dòng phụ "Chép n bé, ghi chú và việc chưa xong."); `scripts/chup-giao-dien.mjs` một chỗ cùng chữ đó. Thêm `tests/chung.test.js` (3 bài). Không nới luật nào.
-- **Chưa làm:** đợt 5 (nâng thư viện) chưa được duyệt. Ảnh chuẩn chưa lưu lại. Chưa thử trên iPhone thật.
+- **Đã lên app:** bác sĩ đồng ý, đẩy lên `main` ngày 14/11/2026 (commit c26d8b9), GitHub triển khai đạt.
+- **Ảnh chuẩn:** bác sĩ duyệt ảnh ngày 14/11/2026, đã lưu lại cả bộ bằng `--luu-chuan`. Bộ này gồm cả giao diện tinh gọn mức 2 của 09/11/2026 (trước đó chưa lưu chuẩn).
+- **Chưa làm:** đợt 5 (nâng thư viện) chưa được duyệt. Chưa thử trên iPhone thật.
 
 ## 09/11/2026 — Tinh gọn nút iPhone, mức 2
 - Phiếu: `doi-agent/phieu-viec/2026-11-09-tinh-gon-nut-iphone-muc-2.json`. Bác sĩ duyệt bản vẽ bảng 20 và 21 ngày 09/11/2026.
