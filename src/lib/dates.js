@@ -43,3 +43,5 @@ export const fmtDM = (iso) => {
   const d = parseIso(iso);
   return `${p2(d.getDate())}/${p2(d.getMonth() + 1)}`;
 };
+/** 'dd/mm/yyyy' của một ngày 'YYYY-MM-DD'. */
+export const fmtDMY = (iso) => fmtDM(iso) + '/' + parseIso(iso).getFullYear();

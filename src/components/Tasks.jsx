@@ -1,21 +1,26 @@
 // Mục Việc: khu vực, danh sách theo khu, form thêm việc, lịch.
-import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
+import { useRef, useState, useEffect, useMemo } from 'react';
 import { ZONES, LEGACY_ZONES } from '../db.js';
 import { addTask, toggleTask, cycleUrgency, removeTask, khoiPhucTask, setTaskTags, setTaskNote, setTaskText, setTaskZone, doiViecSangHomNay, hoanTacDoiViec } from '../lib/actions.js';
 import { parseIso, fmtDM } from '../lib/dates.js';
 import { demViecChuaXong, ngaySotGanNhat } from '../lib/lich.js';
-import { TAGS, laViecMoi, batTatNhan, sapViec, khuHienThi, khuDeChon, boDemCham, themCham, gioXong, chuanTenViec, khiRoiOThemViec } from '../lib/viec.js';
-import { useBanPhim } from '../hooks.js';
+import { TAGS, laViecMoi, batTatNhan, sapViec, khuHienThi, khuDeChon, gioXong, chuanTenViec, khiRoiOThemViec } from '../lib/viec.js';
+import { nhomTheo } from '../lib/chung.js';
+import { useBanPhim, useChamHaiLan, useTuLuu } from '../hooks.js';
 import { useVietTat } from './VietTat.jsx';
 import { KhungLich } from './Lich.jsx';
 import { useHoanTac } from './HoanTac.jsx';
-import { PriDot, PRI_NAME, Chevron, XIcon, SwipeRow, TagDot, TickOk, TrangThaiXong, mauNhan, Sheet, TrashIcon, PlusIcon, DongBtn, useDongSheet } from './ui.jsx';
+import { PriDot, PRI_NAME, Chevron, SwipeRow, TagDot, TickOk, TrangThaiXong, mauNhan, Sheet, PlusIcon, DongBtn, DauChiTietViec, ChanChiTietViec, giuConTro, useDongSheet } from './ui.jsx';
 
 /** Thanh khu vực: dạng cột (PC) hoặc chip vuốt ngang (iPhone). */
 export function ZoneNav({ dayTasks, active, onPick, chips }) {
-  const items = [['all', 'Tất cả', dayTasks.filter((t) => !t.done).length]].concat(
-    khuHienThi(dayTasks, ZONES, LEGACY_ZONES).map((z) => [z, z, dayTasks.filter((t) => t.zone === z && !t.done).length])
-  );
+  // Đếm việc chưa xong của mọi khu trong MỘT lượt (không lọc lại cả danh sách cho từng khu)
+  const items = useMemo(() => {
+    const con = new Map();
+    let tong = 0;
+    for (const t of dayTasks) if (!t.done) { tong++; con.set(t.zone, (con.get(t.zone) || 0) + 1); }
+    return [['all', 'Tất cả', tong], ...khuHienThi(dayTasks, ZONES, LEGACY_ZONES).map((z) => [z, z, con.get(z) || 0])];
+  }, [dayTasks]);
   return (
     <nav aria-label="Khu vực làm việc" className={chips ? 'chips noscroll' : 'zone-col'}>
       {items.map(([key, label, count]) => (
@@ -43,29 +48,6 @@ function TagBtns({ tags, onToggle, label, giuConTro: giu = false }) {
   );
 }
 
-/** Ô tự lưu: gõ tới đâu lưu sau 0,4 giây; lưu nốt khi đóng. Trả [chữ, đổi, lưuNgay, đặtLại, bỏ]. */
-export function useTuLuu(goc, luu) {
-  const [v, setV] = useState(goc);
-  const pending = useRef(null);
-  const timer = useRef();
-  const luuRef = useRef(luu);
-  luuRef.current = luu;
-  const flush = useCallback(() => {
-    clearTimeout(timer.current);
-    if (pending.current !== null) { const x = pending.current; pending.current = null; luuRef.current(x); }
-  }, []);
-  useEffect(() => () => flush(), [flush]); // lưu nốt khi đóng bảng
-  const change = (x) => {
-    setV(x);
-    pending.current = x;
-    clearTimeout(timer.current);
-    timer.current = setTimeout(flush, 400);
-  };
-  const datLai = (x) => { clearTimeout(timer.current); pending.current = null; setV(x); };
-  const bo = () => { clearTimeout(timer.current); pending.current = null; };
-  return [v, change, flush, datLai, bo];
-}
-
 /**
  * Bảng "chi tiết việc" (chạm 2 lần vào việc): sửa tên, khu, nhãn, ghi chú; đánh dấu xong / bỏ; xoá việc. Mọi ô tự lưu.
  * Việc cũ (có urgency, chưa có tags): hiện 5 nút nhãn chưa bật; bật nhãn đầu tiên thì thành kiểu mới.
@@ -86,13 +68,7 @@ function TaskDetail({ t, wide, onClose, onDoi = null }) {
   };
   return (
     <Sheet label="Chi tiết việc" onClose={onClose} wide={wide} className="sheet-half">
-      <div className="row-between sheet-r1">
-        <label htmlFor="ten-viec" className="sr-only">Nội dung việc</label>
-        <textarea id="ten-viec" className="sheet-name" rows={ten.length > 52 ? 3 : ten.length > 26 ? 2 : 1} autoComplete="off" {...vtTen.props}
-          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } }} />
-        <DongBtn className="icon-btn" aria-label="Đóng" onClose={onClose}><XIcon /></DongBtn>
-      </div>
-      {vtTen.strip}
+      <DauChiTietViec id="ten-viec" nhan="Nội dung việc" ten={ten} vt={vtTen} onClose={onClose} />
       <div className="sheet-nhom">
         <span className="sheet-nhan" id="khu-viec-nhan">Khu vực</span>
         <div className="chips-sheet noscroll" role="group" aria-label="Khu vực">
@@ -112,29 +88,24 @@ function TaskDetail({ t, wide, onClose, onDoi = null }) {
       <TrangThaiXong xong={!!t.done} gio={gioXong(t.doneAt)} onDanhDau={() => toggleTask(t)} onBo={() => toggleTask(t)} />
       {/* việc còn từ hôm qua (chế độ 2 ngày): dời riêng một việc sang hôm nay, có Hoàn tác */}
       {onDoi && <DongBtn className="btn doi-hom-nay" onClose={async () => { await onDoi(t); onClose(); }}>Dời sang hôm nay</DongBtn>}
-      <div className="row8 sheet-r4">
-        <DongBtn className="sheet-del-task" onClose={xoaViec}><TrashIcon size={18} />Xoá việc</DongBtn>
-        <span className="grow" />
-        <DongBtn className="btn primary big sheet-done" onClose={onClose}>Xong</DongBtn>
-      </div>
+      <ChanChiTietViec onXoa={xoaViec} onClose={onClose} />
     </Sheet>
   );
 }
 
 function TaskRow({ t, chips, onOpen }) {
   const hoanTac = useHoanTac();
-  const bodyTaps = useRef([]);
   const [sang, setSang] = useState(false); // dòng sáng lên một nhịp (~140ms) mỗi lần chạm
   const hetSang = useRef(null);
   useEffect(() => () => clearTimeout(hetSang.current), []);
   const moi = laViecMoi(t);
   // Chạm 2 lần (trong 1 giây) vào thân dòng hoặc vùng nhãn → chi tiết việc.
+  const cham = useChamHaiLan(() => onOpen(t.id));
   const tapBody = () => {
     setSang(true);
     clearTimeout(hetSang.current);
     hetSang.current = setTimeout(() => setSang(false), 140);
-    bodyTaps.current = themCham(bodyTaps.current, Date.now());
-    if (boDemCham(bodyTaps.current, 2)) { bodyTaps.current = []; onOpen(t.id); }
+    cham();
   };
   const tags = moi ? t.tags : [];
   const note = (t.note || '').trim();
@@ -173,15 +144,21 @@ export function TaskGroups({ dayTasks, active, collapsed, onToggle, chips }) {
   // Bảng chi tiết đặt ở đây (không đặt trong TaskRow) để đổi khu mà bảng không bị đóng khi dòng chuyển nhóm.
   const [chiTietId, setChiTietId] = useState(null);
   const dangMo = chiTietId ? dayTasks.find((t) => t.id === chiTietId && !t.deleted) : null;
-  const groups = khuHienThi(dayTasks, ZONES, LEGACY_ZONES).filter((z) => active === 'all' || active === z)
-    .map((z) => ({ z, list: sapViec(dayTasks.filter((t) => t.zone === z)) }))
-    .filter((g) => g.list.length);
+  // Chia việc theo khu trong MỘT lượt, chỉ tính lại khi danh sách hoặc khu đang lọc đổi
+  const groups = useMemo(() => {
+    const theoKhu = nhomTheo(dayTasks, (t) => t.zone);
+    return khuHienThi(dayTasks, ZONES, LEGACY_ZONES).flatMap((z) => {
+      const ds = (active === 'all' || active === z) && theoKhu.get(z);
+      if (!ds) return [];
+      const list = sapViec(ds);
+      return [{ z, list, left: list.reduce((n, t) => n + (t.done ? 0 : 1), 0) }];
+    });
+  }, [dayTasks, active]);
   const sheet = dangMo && <TaskDetail key={dangMo.id} t={dangMo} wide={!chips} onClose={() => setChiTietId(null)} />;
   if (!groups.length) return <><div className="empty">Chưa có việc nào ở khu vực này.</div>{sheet}</>;
   return (
     <>
-      {groups.map(({ z, list }) => {
-        const left = list.filter((t) => !t.done).length;
+      {groups.map(({ z, list, left }) => {
         const open = !collapsed[z];
         return (
           <section key={z} className="group">
@@ -203,13 +180,9 @@ export function TaskGroups({ dayTasks, active, collapsed, onToggle, chips }) {
 
 /** Một việc trong khung "Còn từ hôm qua": vuốt phải = xong; chạm 2 lần = chi tiết (có nút "Dời sang hôm nay"). Không vuốt trái, không xoá. */
 function HangConHomQua({ m, onOpen }) {
-  const taps = useRef([]);
   const t = m.task;
   const tags = laViecMoi(t) ? t.tags : [];
-  const tap = () => {
-    taps.current = themCham(taps.current, Date.now());
-    if (boDemCham(taps.current, 2)) { taps.current = []; onOpen(t.id); }
-  };
+  const tap = useChamHaiLan(() => onOpen(t.id));
   return (
     <SwipeRow className="task-row compact hq-hang" label={t.text} onDone={() => toggleTask(t)}>
       <div className="task-main" role="button" tabIndex={0} aria-label={'Mở chi tiết việc: ' + t.text}
@@ -256,9 +229,6 @@ export function ConTuHomQua({ muc, homNay, chips }) {
     </>
   );
 }
-
-/** Chạm nút trong thanh thêm việc không được làm ô gõ mất con trỏ (bàn phím iPhone tụt xuống). */
-const giuConTro = (e) => e.preventDefault();
 
 /**
  * Form thêm việc. variant 'pc' = khung trên đầu (giữ bố cục cũ); 'ph' = thanh dưới cùng iPhone (bảng 15a, 15b):
@@ -416,8 +386,8 @@ export function TaskForm({ variant, date, zone, setZone, tags, setTags, khuLoc =
 export function LichViec({ tasks, viewDate, today, month, setMonth, onPick, onClose, inline = false }) {
   const dongSheet = useDongSheet();
   const dem = useMemo(() => demViecChuaXong(tasks), [tasks]);
-  const sot = ngaySotGanNhat(tasks, today);
-  const soSot = Object.entries(dem).reduce((s, [iso, n]) => (iso < today ? s + n : s), 0);
+  const sot = useMemo(() => ngaySotGanNhat(tasks, today), [tasks, today]);
+  const soSot = useMemo(() => Object.entries(dem).reduce((s, [iso, n]) => (iso < today ? s + n : s), 0), [dem, today]);
   const roi = () => { if (onClose) (dongSheet ? dongSheet(onClose) : onClose()); };
   const chon = (iso) => { onPick(iso); roi(); };
   const denNgay = (iso) => { setMonth(monthOf(iso)); chon(iso); };

@@ -1,12 +1,11 @@
 // Chế độ 2 ngày và tổng hợp giao tour (v9.6). Hàm thuần: không chạm giao diện hay CSDL; hàm dùng đồng hồ nhận `now`.
 // "Hôm qua" / "hôm nay" ở đây là NGÀY LÀM VIỆC (xem ngayLamViec trong dates.js). Tuổi luôn tính theo NGÀY LỊCH của `now`.
 import { calcAge, ngayTinhTuoi, parseDob } from './clinical.js';
-import { p2, parseIso } from './dates.js';
+import { p2, parseIso, fmtDM as dm, fmtDMY as dmy } from './dates.js';
 import { soSanhBe } from './thu-tu.js';
 import { phongChoXem } from './tong-hop.js';
 import { MOC_MAC_DINH } from './cai-dat.js';
-
-const alive = (r) => !r.deleted;
+import { alive, nhomTheo } from './chung.js';
 
 /** Giờ bắt đầu "đêm qua" (phút từ 00:00): 16:00 (bác sĩ duyệt, câu 2). */
 export const GIO_BAT_DAU_DEM_MAC_DINH = 960;
@@ -75,7 +74,7 @@ const trongCuaSo = (ms, w) => laMs(ms) && ms >= w.tu && ms < w.den;
 // ---------- Việc ----------
 const soViecTrongBe = (a, b) => ((a.order || 0) - (b.order || 0)) || ((a.createdAt || 0) - (b.createdAt || 0))
   || String(a.id ?? '').localeCompare(String(b.id ?? ''));
-const viecSongCuaBe = (todosByPid, id) => ((todosByPid && todosByPid[id]) || []).filter(alive).slice().sort(soViecTrongBe);
+const viecSongCuaBe = (todosByPid, id) => (todosByPid?.[id] || []).filter(alive).sort(soViecTrongBe);
 
 /**
  * "Còn từ hôm qua" của tab Việc: việc chưa xong, chưa xoá của ĐÚNG ngày làm việc trước (không gồm ngày xa hơn).
@@ -140,13 +139,13 @@ export function chonChepMotBe({ src, cur, roomIds, homNay }) {
 // ---------- Tách kết quả truy vấn một khoảng thành hai ngày ----------
 /** k = kết quả useBeKhoang(homQua, homNay). Trả { ready, rooms, todosByPid, homQua: { ngay, patients }, homNay: { ngay, patients } }. */
 export function tachHaiNgay(k, homQua, homNay) {
-  const ps = k.patients || [];
+  const theoNgay = nhomTheo(k.patients, (p) => p.examDate);
   return {
     ready: k.ready,
     rooms: k.rooms,
     todosByPid: k.todosByPid,
-    homQua: { ngay: homQua, patients: ps.filter((p) => p.examDate === homQua) },
-    homNay: { ngay: homNay, patients: ps.filter((p) => p.examDate === homNay) },
+    homQua: { ngay: homQua, patients: theoNgay.get(homQua) || [] },
+    homNay: { ngay: homNay, patients: theoNgay.get(homNay) || [] },
   };
 }
 
@@ -271,24 +270,22 @@ export function ghepHaiNgay({ homQua, homNay, rooms = [], todosByPid = {}, mocPh
   });
   const the = dsThe.map((x) => x.the);
 
+  const theTheoPhong = nhomTheo(the, (t) => t.roomId);
   const phong = [];
   for (const r of dsPhong) {
-    const trongPhong = the.filter((t) => t.roomId === r.id);
-    if (trongPhong.length) phong.push({ roomId: r.id, ten: r.name, tenNgan: tenPhongNgan(r.name), the: trongPhong });
+    const trongPhong = theTheoPhong.get(r.id);
+    if (trongPhong) phong.push({ roomId: r.id, ten: r.name, tenNgan: tenPhongNgan(r.name), the: trongPhong });
   }
-  return {
-    homQua: ngayQ,
-    homNay: ngayH,
-    the,
-    phong,
-    dem: {
-      tatCa: the.length,
-      moiDemQua: the.filter((t) => t.moiDemQua).length,
-      conViec: the.filter((t) => t.conViec).length,
-      chuaChep: the.filter((t) => t.chuaChep).length,
-    },
-    soViecCon: the.reduce((n, t) => n + t.soViecCon, 0),
-  };
+  // Một lượt đếm cho cả 4 chip và tổng số việc còn lại
+  const soDem = { tatCa: the.length, moiDemQua: 0, conViec: 0, chuaChep: 0 };
+  let soViecCon = 0;
+  for (const t of the) {
+    if (t.moiDemQua) soDem.moiDemQua++;
+    if (t.conViec) soDem.conViec++;
+    if (t.chuaChep) soDem.chuaChep++;
+    soViecCon += t.soViecCon;
+  }
+  return { homQua: ngayQ, homNay: ngayH, the, phong, dem: soDem, soViecCon };
 }
 
 /** Lọc thẻ theo chip: 'tatCa' | 'moiDemQua' | 'conViec' | 'chuaChep'. Chip lạ = tất cả. */
@@ -302,8 +299,6 @@ export function locThe(the, chip) {
 }
 
 // ---------- Tổng hợp giao tour (bảng 17d) ----------
-const dm = (iso) => { const d = parseIso(iso); return p2(d.getDate()) + '/' + p2(d.getMonth() + 1); };
-const dmy = (iso) => dm(iso) + '/' + parseIso(iso).getFullYear();
 const TIEU_DE_NHOM = [
   ['beMoi', 'BÉ MỚI ĐÊM QUA'],
   ['viecConLai', 'VIỆC CÒN TỪ HÔM QUA'],
@@ -341,17 +336,17 @@ export function soanGiaoTour({ ghep, bat }) {
   const { the, homQua, homNay } = ghep;
   const khacNam = homQua.slice(0, 4) !== homNay.slice(0, 4);
   const dau = 'GIAO TOUR ' + (khacNam ? dmy(homQua) : dm(homQua)) + ' - ' + dmy(homNay);
-  const nhom = { beMoi: [], viecConLai: [], beOnDinh: [] };
-  for (const t of the) nhom[nhomGiaoTour(t)].push(t.key);
-  const soMoiDemQua = the.filter((t) => t.moiDemQua).length;
+  const theoNhom = nhomTheo(the, nhomGiaoTour);
+  const nhom = Object.fromEntries(TIEU_DE_NHOM.map(([ma]) => [ma, (theoNhom.get(ma) || []).map((t) => t.key)]));
+  const soMoiDemQua = nhom.beMoi.length; // nhóm 'beMoi' = đúng các bé mới đêm qua (nhomGiaoTour)
   const kq = { soBe: the.length, soMoiDemQua, soViecCon: ghep.soViecCon, nhom };
   if (!the.length) return { ...kq, text: dau + '\nChưa có bé trong 2 ngày.' };
 
   const khoi = [dau + '\n' + `${the.length} bé. ${soMoiDemQua} mới đêm qua. ${ghep.soViecCon} việc còn lại.`];
   for (const [ma, tieuDe] of TIEU_DE_NHOM) {
     if (!b[ma]) continue;
-    const ds = the.filter((t) => nhomGiaoTour(t) === ma);
-    if (!ds.length) continue;
+    const ds = theoNhom.get(ma);
+    if (!ds) continue;
     khoi.push([tieuDe, ...ds.flatMap((t) => dongGiaoTour(t, !!b.ghiChu))].join('\n'));
   }
   return { ...kq, text: khoi.join('\n\n') };

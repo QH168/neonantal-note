@@ -4,7 +4,7 @@
 
 ## File và hàm
 - `src/db.js` — `db` (Dexie `ghichu-sosinh`), `DATA_TABLES` (tasks, rooms, exam_patients, patient_todos, abbrevs), `ZONES`, `uuid`, `getDeviceId`, `getMeta/setMeta`,
-  `addRow`, `updateRow`, `softDelete` (mọi lần ghi đều có `updatedAt` + `deviceId`), `requestPersistentStorage`, `todayStr`.
+  `addRow`, `updateRow`, `softDelete` (mọi lần ghi đều có `updatedAt` + `deviceId`), `requestPersistentStorage`. (`todayStr` không ai dùng, đã xoá 14/11/2026; ngày lấy từ `src/lib/dates.js`.) Từ 14/11/2026 các thao tác ghi nhiều dòng trong `src/lib/actions.js` (xoá việc đã xong, Hoàn tác nhiều dòng, chép danh sách, chép một bé, dời việc, xoá bé, xoá phòng) chạy trong MỘT giao dịch qua `ghiMotLuot`; từng dòng vẫn qua `addRow`/`updateRow`/`softDelete`.
 - `src/lib/merge.js` — `BACKUP_FORMAT`, `BACKUP_VERSION`, `mergeRows` (bản sửa sau cùng thắng, bằng nhau giữ bản trên máy),
   `validateBackup`, `backupFileName` (ghichu_YYYY-MM-DD_HHMM_thiet-bi.json).
 - `src/lib/backup.js` — xuất (`prepareBackupFile`, `shareFile` cho iPhone, `saveToFolder` cho PC, `downloadFile` dự phòng),

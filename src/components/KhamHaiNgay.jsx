@@ -50,8 +50,9 @@ export default function KhamHaiNgay({ homQua, homNay, mocPhut, ngayLich, wide })
   const [msg, setMsg] = useState('');
   const [dangChep, setDangChep] = useState(false);
 
+  const phongTheoId = useMemo(() => new Map(d.rooms.map((r) => [r.id, r])), [d.rooms]);
   const tenPhong = (roomId, ten) => {
-    const r = d.rooms.find((x) => x.id === roomId);
+    const r = phongTheoId.get(roomId);
     return r ? r.name + (r.deleted && r.name !== 'Phòng đã xoá' ? ' (đã xoá)' : '') : ten;
   };
   const phongHien = ghep.phong.map((p) => ({ ...p, the: locThe(p.the, chip) })).filter((p) => p.the.length);

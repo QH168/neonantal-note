@@ -52,6 +52,18 @@
 | 54 | Bảng 21A (2 ngày) ghi dòng ngày "Thứ Hai, 09/11 · Đã xong 2/6"; app ghi "Hôm qua 08/11 và hôm nay 09/11" khi bật 2 ngày. | Lưu ý | Giữ chữ của app; bác sĩ xác nhận. | Giao diện |
 | 55 | Đợt tinh gọn nút iPhone mức 2 chưa thử trên iPhone thật (cử chỉ, bàn phím, bảng "…", tai thỏ chưa tính). Ảnh chuẩn đợt này chưa lưu. | Lưu ý | Bác sĩ thử trên iPhone và duyệt ảnh; nếu vướng thì giao phiếu chỉnh. | Giao diện |
 
+## 14/11/2026 — Dọn mã (4 đợt) và chép ghi chú khi lấy danh sách
+
+Phiếu: `doi-agent/phieu-viec/2026-11-14-don-ma-va-chep-ghi-chu.json`. Nhánh `don-ma-va-chep-ghi-chu`, chưa đẩy lên `main`. Một phiên Claude làm trực tiếp (không gọi đội agent).
+
+- **Bác sĩ thấy gì đổi:** ở tab Khám, "Lấy danh sách hôm qua", "Chép sang hôm nay" và "Chép sang" nay chép luôn ghi chú của bé. Dòng phụ ghi "Chép n bé, ghi chú và việc chưa xong." Ngoài ra giao diện không đổi.
+- **Đợt 1, bỏ phần thừa:** xoá `Sun`, `Moon`, `PRI_LEVELS` (`ui.jsx`), `todayStr` (`db.js`), tham số `compact` của `ExamActions`. Hàm `alive` (viết lại ở 5 tệp) về một chỗ: `src/lib/chung.js`. `giuConTro` (viết 2 lần) về `ui.jsx`. `dm`/`dmy` (viết ở 2 tệp) dùng `fmtDM`/`fmtDMY` của `dates.js`.
+- **Đợt 2, gom phần lặp:** `useChamHaiLan` (chạm 2 lần, trước viết 3 lần), `useBaoTam` (câu báo tự tắt, trước viết 3 lần), `useTuLuu` và `useGioMay` chuyển về `src/hooks.js`; `DauChiTietViec`, `ChanChiTietViec` trong `ui.jsx` dùng chung cho chi tiết việc và chi tiết việc của bé; `viecTheoBe` thay hai đoạn xếp việc theo bé.
+- **Đợt 3, bớt vòng lặp và bớt đọc dữ liệu:** `useAppData` đọc bé hôm nay một lần (trước hai lần), dựng `todosByPid` trong truy vấn (trước dựng lại mỗi lần vẽ), đếm bé ngày trước của các phòng trống bằng một truy vấn (trước mỗi phòng một truy vấn). `actions.js`: ghi nhiều dòng trong một giao dịch (`ghiMotLuot`); `copyPatientsFrom` đọc việc của mọi bé một lần và tra mã trùng bằng `Set`. Chia nhóm một lượt bằng `nhomTheo` ở thanh khu vực, nhóm việc, danh sách phòng, xem ngày trước, `buildSummary`, `tongHopNhieuNgay`, `ghepHaiNgay`, `soanGiaoTour`. Số đếm ở đầu trang chỉ tính lại khi dữ liệu đổi.
+- **Đợt 4, `App.jsx`:** tách hàm thuần `chuDauTrang` và `taoMenuThem`, gom ba bảng dùng chung thành `bangChung`, xếp trạng thái theo nhóm. PC và iPhone vẫn nằm trong `AppChinh` (lý do ghi trong phiếu).
+- **Bài kiểm đã sửa:** `tests/luat.test.js` một dòng (chữ dòng phụ "Chép n bé, ghi chú và việc chưa xong."); `scripts/chup-giao-dien.mjs` một chỗ cùng chữ đó. Thêm `tests/chung.test.js` (3 bài). Không nới luật nào.
+- **Chưa làm:** đợt 5 (nâng thư viện) chưa được duyệt. Ảnh chuẩn chưa lưu lại. Chưa thử trên iPhone thật.
+
 ## 09/11/2026 — Tinh gọn nút iPhone, mức 2
 - Phiếu: `doi-agent/phieu-viec/2026-11-09-tinh-gon-nut-iphone-muc-2.json`. Bác sĩ duyệt bản vẽ bảng 20 và 21 ngày 09/11/2026.
 - Đã đổi (lời thường):

@@ -4161,7 +4161,7 @@ for (const dark of [false, true]) {
   await chup(page, 'iphone-muc2-kham-dong' + sfx, true);
   await nutBa.tap(); await page.locator('[role="menu"]').waitFor();
   T.khamMenu = await page.evaluate(() => { const b = document.querySelector('[role="menu"]'); return { nhom: [...b.querySelectorAll('[role="group"]')].map((g) => g.getAttribute('aria-label')), dong: [...b.querySelectorAll('[role="menuitem"]')].map((e) => [e.querySelector('.mt-t').textContent, e.querySelector('.mt-s')?.textContent || '', e.disabled, Math.round(e.getBoundingClientRect().height)]), cuon: document.documentElement.scrollWidth - innerWidth }; });
-  if (T.khamMenu.nhom.join('|') !== 'Danh sách khám|Ứng dụng' || T.khamMenu.dong[0][0] !== 'Lấy danh sách hôm qua' || T.khamMenu.dong[0][1] !== 'Chép 3 bé và việc chưa xong.' || T.khamMenu.dong[1][0] !== 'Quản lý phòng' || T.khamMenu.dong[1][1] !== 'Đổi tên, thêm hoặc xoá phòng.' || T.khamMenu.dong.some((d) => d[3] < 52)) E('bảng "…" tab Khám: ' + JSON.stringify(T.khamMenu));
+  if (T.khamMenu.nhom.join('|') !== 'Danh sách khám|Ứng dụng' || T.khamMenu.dong[0][0] !== 'Lấy danh sách hôm qua' || T.khamMenu.dong[0][1] !== 'Chép 3 bé, ghi chú và việc chưa xong.' || T.khamMenu.dong[1][0] !== 'Quản lý phòng' || T.khamMenu.dong[1][1] !== 'Đổi tên, thêm hoặc xoá phòng.' || T.khamMenu.dong.some((d) => d[3] < 52)) E('bảng "…" tab Khám: ' + JSON.stringify(T.khamMenu));
   await chup(page, 'iphone-muc2-kham-menu' + sfx, true);
   // Quản lý phòng: bật/tắt, tên đổi thành "Đóng quản lý phòng", thẻ RoomManager mở ở đầu danh sách
   await page.getByRole('menuitem', { name: /^Quản lý phòng/ }).tap(); await page.waitForTimeout(500);

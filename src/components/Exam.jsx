@@ -1,17 +1,18 @@
 // Mục Khám: phòng, bệnh nhân, chi tiết bé, tổng hợp y lệnh.
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   addRoom, renameRoom, removeRoom, khoiPhucRoom, addPatient, updatePatient, setPatientDone, removePatient,
   addTodo, toggleTodo, removeTodo, khoiPhucTodo, setTodoText, copyPatientsFrom
 } from '../lib/actions.js';
 import { calcAge, gaFmt, copyText } from '../lib/clinical.js';
 import { addDays, fmtDM } from '../lib/dates.js';
-import { boDemCham, themCham, gioXong, chuanTenViec } from '../lib/viec.js';
+import { gioXong, chuanTenViec } from '../lib/viec.js';
+import { nhomTheo } from '../lib/chung.js';
+import { useBaoTam, useChamHaiLan, useTuLuu } from '../hooks.js';
 import { useVietTat } from './VietTat.jsx';
 import { useHoanTac } from './HoanTac.jsx';
-import { useTuLuu } from './Tasks.jsx';
 import { mucTangGiamCan } from '../lib/hai-ngay.js';
-import { Chevron, XIcon, SheetHead, SwipeRow, Sheet, DongBtn, TickOk, TrangThaiXong, TrashIcon, PlusIcon } from './ui.jsx';
+import { Chevron, XIcon, SheetHead, SwipeRow, Sheet, DongBtn, TickOk, TrangThaiXong, TrashIcon, PlusIcon, DauChiTietViec, ChanChiTietViec, giuConTro } from './ui.jsx';
 
 const chuanChuViec = (s) => String(s ?? '').normalize('NFC').trim().replace(/\s+/g, ' ').toLowerCase();
 
@@ -25,8 +26,8 @@ export function thongTinLayDanhSach(prev, today) {
   const label = none || isYesterday ? 'Lấy danh sách hôm qua' : `Lấy danh sách ngày ${fmtDM(prev.date)}`;
   const hint = none
     ? 'Chưa có danh sách ngày trước.'
-    : `Chép ${prev.count} bệnh nhân của ${isYesterday ? 'hôm qua' : 'ngày ' + fmtDM(prev.date)}, kèm việc chưa xong. Bệnh nhân đã có trong danh sách hôm nay sẽ không bị trùng.`;
-  const hintNgan = none ? 'Chưa có danh sách ngày trước.' : `Chép ${prev.count} bé và việc chưa xong.`;
+    : `Chép ${prev.count} bệnh nhân của ${isYesterday ? 'hôm qua' : 'ngày ' + fmtDM(prev.date)}, kèm ghi chú và việc chưa xong. Bệnh nhân đã có trong danh sách hôm nay sẽ không bị trùng.`;
+  const hintNgan = none ? 'Chưa có danh sách ngày trước.' : `Chép ${prev.count} bé, ghi chú và việc chưa xong.`;
   return { none, label, hint, hintNgan };
 }
 /** Chép danh sách ngày trước sang hôm nay, trả câu báo kết quả. */
@@ -36,16 +37,13 @@ export async function chepDanhSach(prev, today) {
 }
 
 /** Nút "Lấy danh sách hôm qua" + "Quản lý phòng". */
-export function ExamActions({ prev, today, roomEdit, onToggleRoomEdit, compact }) {
-  const [msg, setMsg] = useState('');
+export function ExamActions({ prev, today, roomEdit, onToggleRoomEdit }) {
+  const [msg, baoTam] = useBaoTam(3000);
   const { none, label, hint } = thongTinLayDanhSach(prev, today);
-  const run = async () => {
-    setMsg(await chepDanhSach(prev, today));
-    setTimeout(() => setMsg(''), 3000);
-  };
+  const run = async () => baoTam(await chepDanhSach(prev, today));
   return (
     <div className="stack6">
-      <div className={compact ? 'row8 wrap' : 'stack8'}>
+      <div className="stack8">
         <button type="button" className="btn primary left" disabled={none} onClick={run}>{label}</button>
         <button type="button" className="btn left" aria-expanded={roomEdit} onClick={onToggleRoomEdit}>Quản lý phòng</button>
       </div>
@@ -77,10 +75,7 @@ function RoomNameInput({ room }) {
 export function RoomManager({ rooms, roomUse, roomUsePast = {}, homNay }) {
   const hoanTac = useHoanTac();
   const [draft, setDraft] = useState('');
-  const [bao, setBao] = useState('');
-  const baoTimer = useRef();
-  useEffect(() => () => clearTimeout(baoTimer.current), []);
-  const baoLoi = (s) => { setBao(s); clearTimeout(baoTimer.current); baoTimer.current = setTimeout(() => setBao(''), 6000); };
+  const [bao, baoLoi] = useBaoTam(6000);
   const xoa = async (r) => {
     const nTruoc = roomUsePast[r.id] || 0;
     if (nTruoc > 0 && !window.confirm(`Xoá ${r.name}? ${nTruoc} bé ở các ngày trước vẫn xem được trong Lịch Khám, nhưng không chép sang hôm nay được nữa.`)) return;
@@ -161,9 +156,11 @@ export function RoomList({ rooms, patients, todosByPid, collapsed, onToggle, sel
     const p = await addPatient(r.id, today);
     onOpen(p.id);
   };
+  // Chia bé theo phòng trong MỘT lượt (không lọc lại cả danh sách cho từng phòng); chỉ tính lại khi danh sách bé đổi
+  const theoPhong = useMemo(() => nhomTheo(patients, (p) => p.roomId), [patients]);
   return rooms.map((r) => {
-    const ps = patients.filter((p) => p.roomId === r.id);
-    const dn = ps.filter((p) => p.done).length;
+    const ps = theoPhong.get(r.id) || [];
+    const dn = ps.reduce((n, p) => n + (p.done ? 1 : 0), 0);
     const open = !collapsed[r.id];
     return (
       <section key={r.id} className="group">
@@ -197,11 +194,7 @@ export function RoomList({ rooms, patients, todosByPid, collapsed, onToggle, sel
 /** Một việc cần làm của bé: vuốt phải = xong, vuốt trái = xoá (có Hoàn tác), chạm 2 lần = bảng nhỏ sửa tên / bỏ đánh dấu xong / xoá. */
 function TodoRow({ t, onOpen, nhan = '' }) {
   const hoanTac = useHoanTac();
-  const taps = useRef([]);
-  const tap = () => {
-    taps.current = themCham(taps.current, Date.now());
-    if (boDemCham(taps.current, 2)) { taps.current = []; onOpen(t.id); }
-  };
+  const tap = useChamHaiLan(() => onOpen(t.id));
   const xoa = async () => {
     await removeTodo(t.id);
     hoanTac.hien({ nhan: 'Đã xoá: ' + t.text, lam: () => khoiPhucTodo(t.id) });
@@ -233,19 +226,9 @@ function TodoDetail({ t, wide, onClose }) {
   };
   return (
     <Sheet label="Chi tiết việc của bé" onClose={onClose} wide={wide} className="sheet-todo">
-      <div className="row-between sheet-r1">
-        <label htmlFor="ten-viec-be" className="sr-only">Nội dung việc của bé</label>
-        <textarea id="ten-viec-be" className="sheet-name" rows={ten.length > 52 ? 3 : ten.length > 26 ? 2 : 1} autoComplete="off" {...vt.props}
-          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } }} />
-        <DongBtn className="icon-btn" aria-label="Đóng" onClose={onClose}><XIcon /></DongBtn>
-      </div>
-      {vt.strip}
+      <DauChiTietViec id="ten-viec-be" nhan="Nội dung việc của bé" ten={ten} vt={vt} onClose={onClose} />
       <TrangThaiXong xong={!!t.done} gio={gioXong(t.doneAt)} onDanhDau={() => toggleTodo(t)} onBo={() => toggleTodo(t)} />
-      <div className="row8 sheet-r4">
-        <DongBtn className="sheet-del-task" onClose={xoaViec}><TrashIcon size={18} />Xoá việc</DongBtn>
-        <span className="grow" />
-        <DongBtn className="btn primary big sheet-done" onClose={onClose}>Xong</DongBtn>
-      </div>
+      <ChanChiTietViec onXoa={xoaViec} onClose={onClose} />
     </Sheet>
   );
 }
@@ -311,7 +294,6 @@ export function PatientDetail({ p, todos, onClose, wide = false, phong = '', dem
   const chuHomNay = new Set(todos.map((t) => chuanChuViec(t.text)));
   const nhanTu = dem?.moiDemQua ? 'từ đêm qua' : 'từ hôm qua';
   const mucCan = dem ? mucTangGiamCan(dem.p.wt, f.wt) : null;
-  const giuConTro = (e) => e.preventDefault(); // chạm "+" không làm ô gõ mất con trỏ (bàn phím iPhone không tụt)
   const field = (k, label, extra = {}) => (
     <label className="field">
       <span className="muted small">{label}</span>

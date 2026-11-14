@@ -5,9 +5,18 @@ import { sapBe, orderTiepTheo } from './thu-tu.js';
 import { chuanKey, BO_MAU } from './viet-tat.js';
 import { KHOA_MOC_NGAY_LAM_VIEC, chuanHoaMoc } from './cai-dat.js';
 import { lapKeHoachDoiViec, keHoachHoanTacDoi, chonChepMotBe } from './hai-ngay.js';
+import { alive, nhomTheo } from './chung.js';
 import { db, addRow, updateRow, softDelete, getDeviceId, getMeta, setMeta } from '../db.js';
 
-const alive = (r) => !r.deleted;
+/**
+ * Ghi nhiều dòng trong MỘT giao dịch: nhanh hơn ghi từng dòng riêng, màn hình chỉ vẽ lại một lần, và hoặc ghi hết hoặc không ghi gì.
+ * Mỗi dòng vẫn đi qua addRow/updateRow/softDelete (có updatedAt + deviceId). Bảng meta luôn nằm trong giao dịch vì
+ * các hàm đó đọc mã máy; gọi getDeviceId() trước để mã máy đã sẵn.
+ */
+async function ghiMotLuot(bang, lam) {
+  await getDeviceId();
+  return db.transaction('rw', [...bang, db.meta], lam);
+}
 
 // ---------- Hàm thuần (kiểm được bằng Node) ----------
 // Phần thay đổi khi đánh dấu xong / bỏ xong: xong → doneAt = giờ, bỏ xong → doneAt = null.
@@ -21,10 +30,12 @@ export async function khoiPhuc(table, id) {
   await updateRow(table, id, phanKhoiPhuc());
   return { ok: true };
 }
-// Khôi phục nhiều dòng (Hoàn tác "Xoá việc đã xong"): mỗi dòng một updateRow. Trả về mảng id đã khôi phục.
+// Khôi phục nhiều dòng (Hoàn tác "Xoá việc đã xong"): mỗi dòng một updateRow, tất cả trong một giao dịch. Trả về mảng id đã khôi phục.
 export async function khoiPhucNhieu(table, ids) {
-  const out = [];
-  for (const id of ids || []) { await updateRow(table, id, phanKhoiPhuc()); out.push(id); }
+  const out = [...(ids || [])];
+  await ghiMotLuot([db[table]], async () => {
+    for (const id of out) await updateRow(table, id, phanKhoiPhuc());
+  });
   return out;
 }
 
@@ -83,9 +94,11 @@ export const cycleUrgency = (t) => updateRow('tasks', t.id, { urgency: (t.urgenc
 export const removeTask = (id) => softDelete('tasks', id);
 // Trả về danh sách id đã xoá mềm → giao diện gọi khoiPhucNhieu('tasks', ids) khi Hoàn tác.
 export async function clearDone(date) {
-  const done = await db.tasks.where('date').equals(date).filter((t) => alive(t) && t.done).toArray();
   const ids = [];
-  for (const t of done) { await softDelete('tasks', t.id); ids.push(t.id); }
+  await ghiMotLuot([db.tasks], async () => {
+    const done = await db.tasks.where('date').equals(date).filter((t) => alive(t) && t.done).toArray();
+    for (const t of done) { await softDelete('tasks', t.id); ids.push(t.id); }
+  });
   return ids;
 }
 export const khoiPhucTask = (id) => khoiPhuc('tasks', id);
@@ -101,9 +114,8 @@ export const renameRoom = (id, name) => updateRow('rooms', id, { name });
 // Đọc lại bé của phòng và ghi trong CÙNG một giao dịch (đếm lại ngay lúc xoá). Thiếu/sai homNay thì không xoá.
 // Trả { ok:true, soBeNgayTruoc } hoặc { ok:false, soBeHomNay } (ok:false vì thiếu homNay thì soBeHomNay = 0).
 export async function removeRoom(id, homNay) {
-  await getDeviceId();
   let kq = { ok: false, soBeHomNay: 0 };
-  await db.transaction('rw', db.rooms, db.exam_patients, db.meta, async () => {
+  await ghiMotLuot([db.rooms, db.exam_patients], async () => {
     const room = await db.rooms.get(id);
     if (!room || room.deleted) return;
     const be = await db.exam_patients.where('roomId').equals(id).filter(alive).toArray();
@@ -129,8 +141,7 @@ export const updatePatient = (id, changes) => updateRow('exam_patients', id, cha
 // Đánh dấu đã khám / bỏ đánh dấu: p là dòng bé; done mặc định đảo trạng thái hiện tại. Ghi doneAt cùng lúc.
 export const setPatientDone = (p, done = !p.done) => updateRow('exam_patients', p.id, phanDoiXong(done));
 export async function removePatient(id) {
-  await getDeviceId();
-  await db.transaction('rw', db.exam_patients, db.patient_todos, db.meta, async () => {
+  await ghiMotLuot([db.exam_patients, db.patient_todos], async () => {
     const todos = await db.patient_todos.where('patientId').equals(id).filter(alive).toArray();
     for (const t of todos) await softDelete('patient_todos', t.id);
     await softDelete('exam_patients', id);
@@ -153,29 +164,42 @@ export async function setTodoText(id, text) {
   return true;
 }
 
+// Ghi chú của bé nguồn mang sang ngày mới (bác sĩ duyệt 14/11/2026). Dòng cũ không có ghi chú thì để trống.
+const ghiChuChepSang = (p) => (typeof p.note === 'string' ? p.note : '');
+
+// Chép việc CHƯA XONG (đã lọc sẵn) của bé nguồn sang bé mới, giữ thứ tự, đánh số lại từ 1. Gọi trong giao dịch.
+async function chepViecChuaXong(viec, patientId) {
+  let i = 0;
+  for (const t of [...viec].sort((a, b) => (a.order || 0) - (b.order || 0))) {
+    await addRow('patient_todos', { patientId, text: t.text, done: false, order: ++i });
+  }
+}
+
 /**
- * Chép bệnh nhân của một ngày trước sang hôm nay, kèm việc chưa xong.
+ * Chép bệnh nhân của một ngày trước sang hôm nay, kèm ghi chú và việc chưa xong.
  * Bỏ qua bé đã có trong danh sách hôm nay (cùng phòng, cùng mã) và phòng đã xoá.
  */
 export async function copyPatientsFrom(srcDate, today) {
-  await getDeviceId();
   let added = 0;
-  await db.transaction('rw', db.exam_patients, db.patient_todos, db.rooms, db.meta, async () => {
+  await ghiMotLuot([db.exam_patients, db.patient_todos, db.rooms], async () => {
     const roomIds = new Set((await db.rooms.filter(alive).toArray()).map((r) => r.id));
     const cur = await db.exam_patients.where('examDate').equals(today).filter(alive).toArray();
     const src = sapBe(await db.exam_patients.where('examDate').equals(srcDate).filter(alive).toArray());
+    // Mã đã có hôm nay theo từng phòng (tra một bước, không dò lại cả danh sách hôm nay cho từng bé)
+    const maDaCo = new Map();
+    for (const [roomId, ds] of nhomTheo(cur, (c) => c.roomId)) maDaCo.set(roomId, new Set(ds.map((c) => c.code)));
+    const canChep = src.filter((p) => roomIds.has(p.roomId) && !maDaCo.get(p.roomId)?.has(p.code));
+    // Việc chưa xong của mọi bé cần chép: một lần đọc theo chỉ mục patientId
+    const viecTheoNguon = canChep.length
+      ? nhomTheo(await db.patient_todos.where('patientId').anyOf(canChep.map((p) => p.id)).filter((t) => alive(t) && !t.done).toArray(), (t) => t.patientId)
+      : new Map();
     let nextOrder = orderTiepTheo(cur);
-    for (const p of src) {
-      if (!roomIds.has(p.roomId)) continue;
-      if (cur.some((c) => c.roomId === p.roomId && c.code === p.code)) continue;
+    for (const p of canChep) {
       const np = await addRow('exam_patients', {
         roomId: p.roomId, examDate: today, code: p.code, dob: p.dob, ga: p.ga, wt: p.wt,
-        note: '', done: false, copiedFrom: p.id, order: nextOrder++
+        note: ghiChuChepSang(p), done: false, copiedFrom: p.id, order: nextOrder++
       });
-      const todos = await db.patient_todos.where('patientId').equals(p.id).filter((t) => alive(t) && !t.done).toArray();
-      todos.sort((a, b) => (a.order || 0) - (b.order || 0));
-      let i = 0;
-      for (const t of todos) await addRow('patient_todos', { patientId: np.id, text: t.text, done: false, order: ++i });
+      await chepViecChuaXong(viecTheoNguon.get(p.id) || [], np.id);
       added++;
     }
   });
@@ -188,9 +212,8 @@ export async function copyPatientsFrom(srcDate, today) {
  * @returns { added: 1, id } khi đã chép; { added: 0, ly: 'trung' | 'phong-xoa' | 'khong-thay' } khi không chép.
  */
 export async function chepMotBe(patientId, homNay) {
-  await getDeviceId();
   let kq = { added: 0, ly: 'khong-thay' };
-  await db.transaction('rw', db.exam_patients, db.patient_todos, db.rooms, db.meta, async () => {
+  await ghiMotLuot([db.exam_patients, db.patient_todos, db.rooms], async () => {
     const src = await db.exam_patients.get(patientId);
     const roomIds = new Set((await db.rooms.filter(alive).toArray()).map((r) => r.id));
     const cur = await db.exam_patients.where('examDate').equals(homNay).filter(alive).toArray();
@@ -198,12 +221,9 @@ export async function chepMotBe(patientId, homNay) {
     if (!luat.ok) { kq = { added: 0, ly: luat.ly }; return; }
     const np = await addRow('exam_patients', {
       roomId: src.roomId, examDate: homNay, code: src.code, dob: src.dob, ga: src.ga, wt: src.wt,
-      note: '', done: false, copiedFrom: src.id, order: orderTiepTheo(cur)
+      note: ghiChuChepSang(src), done: false, copiedFrom: src.id, order: orderTiepTheo(cur)
     });
-    const todos = await db.patient_todos.where('patientId').equals(src.id).filter((t) => alive(t) && !t.done).toArray();
-    todos.sort((a, b) => (a.order || 0) - (b.order || 0));
-    let i = 0;
-    for (const t of todos) await addRow('patient_todos', { patientId: np.id, text: t.text, done: false, order: ++i });
+    await chepViecChuaXong(await db.patient_todos.where('patientId').equals(src.id).filter((t) => alive(t) && !t.done).toArray(), np.id);
     kq = { added: 1, id: np.id };
   });
   return kq;
@@ -216,9 +236,8 @@ export async function chepMotBe(patientId, homNay) {
  * @returns [{ id, dateCu }] các việc ĐÃ dời → đưa cho hoanTacDoiViec khi Hoàn tác (6 giây).
  */
 export async function doiViecSangHomNay(ids, homNay) {
-  await getDeviceId();
   const daDoi = [];
-  await db.transaction('rw', db.tasks, db.meta, async () => {
+  await ghiMotLuot([db.tasks], async () => {
     const rows = (await db.tasks.bulkGet([...new Set(ids || [])])).filter(Boolean);
     for (const k of lapKeHoachDoiViec(rows, ids, homNay)) {
       await updateRow('tasks', k.id, { date: homNay });
@@ -231,10 +250,11 @@ export async function doiViecSangHomNay(ids, homNay) {
 /** Hoàn tác doiViecSangHomNay: trả `date` về đúng ngày cũ. Trả mảng id đã trả lại. */
 export async function hoanTacDoiViec(daDoi) {
   const out = [];
-  await getDeviceId();
-  await db.transaction('rw', db.tasks, db.meta, async () => {
-    for (const k of keHoachHoanTacDoi(daDoi)) {
-      if (!(await db.tasks.get(k.id))) continue;
+  await ghiMotLuot([db.tasks], async () => {
+    const keHoach = keHoachHoanTacDoi(daDoi);
+    const con = await db.tasks.bulkGet(keHoach.map((k) => k.id)); // một lần đọc; việc không còn thì bỏ qua
+    for (const [i, k] of keHoach.entries()) {
+      if (!con[i]) continue;
       await updateRow('tasks', k.id, { date: k.date });
       out.push(k.id);
     }

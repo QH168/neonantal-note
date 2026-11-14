@@ -7,12 +7,9 @@ import { theoDoiBanPhim } from '../hooks.js';
 
 const S = { fill: 'none', stroke: 'currentColor', strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true };
 
-export const Sun = () => (
-  <svg width="20" height="20" viewBox="0 0 20 20" strokeWidth="1.7" {...S}><circle cx="10" cy="10" r="3.4" /><path d="M10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M4.7 15.3l1.4-1.4M13.9 6.1l1.4-1.4" /></svg>
-);
-export const Moon = () => (
-  <svg width="20" height="20" viewBox="0 0 20 20" strokeWidth="1.7" {...S}><path d="M16.5 11.8A6.8 6.8 0 0 1 8.2 3.5a6.8 6.8 0 1 0 8.3 8.3z" /></svg>
-);
+/** Gắn vào onPointerDown/onMouseDown của nút: bấm nút không làm ô gõ mất con trỏ (bàn phím iPhone không tụt xuống). */
+export const giuConTro = (e) => e.preventDefault();
+
 export const CalIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" strokeWidth="1.7" {...S}><rect x="3" y="4.5" width="14" height="12.5" rx="2" /><path d="M3 8.5h14M7 3v3M13 3v3" /></svg>
 );
@@ -86,7 +83,6 @@ export function GatHaiNgay({ haiNgay, onDoi, ghiChu = '' }) {
 }
 
 export const PRI_NAME = { 1: 'đỏ', 2: 'vàng', 3: 'xanh lá', 4: 'xanh dương', 5: 'NV' };
-export const PRI_LEVELS = [1, 2, 3, 4, 5];
 /** Chữ hiện trên nút/huy hiệu: số 1–4, riêng mức 5 ghi "NV". */
 export const priLabel = (n) => (n === 5 ? 'NV' : String(n));
 
@@ -330,6 +326,35 @@ export function Sheet({ label, onClose, children, wide, className = '' }) {
 export function DongBtn({ onClose, children, ...rest }) {
   const dong = useDongSheet();
   return <button type="button" {...rest} onClick={() => (dong ? dong(onClose) : onClose())}>{children}</button>;
+}
+
+/**
+ * Đầu bảng chi tiết việc (việc ở tab Việc và việc của bé): ô tên nhiều dòng + nút đóng, rồi hàng gợi ý viết tắt.
+ * `vt` = kết quả useVietTat của ô tên; Enter chỉ rời ô (không xuống dòng).
+ */
+export function DauChiTietViec({ id, nhan, ten, vt, onClose }) {
+  return (
+    <>
+      <div className="row-between sheet-r1">
+        <label htmlFor={id} className="sr-only">{nhan}</label>
+        <textarea id={id} className="sheet-name" rows={ten.length > 52 ? 3 : ten.length > 26 ? 2 : 1} autoComplete="off" {...vt.props}
+          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } }} />
+        <DongBtn className="icon-btn" aria-label="Đóng" onClose={onClose}><XIcon /></DongBtn>
+      </div>
+      {vt.strip}
+    </>
+  );
+}
+
+/** Chân bảng chi tiết việc: "Xoá việc" bên trái, "Xong" bên phải; cả hai đóng bảng có chuyển động rồi mới chạy. */
+export function ChanChiTietViec({ onXoa, onClose }) {
+  return (
+    <div className="row8 sheet-r4">
+      <DongBtn className="sheet-del-task" onClose={onXoa}><TrashIcon size={18} />Xoá việc</DongBtn>
+      <span className="grow" />
+      <DongBtn className="btn primary big sheet-done" onClose={onClose}>Xong</DongBtn>
+    </div>
+  );
 }
 
 export function SheetHead({ title, onClose, closeLabel }) {

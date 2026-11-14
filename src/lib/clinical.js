@@ -1,5 +1,6 @@
 // Tính tuần tuổi và soạn tổng hợp y lệnh. Giữ đúng quy tắc của prototype.
 import { p2, parseIso, ngayLichCuaMs } from './dates.js';
+import { nhomTheo } from './chung.js';
 
 /**
  * Đọc tuổi thai lúc sinh. Chấp nhận: 346, 34w6d, 34w6, 34+6, 34 6, 34.6, 34,6, 34/6, 34 (= 34w0d).
@@ -100,9 +101,10 @@ export function buildSummary({ rooms, patients, todosByPid, now = new Date(), ng
   const dateStr = p2(now.getDate()) + '/' + p2(now.getMonth() + 1) + '/' + now.getFullYear();
   let nTodo = 0, nPat = 0;
   const blocks = [];
+  const theoPhong = nhomTheo(patients, (p) => p.roomId); // chia một lượt, không lọc lại cả danh sách cho từng phòng
   rooms.forEach((r) => {
-    const ps = patients.filter((p) => p.roomId === r.id);
-    if (!ps.length) return;
+    const ps = theoPhong.get(r.id);
+    if (!ps) return;
     const rb = [r.name.toUpperCase()];
     ps.forEach((p, i) => {
       const pend = (todosByPid[p.id] || []).filter((t) => !t.done);

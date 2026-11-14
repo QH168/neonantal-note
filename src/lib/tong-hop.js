@@ -1,15 +1,12 @@
 // Tổng hợp y lệnh nhiều ngày (v9.5). Hàm thuần, không chạm giao diện hay CSDL.
 // Tuổi của MỖI dòng bé tính theo examDate của chính dòng đó (không dùng hôm nay, không dùng đầu/cuối khoảng).
 import { tuoiCuaDong } from './clinical.js';
-import { p2, parseIso } from './dates.js';
+import { parseIso, fmtDM as dm, fmtDMY as dmy } from './dates.js';
 import { soSanhBe } from './thu-tu.js';
 import { soNgayKhoang } from './lich.js';
+import { alive, nhomTheo, soViecCuaBe } from './chung.js';
 
-const alive = (r) => !r.deleted;
 const TEN_PHONG_MAT = 'Phòng đã xoá';
-
-const dm = (iso) => { const d = parseIso(iso); return p2(d.getDate()) + '/' + p2(d.getMonth() + 1); };
-const dmy = (iso) => dm(iso) + '/' + parseIso(iso).getFullYear();
 
 /**
  * Các phòng cần hiện khi xem bé (kể cả bé ở phòng đã xoá): phòng còn sống theo thứ tự,
@@ -65,8 +62,7 @@ export function tongHopNhieuNgay({ tuNgay, denNgay, rooms, patients, todosByPid,
 
   // Mỗi dòng bé thành một bản ghi đã dựng sẵn nội dung
   const dong = ps.map((p) => {
-    const todos = (todosByPid?.[p.id] || []).filter(alive)
-      .slice().sort((a, b) => (a.order || 0) - (b.order || 0) || (a.createdAt || 0) - (b.createdAt || 0));
+    const todos = (todosByPid?.[p.id] || []).filter(alive).sort(soViecCuaBe);
     const noiDung = todos.length ? todos.map((t) => t.text + (t.done ? '' : ' (chưa xong)')).join('; ') : 'Tiếp tục y lệnh cũ';
     const c = tuoiCuaDong(p, parseIso(p.examDate)); // v9.6: ngày tính tuổi = ngayTinhTuoi(p) (bé sinh sau nửa đêm)
     const parts = [];
@@ -96,17 +92,20 @@ export function tongHopNhieuNgay({ tuNgay, denNgay, rooms, patients, todosByPid,
   const khoi = [];
 
   if (cachXep === 'ngay') {
-    const ngays = [...new Set(dong.map((d) => d.examDate))].sort();
-    for (const ngay of ngays) {
-      const trongNgay = dong.filter((d) => d.examDate === ngay).sort((a, b) => soSanhBe(a.p, b.p));
-      const cacPhong = dsPhong.filter((r) => trongNgay.some((d) => d.roomId === r.id));
-      cacPhong.forEach((r, i) => {
+    // Chia một lượt theo ngày, rồi mỗi ngày chia một lượt theo phòng (không lọc lại cả danh sách cho từng ngày, từng phòng)
+    const theoNgay = nhomTheo(dong, (d) => d.examDate);
+    for (const ngay of [...theoNgay.keys()].sort()) {
+      const theoPhong = nhomTheo(theoNgay.get(ngay).sort((a, b) => soSanhBe(a.p, b.p)), (d) => d.roomId);
+      let dauNgay = true;
+      for (const r of dsPhong) {
+        const trongPhong = theoPhong.get(r.id);
+        if (!trongPhong) continue;
         const lines = [];
-        if (i === 0) lines.push('NGÀY ' + dm(ngay));
+        if (dauNgay) { lines.push('NGÀY ' + dm(ngay)); dauNgay = false; }
         lines.push(tenPhong(r.id));
-        for (const d of trongNgay.filter((x) => x.roomId === r.id)) lines.push(...dongLines(d, (d.ma || 'Chưa có mã') + ': '));
+        for (const d of trongPhong) lines.push(...dongLines(d, (d.ma || 'Chưa có mã') + ': '));
         khoi.push(lines.join('\n'));
-      });
+      }
     }
   } else {
     const ds = [...nhom.values()].sort((a, b) => {

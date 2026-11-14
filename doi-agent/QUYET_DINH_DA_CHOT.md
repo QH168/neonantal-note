@@ -45,7 +45,7 @@
   - Dòng phòng: nút "+" tròn thay ô gạch đứt "+ Thêm bệnh nhân"; phòng đang thu gọn thì bấm "+" tự mở phòng rồi thêm bé và mở chi tiết bé.
   - Chi tiết bé mới theo bảng 16b: mã giường ở tiêu đề (sửa được, bé mới tự đặt con trỏ vào ô mã), chip tên phòng, hàng 3 ô Ngày sinh | Tuổi thai | Cân nặng, nút "Tính tuần tuổi" + ô kết quả (Ngày tuổi, Hiệu chỉnh). VẪN CHỈ TÍNH TUỔI KHI BẤM; sửa ngày sinh hoặc tuổi thai thì xoá kết quả cũ. Trạng thái "Chưa khám" + "Hoàn tất khám" / "Đã khám lúc hh:mm" + "Bỏ đánh dấu đã khám" (bé cũ chưa có giờ chỉ ghi "Đã khám"). "Xoá khỏi hôm nay" vẫn hỏi xác nhận. Nút "Tổng hợp" đổi thành "Tổng hợp y lệnh", nút trong bảng đổi thành "Soạn lại" (nội dung tổng hợp không đổi).
   - Dữ liệu bé cũ không đổi khi mở app.
-- "Lấy danh sách hôm qua": chép bé + việc chưa xong từ ngày khám gần nhất trước hôm nay, không trùng phòng + mã. ⚙ (ảnh chụp thử tự động) Từ 09/11/2026 trên iPhone nút này nằm trong bảng "…" (xem mục cuối); PC giữ nút.
+- "Lấy danh sách hôm qua": chép bé + việc chưa xong từ ngày khám gần nhất trước hôm nay, không trùng phòng + mã. (bác sĩ duyệt 14/11/2026) Chép luôn GHI CHÚ của bé sang hôm nay; áp dụng cho cả "Chép sang hôm nay" (xem ngày trước) và "Chép sang" một bé (xem 2 ngày). Thay "bé chép sang có ghi chú trống". Bé nguồn không đổi; trạng thái đã khám không mang theo. ⚙ (ảnh chụp thử tự động) Từ 09/11/2026 trên iPhone nút này nằm trong bảng "…" (xem mục cuối); PC giữ nút.
   Giữ đúng thứ tự bé như ngày nguồn; bé thêm tay nằm cuối phòng (bác sĩ duyệt 28/10/2026). ⚙ (tests/thu-tu.test.js)
 - "Tổng hợp y lệnh": văn bản sửa được, có nút Sao chép; bé không có việc mới ghi "Tiếp tục y lệnh cũ". ⚙
 

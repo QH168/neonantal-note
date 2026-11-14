@@ -7,8 +7,17 @@ import { sapBe } from './lib/thu-tu.js';
 import { phongChoXem } from './lib/tong-hop.js';
 import { phongHomNay } from './lib/phong.js';
 import { tachHaiNgay } from './lib/hai-ngay.js';
+import { boDemCham, themCham } from './lib/viec.js';
+import { alive, viecTheoBe } from './lib/chung.js';
 
-const alive = (r) => !r.deleted;
+/** Bé còn sống của các ngày trong [tu, den] (đã sapBe) và việc còn sống của các bé đó, đã chia theo bé. Đọc theo chỉ mục. */
+async function docBeVaViec(tu, den) {
+  const patients = sapBe(await db.exam_patients.where('examDate').between(tu, den, true, true).filter(alive).toArray());
+  const todos = patients.length
+    ? await db.patient_todos.where('patientId').anyOf(patients.map((p) => p.id)).filter(alive).toArray()
+    : [];
+  return { patients, todosByPid: viecTheoBe(todos) };
+}
 
 /**
  * NGÀY LÀM VIỆC (v9.6) — là "hôm nay" của Việc và Khám (useToday cũ theo ngày lịch đã bỏ) (ngày gán cho việc/bé mới, "Lấy danh sách
@@ -56,6 +65,67 @@ export function useNgayLamViec(mocPhut) {
  */
 export function useMocNgayLamViec() {
   return useLiveQuery(async () => chuanHoaMoc((await db.meta.get(KHOA_MOC_NGAY_LAM_VIEC))?.value), []);
+}
+
+/** Giờ máy dạng hh:mm, tự cập nhật mỗi 30 giây và khi tab hiện lại (để ghi "đang là 02:30" ở đầu trang khi còn trước mốc). */
+export function useGioMay() {
+  const lay = () => { const d = new Date(); return p2(d.getHours()) + ':' + p2(d.getMinutes()); };
+  const [g, setG] = useState(lay);
+  useEffect(() => {
+    const kiem = () => setG(lay());
+    const iv = setInterval(kiem, 30 * 1000);
+    document.addEventListener('visibilitychange', kiem);
+    return () => { clearInterval(iv); document.removeEventListener('visibilitychange', kiem); };
+  }, []);
+  return g;
+}
+
+/** Câu báo tạm: `hien(chữ)` hiện câu báo rồi tự tắt sau `ms`; báo mới thay báo cũ và tính giờ lại. Trả [chữ, hien]. */
+export function useBaoTam(ms) {
+  const [bao, setBao] = useState('');
+  const timer = useRef();
+  useEffect(() => () => clearTimeout(timer.current), []);
+  const hien = useCallback((chu) => {
+    setBao(chu);
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => setBao(''), ms);
+  }, [ms]);
+  return [bao, hien];
+}
+
+/**
+ * Chạm 2 lần (trong 1 giây) thì gọi `khiDu`. Trả hàm gắn vào onClick. Luật đếm là hàm thuần themCham/boDemCham (src/lib/viec.js).
+ * Dùng chung cho dòng việc, việc còn từ hôm qua và việc của bé.
+ */
+export function useChamHaiLan(khiDu) {
+  const mocs = useRef([]);
+  return () => {
+    mocs.current = themCham(mocs.current, Date.now());
+    if (boDemCham(mocs.current, 2)) { mocs.current = []; khiDu(); }
+  };
+}
+
+/** Ô tự lưu: gõ tới đâu lưu sau 0,4 giây; lưu nốt khi đóng. Trả [chữ, đổi, lưuNgay, đặtLại, bỏ]. */
+export function useTuLuu(goc, luu) {
+  const [v, setV] = useState(goc);
+  const pending = useRef(null);
+  const timer = useRef();
+  const luuRef = useRef(luu);
+  luuRef.current = luu;
+  const flush = useCallback(() => {
+    clearTimeout(timer.current);
+    if (pending.current !== null) { const x = pending.current; pending.current = null; luuRef.current(x); }
+  }, []);
+  useEffect(() => () => flush(), [flush]); // lưu nốt khi đóng bảng
+  const change = (x) => {
+    setV(x);
+    pending.current = x;
+    clearTimeout(timer.current);
+    timer.current = setTimeout(flush, 400);
+  };
+  const datLai = (x) => { clearTimeout(timer.current); pending.current = null; setV(x); };
+  const bo = () => { clearTimeout(timer.current); pending.current = null; };
+  return [v, change, flush, datLai, bo];
 }
 
 /** Màn hình rộng (PC) hay hẹp (điện thoại). */
@@ -153,21 +223,20 @@ export function useLanMoApp() {
   return lanMoApp;
 }
 
+// Giá trị rỗng dùng lại (cùng một đối tượng mỗi lần vẽ, để phần ghi nhớ phía sau không tính lại vô ích)
+const RONG = Object.freeze([]);
+const KHONG = Object.freeze({});
+const KHAM_TRONG = Object.freeze({ patients: RONG, todosByPid: KHONG });
+const CHUA_CO_NGAY_TRUOC = Object.freeze({ date: null, count: 0 });
+
 /** Toàn bộ dữ liệu app cần, tự cập nhật khi cơ sở dữ liệu thay đổi (kể cả sau khi nhập file). */
 export function useAppData(today) {
   const tasks = useLiveQuery(() => db.tasks.filter(alive).toArray(), []);
   const rooms = useLiveQuery(() => db.rooms.orderBy('order').filter(alive).toArray(), []);
   // `today` = NGÀY LÀM VIỆC (useNgayLamViec().homNay). Chưa có (null) thì không truy vấn gì và ready = false.
-  const patients = useLiveQuery(
-    () => (today ? db.exam_patients.where('examDate').equals(today).filter(alive).toArray().then(sapBe) : []),
-    [today]
-  );
-  const todos = useLiveQuery(async () => {
-    if (!today) return [];
-    const ps = await db.exam_patients.where('examDate').equals(today).filter(alive).toArray();
-    if (!ps.length) return [];
-    return db.patient_todos.where('patientId').anyOf(ps.map((p) => p.id)).filter(alive).toArray();
-  }, [today]);
+  // Bé hôm nay và việc của bé đọc trong MỘT truy vấn (trước đây danh sách bé bị đọc hai lần); todosByPid dựng sẵn ở đây
+  // nên chỉ đổi khi dữ liệu đổi, không dựng lại mỗi lần vẽ.
+  const kham = useLiveQuery(() => (today ? docBeVaViec(today, today) : KHAM_TRONG), [today]);
 
   // Ngày khám gần nhất trước hôm nay (thường là hôm qua) để "Lấy danh sách"
   const prev = useLiveQuery(async () => {
@@ -192,24 +261,33 @@ export function useAppData(today) {
     await db.exam_patients.where('examDate').aboveOrEqual(today).filter(alive).each((p) => {
       if (p.roomId in hom) hom[p.roomId] += 1;
     });
-    for (const r of rs) {
-      if (hom[r.id] === 0) truoc[r.id] = await db.exam_patients.where('roomId').equals(r.id).filter((p) => alive(p) && p.examDate < today).count();
+    // Các phòng hôm nay đã trống: đếm bé ngày trước bằng MỘT truy vấn theo chỉ mục roomId (không hỏi từng phòng một)
+    const trong = rs.filter((r) => hom[r.id] === 0).map((r) => r.id);
+    for (const id of trong) truoc[id] = 0;
+    if (trong.length) {
+      await db.exam_patients.where('roomId').anyOf(trong).filter((p) => alive(p) && p.examDate < today).each((p) => { truoc[p.roomId] += 1; });
     }
     return { hom, truoc };
   }, [today]);
-  const roomUse = roomStat?.hom;
-  const roomUsePast = roomStat?.truoc;
   // Mọi phòng kể cả đã xoá, để lưới an toàn hiện cả bé hôm nay nằm ở phòng đã xoá / không tìm thấy.
   const allRooms = useLiveQuery(() => db.rooms.toArray(), []);
+  const patients = kham?.patients;
   const roomsHomNay = useMemo(() => phongHomNay(allRooms || [], patients || []), [allRooms, patients]);
   const lastExport = useLiveQuery(() => db.meta.get('lastExport'), [])?.value;
 
-  const ready = !!today && tasks && rooms && patients && todos && prev && roomUse;
-  const todosByPid = {};
-  for (const t of todos || []) (todosByPid[t.patientId] ||= []).push(t);
-  for (const k in todosByPid) todosByPid[k].sort((a, b) => (a.order || 0) - (b.order || 0) || (a.createdAt || 0) - (b.createdAt || 0));
-
-  return { ready, tasks: tasks || [], rooms: rooms || [], roomsHomNay, patients: patients || [], todosByPid, prev: prev || { date: null, count: 0 }, roomUse: roomUse || {}, roomUsePast: roomUsePast || {}, lastExport };
+  const ready = !!(today && tasks && rooms && kham && prev && roomStat);
+  return {
+    ready,
+    tasks: tasks || RONG,
+    rooms: rooms || RONG,
+    roomsHomNay,
+    patients: patients || RONG,
+    todosByPid: kham?.todosByPid || KHONG,
+    prev: prev || CHUA_CO_NGAY_TRUOC,
+    roomUse: roomStat?.hom || KHONG,
+    roomUsePast: roomStat?.truoc || KHONG,
+    lastExport
+  };
 }
 
 const KHOANG_TRONG = { ready: true, patients: [], todosByPid: {}, rooms: [] };
@@ -225,13 +303,7 @@ export function useBeKhoang(tu, den) {
   const kq = useLiveQuery(async () => {
     if (!tu || !den) return null;
     const [a, b] = tu <= den ? [tu, den] : [den, tu];
-    const patients = sapBe(await db.exam_patients.where('examDate').between(a, b, true, true).filter(alive).toArray());
-    const todosByPid = {};
-    if (patients.length) {
-      const todos = await db.patient_todos.where('patientId').anyOf(patients.map((p) => p.id)).filter(alive).toArray();
-      for (const t of todos) (todosByPid[t.patientId] ||= []).push(t);
-      for (const k in todosByPid) todosByPid[k].sort((x, y) => (x.order || 0) - (y.order || 0) || (x.createdAt || 0) - (y.createdAt || 0));
-    }
+    const { patients, todosByPid } = await docBeVaViec(a, b);
     const rooms = phongChoXem(await db.rooms.toArray(), patients);
     return { ready: true, patients, todosByPid, rooms };
   }, [tu, den]);

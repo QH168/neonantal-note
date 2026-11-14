@@ -1,0 +1,39 @@
+{
+  "ten": "Dọn mã cho gọn và nhẹ hơn (4 đợt) + chép luôn ghi chú khi lấy danh sách ngày trước ở tab Khám",
+  "ngay": "2026-11-14",
+  "khuVuc": "Khung chung | Việc | Khám | Sao lưu (lớp dữ liệu)",
+  "loai": "vua",
+  "canBacSiDuyet": true,
+  "trangThai": "Bác sĩ duyệt đợt 1 đến 4 và yêu cầu chép ghi chú ngày 14/11/2026. Làm trên nhánh don-ma-va-chep-ghi-chu, chưa đẩy lên main.",
+  "bacSiDaQuyet": [
+    "Duyệt kế hoạch dọn mã đợt 1 đến 4 (không đổi giao diện, không đổi CSDL, không thêm thư viện).",
+    "Tab Khám: khi chép bé của ngày trước sang hôm nay thì chép luôn ghi chú."
+  ],
+  "chuaLam": [
+    "Đợt 5 (nâng React, Vite và thư viện đi kèm): bác sĩ chưa duyệt, không làm.",
+    "Chi tiết bé (PatientDetail) vẫn giữ phần tự lưu riêng: nó chỉ ghi những ô vừa sửa, khác với useTuLuu (một ô). Gộp lại sẽ đổi cách ghi nên để nguyên.",
+    "PC và iPhone vẫn nằm chung trong AppChinh của src/App.jsx: tách thành hai thành phần riêng phải truyền hơn 50 giá trị và phải viết lại nhiều bài kiểm trong tests/luat.test.js."
+  ],
+  "agent": ["dieu-phoi"],
+  "fileDuocSua": [
+    "src/App.jsx",
+    "src/db.js",
+    "src/hooks.js",
+    "src/components/Exam.jsx",
+    "src/components/Tasks.jsx",
+    "src/components/KhamNgayTruoc.jsx",
+    "src/components/KhamHaiNgay.jsx",
+    "src/components/ui.jsx",
+    "src/lib/*.js",
+    "tests/*.test.js",
+    "scripts/chup-giao-dien.mjs",
+    "package.json"
+  ],
+  "tieuChiDat": [
+    "npm test đạt.",
+    "Ảnh iPhone và PC không đổi, trừ chỗ có ghi chú được chép sang (dòng bé hôm nay hiện 'Ghi chú: …' sau khi lấy danh sách) và dòng phụ 'Chép n bé, ghi chú và việc chưa xong.'",
+    "Lấy danh sách hôm qua, 'Chép sang hôm nay' (xem ngày trước) và 'Chép sang' (xem 2 ngày): bé mới có ghi chú của ngày nguồn; bé nguồn không đổi.",
+    "Không đổi db.version, định dạng sao lưu, link app; không thêm thư viện."
+  ],
+  "ghiChu": "Mọi phiếu được phép sửa doi-agent/** (hồ sơ). Ảnh chuẩn chưa lưu lại: chờ bác sĩ duyệt ảnh có ghi chú chép sang."
+}

@@ -536,7 +536,7 @@ test('mức 2: ExamActions tách phần dùng chung cho bảng "…" (nhãn, dò
   const ex = read('src/components/Exam.jsx');
   assert.match(ex, /export function thongTinLayDanhSach/);
   assert.match(ex, /export async function chepDanhSach/);
-  assert.match(ex, /Chép \$\{prev\.count\} bé và việc chưa xong\./);
+  assert.match(ex, /Chép \$\{prev\.count\} bé, ghi chú và việc chưa xong\./); // 14/11/2026: chép cả ghi chú (bác sĩ duyệt)
   assert.match(ex, /await copyPatientsFrom\(prev\.date, today\)/);
   assert.match(ex, /const \{ none, label, hint \} = thongTinLayDanhSach\(prev, today\)/); // ExamActions (PC) dùng lại, nhãn và dòng phụ như cũ
   assert.match(ex, /Lấy danh sách ngày \$\{fmtDM\(prev\.date\)\}/);

@@ -3,8 +3,9 @@
 // - Chi tiết bé viết riêng (BeChiXem): không dùng PatientDetail hay useTuLuu, không có ô nhập, không tự lưu.
 // - Tuổi tính theo NGÀY ĐÓ của chính dòng (tuoiCuaDong: bé ghi sau nửa đêm không bị lùi một năm), không bao giờ theo hôm nay.
 // - Bé nào cũng hiện: phòng đã xoá, phòng không tìm thấy (hook trả phongChoXem).
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { copyPatientsFrom } from '../lib/actions.js';
+import { nhomTheo } from '../lib/chung.js';
 import { buildSummary, tuoiCuaDong, ngayTinhTuoi, gaFmt } from '../lib/clinical.js';
 import { fmtDM, parseIso } from '../lib/dates.js';
 import { gioXong } from '../lib/viec.js';
@@ -91,8 +92,11 @@ export default function KhamNgayTruoc({ iso, today, wide, onVeHomNay }) {
   const dm = fmtDM(iso);
   const trong = kq.ready && patients.length === 0;
   const sel = patients.find((p) => p.id === selPid);
+  // Chia bé theo phòng và tra phòng theo id trong một lượt, chỉ tính lại khi dữ liệu đổi
+  const theoPhong = useMemo(() => nhomTheo(patients, (p) => p.roomId), [patients]);
+  const phongTheoId = useMemo(() => new Map(rooms.map((r) => [r.id, r])), [rooms]);
   const tenPhong = (p) => {
-    const r = rooms.find((x) => x.id === p.roomId);
+    const r = phongTheoId.get(p.roomId);
     return r ? r.name + (r.deleted && r.name !== 'Phòng đã xoá' ? ' (đã xoá)' : '') : '';
   };
   const chep = async () => {
@@ -115,8 +119,9 @@ export default function KhamNgayTruoc({ iso, today, wide, onVeHomNay }) {
     <div className="empty">Ngày {dm} không có bé nào trong danh sách.</div>
   ) : (
     <>
-      {rooms.filter((r) => patients.some((p) => p.roomId === r.id)).map((r) => {
-        const ps = patients.filter((p) => p.roomId === r.id);
+      {rooms.map((r) => {
+        const ps = theoPhong.get(r.id);
+        if (!ps) return null;
         return (
           <section key={r.id} className="group nt-phong">
             <h2 className="nt-phong-h">

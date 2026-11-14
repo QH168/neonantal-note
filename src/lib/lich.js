@@ -1,7 +1,6 @@
 // Lịch (v9.5). Hàm thuần: không chạm giao diện hay CSDL. Ngày là chuỗi 'YYYY-MM-DD' theo giờ máy.
 import { isoOf } from './dates.js';
-
-const alive = (r) => !r.deleted;
+import { alive } from './chung.js';
 
 /**
  * Các ô của một tháng, T2 là đầu tuần, Chủ nhật ở cột cuối (chỉ số 6).

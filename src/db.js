@@ -85,9 +85,3 @@ export async function requestPersistentStorage() {
   if (await navigator.storage.persisted()) return true;
   return navigator.storage.persist();
 }
-
-// Ngày theo giờ máy, dạng YYYY-MM-DD (không dùng toISOString vì lệch múi giờ UTC+7).
-export function todayStr(d = new Date()) {
-  const p = (n) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
-}
