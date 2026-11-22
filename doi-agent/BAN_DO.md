@@ -11,7 +11,7 @@
 - Chỉ dùng mã/số giường, **không** có ô họ tên bệnh nhân.
 - Tên cơ sở dữ liệu `ghichu-sosinh`, khối `db.version(1)` không được sửa. Thêm cột/bảng → thêm `db.version(2)`.
 - Sao lưu: file JSON lên OneDrive; gộp theo từng dòng, bản sửa sau cùng thắng; xoá = đánh dấu `deleted`.
-- Cập nhật: Claude gửi zip → bác sĩ giải nén → GitHub Add file > Upload files → Commit. GitHub Actions chạy `npm test` rồi build.
+- Cập nhật (cách cũ, nay chỉ dùng dự phòng): Claude gửi zip → bác sĩ giải nén → GitHub Add file > Upload files → Commit. GitHub Actions chạy `npm test` rồi build. Cách đang dùng: xem `doi-agent/agents/dieu-phoi.md` bước 10.
   Không gửi lại thư mục `.github`.
   **Từ 05/11/2026** Claude có thể đẩy trực tiếp lên `main` từ máy bác sĩ khi `npm test` đạt (không cần gửi zip).
   **Từ 06/11/2026** bác sĩ tắt credential helper của kho (`credential.helper` rỗng trong `.git/config`): Claude phải báo bác sĩ bật lại trước mỗi lần cần đẩy lên, không tự bật.

@@ -13,8 +13,9 @@ Không cần dán bản tóm tắt dài nữa.
    Việc lớn (thêm loại thông tin cho bé, đổi cơ sở dữ liệu, đổi cách tính lâm sàng, thêm thư viện) → gửi bạn duyệt trước.
 2. Agent chuyên trách sửa đúng các file trong phiếu.
 3. Agent Kiểm thử (độc lập) chạy toàn bộ kiểm tra, chụp ảnh iPhone/PC. Lỗi → trả về sửa, tối đa 2 vòng.
-4. Agent Ghi chép cập nhật bản đồ, nhật ký, đóng zip.
-5. Bạn tải zip lên GitHub như mọi lần.
+4. Agent Ghi chép cập nhật bản đồ, nhật ký, lưu trên một nhánh riêng.
+5. Claude báo kết quả và hỏi có đưa lên app không. Bạn đồng ý thì Claude bật quyền đẩy, đưa lên GitHub, rồi tắt quyền ngay.
+   (Nếu Claude không đẩy được từ máy bạn, Claude gửi file zip và hướng dẫn tải lên như trước.)
 
 ## Thư mục này có gì
 | File | Dùng để |

@@ -22,8 +22,13 @@ Không đọc toàn bộ `src/`. Chỉ mở file mã khi cần xác định đú
    (Agent tool, loại general-purpose, mức máy ghi trong file agent).
 6. Nhận kết quả → luôn gọi agent Kiểm thử (agent mới, không kèm lý giải của agent đã sửa).
 7. Kiểm thử báo **Lỗi** → gửi lại agent đã sửa kèm báo cáo lỗi. Tối đa **2 vòng**; vòng 3 vẫn lỗi → dừng, báo bác sĩ.
-8. Kiểm thử báo **Đạt** → gọi agent Ghi chép để cập nhật hồ sơ và đóng zip.
-9. Báo bác sĩ: đã đổi gì (lời thường), kết quả kiểm, file zip, các bước tải lên.
+8. Kiểm thử báo **Đạt** → gọi agent Ghi chép để cập nhật hồ sơ và commit trên nhánh riêng.
+9. Báo bác sĩ: đã đổi gì (lời thường), kết quả kiểm, ảnh trước/sau, việc chưa làm. Hỏi có đưa lên app không.
+10. Bác sĩ cho phép → bật quyền đẩy của kho, gộp nhánh vào `main`, chạy lại `npm test`, đẩy lên, **tắt quyền ngay**.
+    Chờ GitHub Actions báo xong, so bản trên `https://qh168.github.io/neonantal-note/` với bản vừa dựng, rồi báo bác sĩ.
+    Mỗi lần đẩy hỏi lại bác sĩ; lần cho phép trước không dùng cho lần sau.
+11. Bác sĩ duyệt ảnh → nhờ Ghi chép lưu ảnh chuẩn (commit riêng), rồi lại qua bước 10 để đẩy.
+Không đẩy được từ máy bác sĩ → Ghi chép đóng zip theo mục "Dự phòng" trong `ghi-chep.md`.
 
 ## Luật
 - Không cho agent nào sửa ngoài danh sách file trong phiếu (máy kiểm: `scripts/kiem-pham-vi.mjs`).
