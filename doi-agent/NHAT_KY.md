@@ -51,6 +51,32 @@
 | 53 | Đáy tab Việc: bản vẽ ghi ô "Thêm việc…" và nút chữ "Thêm"; app là ô "Ghi việc cần làm…" và nút tròn "+" (v9.3 đã duyệt). | Lưu ý | Giữ app; bác sĩ xác nhận. | Giao diện |
 | 54 | Bảng 21A (2 ngày) ghi dòng ngày "Thứ Hai, 09/11 · Đã xong 2/6"; app ghi "Hôm qua 08/11 và hôm nay 09/11" khi bật 2 ngày. | Lưu ý | Giữ chữ của app; bác sĩ xác nhận. | Giao diện |
 | 55 | Đợt tinh gọn nút iPhone mức 2 chưa thử trên iPhone thật (cử chỉ, bàn phím, bảng "…", tai thỏ chưa tính). Ảnh chuẩn đợt này chưa lưu. | Lưu ý | Bác sĩ thử trên iPhone và duyệt ảnh; nếu vướng thì giao phiếu chỉnh. | Giao diện |
+| 56 | `src/lib/tong-hop.js` (tổng hợp nhiều ngày) còn dòng "Tuổi thai ghi là tuổi thai hiệu chỉnh của từng ngày."; bản một ngày đã bỏ dòng này ở 22/11/2026. | Đã xong | Bác sĩ quyết 23/11/2026: bỏ luôn. Đã bỏ, npm test 304/304, Kiểm thử ĐẠT. | Thuật toán |
+| 57 | Nút "đã nhập máy" trên dòng bé chưa có ở chế độ 2 ngày (`src/components/KhamHaiNgay.jsx`). | Đã xong | Bác sĩ quyết 23/11/2026: có. Đã thêm trên thẻ có dòng hôm nay (chỉ ghi vào dòng hôm nay), Kiểm thử ĐẠT. | Giao diện |
+| 58 | Nhãn mới VIP, G, ST, MT nằm trong hàng nhãn vuốt ngang trên iPhone; phải vuốt mới thấy đủ. | Lưu ý | Bác sĩ thử trên iPhone; nếu khó thấy thì đổi cách xếp hàng nhãn. | Giao diện |
+| 59 | Chưa thử trên iPhone thật. Bảng trượt bàn phím (22/11) mới kiểm bằng giả lập WebKit (mô phỏng, `scripts/gia-lap-iphone.mjs`); cú kéo bằng ngón tay chưa giả lập được. | Lưu ý | Bác sĩ thử trên iPhone: gõ trong chi tiết bé, chi tiết việc, tổng hợp; xem bảng có sát đáy và ô gõ có hiện không. | Giao diện |
+| 60 | Ảnh chuẩn đợt 22/11 chưa lưu. | Đã xong | Bác sĩ duyệt ảnh 23/11/2026; đã lưu ảnh chuẩn bằng `--luu-chuan`. | Giao diện |
+
+## 23/11/2026 — Đợt 22/11: bảng trượt bàn phím iPhone, nhãn mới, chép phòng (đã duyệt ảnh)
+
+Phiếu: `doi-agent/phieu-viec/2026-11-22-bang-truot-ban-phim-iphone.json`. Bác sĩ duyệt 22/11/2026 (6 điểm, xem `doi-agent/QUYET_DINH_DA_CHOT.md` mục cuối). Bác sĩ duyệt ảnh 23/11/2026; đã lưu ảnh chuẩn; `npm test` 304/304. Đã commit trên máy; đẩy lên `main` khi bác sĩ nói "đẩy".
+
+- **Bác sĩ thấy gì đổi:**
+  - Trên iPhone, bảng dưới không còn kẹt khi bàn phím đóng. Ô đang gõ được cuộn vào vùng thấy.
+  - Thẻ "Quản lý phòng" có nút X để đóng.
+  - Ô thêm việc có nhãn VIP, G, ST, MT (MT là biểu tượng máy tính, không có chữ). Trên iPhone hàng nhãn vuốt ngang.
+  - Khu PS-PM tách thành PS và PM. Việc cũ vẫn ở PS-PM, hiện như khu cũ.
+  - Dòng bé có nút máy tính "đã nhập máy" bên trái "Còn n việc". Dấu không mang sang ngày sau.
+  - Màn xem ngày trước: nút "Chép sang hôm nay" cho từng phòng. Chép bé, ghi chú và mọi việc (kể cả việc đã xong). Có Hoàn tác 6 giây.
+  - Tổng hợp y lệnh: dòng đầu "KHÁM SÁNG dd/mm/yyyy", bỏ chữ "Y LỆNH", bỏ dòng "Tuổi thai ghi là…" và dòng "Còn n việc". Phòng có từ 2 bé thì đánh số 1., 2.
+  - Viết tắt `/t` ra giờ HH:mm (có sẵn, không sửa được).
+- **Kỹ thuật:**
+  - `khungBanPhim` (`src/hooks.js`): bàn phím chỉ coi là mở khi phần bị che lớn hơn 80px. `veDinhTrang()` gỡ vị trí khi đóng. `Sheet` (`src/components/ui.jsx`): `khoaCuon` ghim body, overscroll contain.
+  - Chép phòng: `chepPhongSangHomNay`, `hoanTacChepPhong` (`src/lib/actions.js`); luật `phongDichChep`, `lapKeHoachChepPhong` (`src/lib/phong.js`).
+  - Thêm trường `daNhapMay` (trường thường). Không đổi `db.version(1)`, không đổi định dạng sao lưu (`BACKUP_VERSION` vẫn 1).
+  - Giả lập: `scripts/gia-lap-iphone.mjs` (WebKit, mô phỏng, không phải iPhone thật). Bản cũ tái hiện được lỗi: ô gõ bị che, bảng lệch 120px. Bản mới lệch 0. Bài kiểm: `tests/ban-phim.test.js`.
+- **Kết quả kiểm:** `npm test` đạt 302/302. Kiểm thử độc lập đạt (theo phiếu).
+- **Chưa làm:** ảnh chuẩn chưa lưu, chờ bác sĩ duyệt ảnh. Chưa thử trên iPhone thật. Bổ sung 23/11/2026 theo bác sĩ: nút máy tính có cả ở chế độ 2 ngày; tổng hợp nhiều ngày bỏ dòng "Tuổi thai ghi là…" (npm test 304/304, Kiểm thử ĐẠT).
 
 ## 14/11/2026 — Dọn mã (4 đợt) và chép ghi chú khi lấy danh sách
 

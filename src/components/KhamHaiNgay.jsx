@@ -4,13 +4,13 @@
 // Không bao giờ ghi vào dòng của hôm qua: chạm thẻ có bé hôm nay → PatientDetail của dòng hôm nay (kèm khung "Đêm qua" chỉ xem);
 // thẻ chỉ có hôm qua → BeChiXem (chi tiết chỉ xem, không ô nhập).
 import { useMemo, useState } from 'react';
-import { chepMotBe } from '../lib/actions.js';
+import { chepMotBe, batTatDaNhapMay } from '../lib/actions.js';
 import { ghepHaiNgay, locThe } from '../lib/hai-ngay.js';
 import { useHaiNgayKham } from '../hooks.js';
 import { PatientDetail } from './Exam.jsx';
 import { BeChiXem } from './KhamNgayTruoc.jsx';
 import GiaoTour from './GiaoTour.jsx';
-import { Sheet, TickOk } from './ui.jsx';
+import { Sheet, TickOk, MayTinhIcon } from './ui.jsx';
 
 const LY_KHONG_CHEP = {
   trung: 'Bé này đã có trong danh sách hôm nay.',
@@ -91,6 +91,11 @@ export default function KhamHaiNgay({ homQua, homNay, mocPhut, ngayLich, wide })
             </span>
           )}
         </button>
+        {/* "Đã nhập máy tính" (23/11): chỉ bé có dòng HÔM NAY (bé chỉ có hôm qua là chỉ xem); cùng kiểu và hành vi với PatientRow */}
+        {t.homNay && (
+          <button type="button" className="pat-may" aria-pressed={!!t.homNay.daNhapMay} aria-label={t.homNay.daNhapMay ? 'Đã nhập máy tính' : 'Chưa nhập máy tính'}
+            onClick={(e) => { e.stopPropagation(); batTatDaNhapMay(t.homNay); }}><MayTinhIcon size={22} className="" /></button>
+        )}
         {t.chiCoHomQua && (
           <button type="button" className="hn-chep" disabled={dangChep} aria-label={'Chép ' + (t.ma || 'bé') + ' sang hôm nay'} onClick={() => chep(t)}>Chép sang</button>
         )}

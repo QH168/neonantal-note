@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   addRoom, renameRoom, removeRoom, khoiPhucRoom, addPatient, updatePatient, setPatientDone, removePatient,
-  addTodo, toggleTodo, removeTodo, khoiPhucTodo, setTodoText, copyPatientsFrom
+  addTodo, toggleTodo, removeTodo, khoiPhucTodo, setTodoText, copyPatientsFrom, batTatDaNhapMay
 } from '../lib/actions.js';
 import { calcAge, gaFmt, copyText } from '../lib/clinical.js';
 import { addDays, fmtDM } from '../lib/dates.js';
@@ -12,7 +12,7 @@ import { useBaoTam, useChamHaiLan, useTuLuu } from '../hooks.js';
 import { useVietTat } from './VietTat.jsx';
 import { useHoanTac } from './HoanTac.jsx';
 import { mucTangGiamCan } from '../lib/hai-ngay.js';
-import { Chevron, XIcon, SheetHead, SwipeRow, Sheet, DongBtn, TickOk, TrangThaiXong, TrashIcon, PlusIcon, DauChiTietViec, ChanChiTietViec, giuConTro } from './ui.jsx';
+import { Chevron, XIcon, SheetHead, SwipeRow, Sheet, DongBtn, TickOk, TrangThaiXong, TrashIcon, PlusIcon, MayTinhIcon, DauChiTietViec, ChanChiTietViec, giuConTro } from './ui.jsx';
 
 const chuanChuViec = (s) => String(s ?? '').normalize('NFC').trim().replace(/\s+/g, ' ').toLowerCase();
 
@@ -72,7 +72,7 @@ function RoomNameInput({ room }) {
  * Phòng hôm nay trống nhưng có bé ngày trước (roomUsePast > 0): hỏi xác nhận bằng hộp xác nhận của trình duyệt như "Xoá khỏi hôm nay".
  * Mọi đường xoá đều gọi removeRoom(id, homNay) (đếm lại ngay lúc xoá) rồi hiện thanh Hoàn tác 6 giây.
  */
-export function RoomManager({ rooms, roomUse, roomUsePast = {}, homNay }) {
+export function RoomManager({ rooms, roomUse, roomUsePast = {}, homNay, onClose }) {
   const hoanTac = useHoanTac();
   const [draft, setDraft] = useState('');
   const [bao, baoLoi] = useBaoTam(6000);
@@ -95,7 +95,10 @@ export function RoomManager({ rooms, roomUse, roomUsePast = {}, homNay }) {
   };
   return (
     <section aria-label="Quản lý phòng" className="card stack8">
-      <div className="bold">Danh sách phòng</div>
+      <div className="row-between">
+        <div className="bold">Danh sách phòng</div>
+        {onClose && <button type="button" className="icon-btn muted" style={{ margin: '-8px -8px -8px 0' }} aria-label="Đóng quản lý phòng" onClick={onClose}><XIcon /></button>}
+      </div>
       {rooms.map((r) => {
         const nHom = roomUse[r.id] || 0;
         const locked = nHom > 0;
@@ -142,8 +145,11 @@ function PatientRow({ p, todos, selected, onOpen }) {
           )}
           {p.note?.trim() && <span className="pat-note">Ghi chú: {p.note}</span>}
         </span>
-        {left > 0 && <span className="left-badge">Còn {left} việc</span>}
       </button>
+      {/* "Đã nhập máy tính" (22/11): nút riêng, ngay bên trái nhãn "Còn n việc"; độc lập với vuốt phải (đã khám) và với mở chi tiết */}
+      <button type="button" className="pat-may" aria-pressed={!!p.daNhapMay} aria-label={p.daNhapMay ? 'Đã nhập máy tính' : 'Chưa nhập máy tính'}
+        onClick={(e) => { e.stopPropagation(); batTatDaNhapMay(p); }}><MayTinhIcon size={22} className="" /></button>
+      {left > 0 && <span className="left-badge" onClick={onOpen}>Còn {left} việc</span>}
       {p.done && <TickOk nhan="Đã khám" />}
     </SwipeRow>
   );

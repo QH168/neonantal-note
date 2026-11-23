@@ -145,25 +145,47 @@ export function useWide(minWidth = 900) {
  * Bàn phím iPhone có đang mở không, và phần màn hình còn thấy nằm ở đâu. Dùng chung cho bảng dưới (Sheet),
  * thanh thêm việc và thanh Hoàn tác — một chỗ tính duy nhất.
  * `vv` = window.visualViewport, `innerH` = window.innerHeight (tham số để thử bằng visualViewport giả).
+ * Bàn phím chỉ được coi là MỞ khi phần bị che (innerH - vv.height) > 80px. offsetTop > 0 một mình KHÔNG tính: Safari có thể để
+ * offsetTop còn lệch sau khi bàn phím đóng, nếu tính thì bảng giữ top/height lệch và không chạm đáy màn hình.
  * Trả null khi không có bàn phím (hoặc đang phóng to); ngược lại { top, height, duoi }:
- * top/height = khung còn thấy; duoi = khoảng từ đáy khung còn thấy tới đáy cửa sổ (chính là chiều cao bàn phím).
+ * top/height = khung còn thấy; duoi = khoảng từ đáy khung còn thấy tới đáy cửa sổ (0 khi iOS đã đẩy khung xuống sát đáy).
  */
 export function khungBanPhim(vv, innerH) {
-  if (!vv) return null;
-  const duoi = innerH - vv.height - vv.offsetTop;
-  if (vv.scale <= 1.01 && (duoi > 80 || vv.offsetTop > 0)) return { top: vv.offsetTop, height: vv.height, duoi: Math.max(0, duoi) };
-  return null;
+  if (!vv || vv.scale > 1.01) return null;
+  const che = innerH - vv.height;
+  if (!(che > 80)) return null;
+  const top = Math.max(0, vv.offsetTop || 0);
+  return { top, height: vv.height, duoi: Math.max(0, che - top) };
 }
 
-/** Gọi `khop(khung | null)` ngay và mỗi khi bàn phím mở/đóng/cuộn. Trả hàm gỡ. Không có visualViewport thì chỉ gọi khop(null). */
+/** Đưa trang về đỉnh nếu Safari để lệch sau khi bàn phím đóng (trang không có gì để cuộn, lệch chỉ làm lộ nền sau bảng). */
+export function veDinhTrang() {
+  try { if (window.scrollX || window.scrollY) window.scrollTo(0, 0); } catch { /* bỏ qua */ }
+}
+
+/**
+ * Gọi `khop(khung | null)` ngay và mỗi khi bàn phím mở/đóng/cuộn. Trả hàm gỡ. Không có visualViewport thì chỉ gọi khop(null).
+ * Khi bàn phím vừa đóng thì đưa trang về đỉnh (ngay và kiểm lại sau 120ms, 400ms vì iOS đóng bàn phím có độ trễ).
+ */
 export function theoDoiBanPhim(khop) {
   const vv = typeof window !== 'undefined' ? window.visualViewport : null;
   if (!vv) { khop(null); return () => {}; }
-  const chay = () => khop(khungBanPhim(vv, window.innerHeight));
+  let moTruoc = false;
+  let hen = [];
+  const chay = () => {
+    const k = khungBanPhim(vv, window.innerHeight);
+    if (!k && moTruoc) {
+      veDinhTrang();
+      hen.forEach(clearTimeout);
+      hen = [120, 400].map((ms) => setTimeout(() => { if (!khungBanPhim(vv, window.innerHeight)) veDinhTrang(); }, ms));
+    }
+    moTruoc = !!k;
+    khop(k);
+  };
   chay();
   vv.addEventListener('resize', chay);
   vv.addEventListener('scroll', chay);
-  return () => { vv.removeEventListener('resize', chay); vv.removeEventListener('scroll', chay); };
+  return () => { hen.forEach(clearTimeout); vv.removeEventListener('resize', chay); vv.removeEventListener('scroll', chay); };
 }
 
 /** Khung bàn phím dạng state (null khi không mở). Chỉ vẽ lại khi giá trị đổi. */

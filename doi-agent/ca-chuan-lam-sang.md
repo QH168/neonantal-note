@@ -28,3 +28,28 @@
 | 01/01/2027 | 3112 | 300 | 1 | 30w1d | v9.6 như trên, qua năm: lưu ngày khám 31/12/2026, ngày tính 01/01/2027 |
 | 29/02/2028 | 2902 | 280 | 0 | 28w0d | v9.6 như trên, ngày nhuận: lưu ngày khám 28/02/2028, ngày tính 29/02/2028 |
 | 01/03/2026 | 2802 | 320 | 1 | 32w1d | v9.6 như trên, qua tháng, năm không nhuận: lưu ngày khám 28/02/2026, ngày tính 01/03/2026 |
+## Mẫu văn bản "Tổng hợp y lệnh" (đợt 22/11/2026, bác sĩ duyệt)
+
+Chỉ mã giường trong ví dụ. Không đổi cách tính tuổi; chỉ đổi định dạng. Kiểm bằng `tests/clinical.test.js`.
+
+- Dòng đầu chỉ `KHÁM SÁNG dd/mm/yyyy` (không có " - Y LỆNH"), rồi một dòng trống.
+- Không có dòng "Tuổi thai ghi là…" và không có dòng "Còn … việc…" / "Không có việc mới…".
+- Phòng có từ 2 bé: mỗi bé có số thứ tự đầu dòng (`1. `, `2. `…). Phòng 1 bé: không số. Việc và ghi chú không đánh số.
+- Chưa có bé: `KHÁM SÁNG dd/mm/yyyy` rồi `Chưa có bệnh nhân trong danh sách hôm nay.` (hoặc `…ngày này.` khi xem ngày trước).
+
+Ví dụ (ngày tính 20/10/2026):
+
+```
+KHÁM SÁNG 20/10/2026
+
+PHÒNG 1
+1. G01 - 36w4d - 1850 g
+- Cập nhật y lệnh
+Ghi chú: Theo dõi cân
+
+2. G03 - Tiếp tục y lệnh cũ
+
+PHÒNG 2
+G10 - 36w4d - 1900 g
+- Đo bilirubin
+```

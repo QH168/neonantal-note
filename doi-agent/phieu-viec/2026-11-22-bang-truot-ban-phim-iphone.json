@@ -1,0 +1,127 @@
+{
+  "ten": "Đợt 22/11: sửa lỗi bảng trượt khi bàn phím iPhone mở/đóng + 6 ghi chú giao diện của bác sĩ",
+  "ngay": "2026-11-22",
+  "khuVuc": "Khung chung (Sheet), Việc (ô thêm việc, khu), Khám (dòng bé, quản lý phòng, ngày trước, tổng hợp), Viết tắt",
+  "loai": "lon",
+  "canBacSiDuyet": true,
+  "trangThai": "Bác sĩ duyệt 22/11/2026 (đã trả lời câu hỏi); bác sĩ duyệt ảnh 23/11/2026, đã lưu ảnh chuẩn",
+  "bacSiDaQuyet": [
+    "1. VIP, G, ST là NHÃN (như NV, BM, CK, HC, XN), không phải khu. Thêm vào hàng nhãn ở ô thêm việc.",
+    "2. Tách PS-PM thành hai khu PS và PM; việc cũ giữ khu PS-PM, hiện như khu cũ (giống BM), không tự đổi.",
+    "3. Chip máy tính trong ô thêm việc: chỉ là biểu tượng máy tính (một nhãn hiện bằng hình máy tính), KHÔNG ghi chữ 'Đã nhập máy'.",
+    "4. Dấu 'đã nhập máy' của bé không giữ khi chép sang ngày sau.",
+    "5. Chép phòng từ ngày trước: chép HẾT việc, kể cả việc đã hoàn thành (giữ nguyên trạng thái xong/chưa xong như ngày đó), kèm ghi chú.",
+    "6. Chữ 'G' cuối ghi chú tổng hợp là gõ dở: bỏ qua.",
+    "7. (23/11) Tổng hợp nhiều ngày (src/lib/tong-hop.js): bỏ luôn dòng 'Tuổi thai ghi là tuổi thai hiệu chỉnh của từng ngày.'",
+    "8. (23/11) Nút máy tính hiện cả ở chế độ 2 ngày của tab Khám (KhamHaiNgay), ở các dòng bé của hôm nay.",
+    "Giả lập iPhone: phương án 1 (Playwright WebKit, lõi Safari) — bác sĩ cho tải WebKit (đã tải 22/11/2026)."
+  ],
+  "phan": {
+    "A_loiBangTruot": {
+      "loiBacSiBao": [
+        "Chi tiết bé, đang gõ: danh sách việc bị cắt giữa màn hình, kéo không được, không thấy ô đang gõ.",
+        "Chi tiết bé / chi tiết việc của bé / Tổng hợp y lệnh sau khi bàn phím đóng: bảng không chạm đáy màn hình, lộ trang phía sau."
+      ],
+      "nguyenNhanNghiNgo": "khungBanPhim (src/hooks.js) coi visualViewport.offsetTop > 0 là bàn phím còn mở, nên Sheet (src/components/ui.jsx) giữ top/height lệch sau khi bàn phím đóng; khi bàn phím mở, cú kéo đi vào trang chứ không vào vùng cuộn của bảng và ô đang gõ không được cuộn vào chỗ thấy.",
+      "viecCanLam": [
+        "Chỉ coi bàn phím mở khi phần bị che ở đáy > 80px; khi đóng: gỡ top/height và đưa trang về đỉnh nếu Safari để lệch.",
+        "Bàn phím mở: cuộn ô đang gõ vào vùng còn thấy của chính bảng; vùng cuộn overscroll-behavior: contain; khoá cuộn trang phía sau đúng cách trên iOS.",
+        "Bảng mở chồng dùng cùng khung.",
+        "tests/ban-phim.test.js với visualViewport giả; kiểm trên Playwright WebKit hồ sơ iPhone + bàn phím giả (mục giaLapIphone)."
+      ]
+    },
+    "B_viecGo": {
+      "ghiChu": "Thêm chip VIP, G, ST và chip biểu tượng máy tính nhỏ; tách PS-PM thành PS và PM; viết tắt /t chèn giờ hiện tại dạng 24h.",
+      "canHoi": ["VIP, G, ST là khu (như NICU) hay nhãn (như NV, BM)?", "Chip máy tính trong ô thêm việc nghĩa là gì?", "Việc cũ đang ở khu PS-PM chuyển đi đâu?"],
+      "deXuat": "VIP, G, ST là khu mới, thêm sau HS. PS-PM tách thành PS và PM; việc cũ giữ khu PS-PM, hiện như khu cũ (giống BM), không tự đổi. Chip máy tính là một nhãn mới 'Đã nhập máy' bật/tắt được, cùng ý với biểu tượng máy tính ở tab Khám."
+    },
+    "C_khamDaNhapMay": {
+      "ghiChu": "Biểu tượng máy tính bên trái nhãn 'Còn n việc' trên dòng bé; chạm thì đổi xanh dương nhạt = đã nhập máy; độc lập với vuốt phải (đã khám).",
+      "doiDuLieu": "Thêm trường daNhapMay (true/false) + updatedAt cho bé; gộp sao lưu theo updatedAt như các trường khác; không đổi db.version(1) vì Dexie không cần khai báo trường không đánh chỉ mục.",
+      "canHoi": ["Khi chép bé sang hôm nay, dấu 'đã nhập máy' có giữ không?"],
+      "deXuat": "Không giữ: mỗi ngày bắt đầu là chưa nhập. Nút 44px vùng chạm, biểu tượng 20px, tắt: viền mờ; bật: nền --tint, chữ --tintInk; có aria-pressed."
+    },
+    "D_quanLyPhong": {
+      "ghiChu": "Thêm nút X nhỏ ở góc trên bên phải thẻ Quản lý phòng để tắt.",
+      "deXuat": "Nút X 44px vùng chạm, aria-label 'Đóng quản lý phòng'; không đổi dữ liệu."
+    },
+    "E_ngayTruocChepPhong": {
+      "ghiChu": "Xem lại ngày trước: chọn phòng để chép sang hôm nay, chép cả ghi chú và việc cần làm.",
+      "canHoi": ["Chép mọi việc của ngày trước hay chỉ việc chưa xong?"],
+      "deXuat": "Mỗi dòng phòng ở màn ngày trước có nút 'Chép phòng này sang hôm nay' (hỏi xác nhận kèm số bé, có Hoàn tác 6 giây). Chép bé + ghi chú + việc CHƯA xong (giống 'Lấy danh sách hôm qua'); giữ luật không trùng bé; phòng đã xoá thì chép vào phòng cùng tên đang có, không có thì báo."
+    },
+    "F_tongHop": {
+      "ghiChu": "Giữ dòng đầu, bỏ 'Y LỆNH', bỏ dòng 'Tuổi thai ghi là…', bỏ 'Còn … việc'. Trong mỗi phòng đánh số thứ tự nếu nhiều ca, không đánh số nếu 1 ca. Cuối ghi chú có chữ 'G' chưa rõ.",
+      "deXuat": "Dòng đầu: 'KHÁM SÁNG dd/mm/yyyy'. Mỗi bé: '1. <mã> - <tuổi thai hiệu chỉnh> - <cân nặng> g' khi phòng ≥2 bé; 1 bé thì không số. Áp dụng cả tổng hợp ngày trước và nhiều ngày. Sửa trong buildSummary (src/lib/clinical.js) + ca chuẩn lâm sàng.",
+      "canHoi": ["Chữ 'G' cuối ghi chú tổng hợp muốn nói gì?"]
+    },
+    "G_vietTatT": {
+      "ghiChu": "/t hiện giờ lúc nhập dạng 24h.",
+      "deXuat": "/t là viết tắt có sẵn, không sửa/xoá được, hiện đầu thư viện với chữ 'giờ hiện tại (vd. 14:05)'; gõ /t + dấu cách thì thay bằng giờ máy HH:mm lúc gõ. Dùng ở mọi ô có viết tắt."
+    }
+  },
+  "giaLapIphone": {
+    "deXuat1_mienPhi": "Playwright WebKit (lõi của Safari) với hồ sơ iPhone 15 + script 'bàn phím giả' làm visualViewport co lại và trang lệch như iOS. Cần tải trình duyệt WebKit cho Playwright (khoảng 100 MB, từ máy chủ của Playwright) — xin phép trước khi tải.",
+    "deXuat2_trenMayThat": "Chế độ đo ẩn trong Sao lưu và cài đặt: bật lên thì góc màn hình hiện các số đo khung màn hình/bàn phím; gặp lỗi bác sĩ chụp màn hình gửi mình.",
+    "deXuat3_tuyChon": "iPhone thật trên mạng (BrowserStack, LambdaTest): có Safari và bàn phím thật, nhưng trả phí và bác sĩ phải tự tạo tài khoản.",
+    "khongDuoc": "Trình giả lập iPhone chính hãng (Xcode) chỉ chạy trên máy Mac."
+  },
+  "fileDuocSua": [
+    "src/components/ui.jsx",
+    "src/hooks.js",
+    "src/App.css",
+    "src/App.jsx",
+    "src/components/HoanTac.jsx",
+    "src/components/Tasks.jsx",
+    "src/components/Exam.jsx",
+    "src/components/KhamNgayTruoc.jsx",
+    "src/components/ThuVien.jsx",
+    "src/components/VietTat.jsx",
+    "src/components/BackupPanel.jsx",
+    "src/db.js",
+    "src/lib/actions.js",
+    "src/lib/clinical.js",
+    "src/lib/viet-tat.js",
+    "src/lib/viec.js",
+    "src/lib/merge.js",
+    "src/lib/phong.js",
+    "tests/phong.test.js",
+    "tests/viec.test.js",
+    "src/lib/tong-hop.js",
+    "tests/tong-hop.test.js",
+    "src/components/KhamHaiNgay.jsx",
+    "src/lib/hai-ngay.js",
+    "tests/hai-ngay.test.js",
+    "tests/ban-phim.test.js",
+    "tests/luat.test.js",
+    "tests/clinical.test.js",
+    "tests/merge.test.js",
+    "tests/viet-tat.test.js",
+    "scripts/chup-giao-dien.mjs",
+    "scripts/gia-lap-iphone.mjs",
+    "package.json",
+    "doi-agent/BAN_DO.md"
+  ],
+  "ghiChuFile": {
+    "src/lib/merge.js": "chỉ khi trường daNhapMay cần luật gộp riêng; mặc định không đổi",
+    "src/db.js": "chỉ danh sách ZONES/LEGACY_ZONES; không đổi db.version(1)",
+    "src/components/BackupPanel.jsx": "chỉ thêm công tắc chế độ đo",
+    "fileDuocSua": "danh sách tối đa; Điều phối sẽ chép đúng tên file thật sau khi đọc bản đồ"
+  },
+  "thuTuLam": [
+    "1. Giả lập iPhone (sau khi bác sĩ cho tải WebKit) — để thấy lỗi trước khi sửa.",
+    "2. A lỗi bảng trượt + D nút X quản lý phòng (không đổi dữ liệu).",
+    "3. G viết tắt /t + F tổng hợp (Thuật toán, có ca chuẩn lâm sàng).",
+    "4. B khu mới/tách PS-PM, C đã nhập máy, E chép theo phòng (Dữ liệu + Giao diện) — sau khi bác sĩ trả lời câu hỏi.",
+    "5. Kiểm thử độc lập, Ghi chép, ảnh trước/sau sáng + tối, dừng chờ duyệt."
+  ],
+  "khongLam": [
+    "Không đổi db.version(1); không thêm thư viện npm vào app (Playwright WebKit chỉ dùng để thử trên máy, không vào app).",
+    "Không --luu-chuan khi chưa duyệt ảnh; chỉ đẩy khi bác sĩ nói 'đẩy' và cho bật credential helper.",
+    "Chỉ mã/số giường trong dữ liệu mẫu và ảnh."
+  ],
+  "tieuChiDat": [
+    "npm test đạt; Kiểm thử độc lập ĐẠT; ca chuẩn lâm sàng tổng hợp đạt",
+    "Trên giả lập và iPhone thật: gõ trong chi tiết bé thấy ô gõ, kéo được danh sách; đóng bàn phím bảng chạm đáy"
+  ]
+}

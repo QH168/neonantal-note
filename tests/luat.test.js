@@ -87,10 +87,11 @@ test('luật 6: không hiện "còn bao nhiêu ngày đến 40w"', () => {
 
 test('luật 7: khu vực, mức ưu tiên, định dạng sao lưu giữ đúng như đã chốt', () => {
   // bác sĩ duyệt 28/10/2026: khu mới; 'BM' thành khu cũ, chỉ hiện khi còn việc cũ
-  assert.match(read('src/db.js'), /ZONES = \['NICU', 'CT', 'KAN', 'PS-PM', 'Ngoại Trú', 'DV', 'HP', 'HS'\]/);
-  assert.match(read('src/db.js'), /LEGACY_ZONES = \['BM'\]/);
-  // bác sĩ duyệt 28/10/2026: 5 nhãn loại việc
-  assert.match(read('src/lib/viec.js'), /TAGS = \['NV', 'BM', 'CK', 'HC', 'XN'\]/);
+  assert.match(read('src/db.js'), /ZONES = \['NICU', 'CT', 'KAN', 'PS', 'PM', 'Ngoại Trú', 'DV', 'HP', 'HS'\]/);
+  assert.match(read('src/db.js'), /LEGACY_ZONES = \['BM', 'PS-PM'\]/);
+  // 22/11/2026 (bác sĩ duyệt): PS-PM tách thành PS và PM (PS-PM thành khu cũ, giống BM); 9 nhãn: thêm VIP, G, ST, MT (MT là biểu tượng máy tính)
+  // 28/10/2026: 5 nhãn đầu
+  assert.match(read('src/lib/viec.js'), /TAGS = \['NV', 'BM', 'CK', 'HC', 'XN', 'VIP', 'G', 'ST', 'MT'\]/);
   const ui = read('src/components/ui.jsx');
   assert.match(ui, /PRI_NAME = \{ 1: 'đỏ', 2: 'vàng', 3: 'xanh lá', 4: 'xanh dương', 5: 'NV' \}/);
   assert.match(read('src/lib/actions.js'), /urgency: \(t\.urgency % 5\) \+ 1/, 'vòng đổi mức 1→2→3→4→NV→1');
@@ -165,8 +166,8 @@ const tuongPhan = (a, b) => { const [x, y] = [sang(a), sang(b)].sort((p, q) => q
 test('v9.1: màu nhãn mới có cả bản sáng và tối, đúng bảng 16a, chữ trên nền ≥ 4,5:1; --p1…--p5 không đổi', () => {
   const V = bienMau();
   const dung = {
-    sang: { NV: ['#F8D7D3', '#8C2A20'], BM: ['#F7E6B8', '#6E4E00'], CK: ['#D3EAF0', '#1B5566'], HC: ['#DDE3F6', '#2C3F86'], XN: ['#E8DDF3', '#573884'] },
-    toi: { NV: ['#4C2723', '#F5C4BD'], BM: ['#4A3B15', '#F0D88F'], CK: ['#173A44', '#A9D8E5'], HC: ['#232D52', '#BFCBF3'], XN: ['#34284A', '#D8C7EF'] }
+    sang: { NV: ['#F8D7D3', '#8C2A20'], BM: ['#F7E6B8', '#6E4E00'], CK: ['#D3EAF0', '#1B5566'], HC: ['#DDE3F6', '#2C3F86'], XN: ['#E8DDF3', '#573884'], VIP: ['#FBE0CC', '#8A4410'], G: ['#D5EBD7', '#2A6030'], ST: ['#F6D6E6', '#8A2A5C'], MT: ['#DCE3EA', '#33475A'] },
+    toi: { NV: ['#4C2723', '#F5C4BD'], BM: ['#4A3B15', '#F0D88F'], CK: ['#173A44', '#A9D8E5'], HC: ['#232D52', '#BFCBF3'], XN: ['#34284A', '#D8C7EF'], VIP: ['#4D3220', '#F5CFAE'], G: ['#1F3A25', '#B6DFBB'], ST: ['#4A2438', '#F2BEDA'], MT: ['#26323D', '#C5D3E0'] }
   };
   for (const che of ['sang', 'toi']) {
     for (const [tag, [nen, chu]] of Object.entries(dung[che])) {
@@ -184,7 +185,7 @@ test('v9.1: màu nhãn mới có cả bản sáng và tối, đúng bảng 16a, 
     let i = 0;
     for (let n = 1; n <= 5; n++) for (const s of ['', 'i', 'e']) assert.equal(V[che][`--p${n}${s}`]?.toUpperCase(), p[che][i++], `${che} --p${n}${s} bị đổi`);
   }
-  assert.equal(read('src/lib/viec.js').includes("TAG_COLOR = { NV: 1, BM: 2, CK: 3, HC: 4, XN: 5 }"), true);
+  assert.equal(read('src/lib/viec.js').includes("TAG_COLOR = { NV: 1, BM: 2, CK: 3, HC: 4, XN: 5, VIP: 4, G: 3, ST: 2, MT: 1 }"), true);
   assert.match(read('src/components/ui.jsx'), /--t\$\{k\}i/, 'TagDot phải dùng biến màu nhãn mới');
 });
 
@@ -337,12 +338,12 @@ test('v9.4: lưu việc thay chữ tắt ở cuối (bấm + hoặc Enter): ô t
 // ===== v9 đợt 9.5: lịch mới, xem lại ngày trước (chỉ xem), tổng hợp nhiều ngày =====
 const boChuThich = (s) => s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
 
-test('v9.5: trang xem ngày trước CHỈ XEM — chỉ một thao tác ghi (copyPatientsFrom), không dùng PatientDetail/useTuLuu, không ô nhập, không vuốt', () => {
+test('v9.5: trang xem ngày trước CHỈ XEM — chỉ các thao tác chép sang hôm nay (copyPatientsFrom, 22/11: chepPhongSangHomNay + hoanTacChepPhong), không dùng PatientDetail/useTuLuu, không ô nhập, không vuốt', () => {
   const raw = read('src/components/KhamNgayTruoc.jsx');
   const s = boChuThich(raw);
   const nhap = [...s.matchAll(/import\s*\{([^}]*)\}\s*from\s*'([^']+)'/g)];
   const tuActions = nhap.filter((m) => /actions\.js$/.test(m[2])).flatMap((m) => m[1].split(',').map((x) => x.trim()).filter(Boolean));
-  assert.deepEqual(tuActions, ['copyPatientsFrom'], 'chỉ được import copyPatientsFrom từ actions.js');
+  assert.deepEqual(tuActions, ['copyPatientsFrom', 'chepPhongSangHomNay', 'hoanTacChepPhong'], 'chỉ được import 3 hàm chép sang hôm nay từ actions.js');
   assert.doesNotMatch(s, /\b(PatientDetail|useTuLuu|RoomManager|RoomList|PatientRow|TodoRow|SwipeRow|PlusIcon)\b/);
   assert.doesNotMatch(s, /<(input|textarea|select)\b/i, 'chi tiết chỉ xem không có ô nhập');
   assert.doesNotMatch(s, /\b(onDelete|onDone|updatePatient|setPatientDone|addPatient|removePatient|toggleTodo|addTodo)\b/);
@@ -436,7 +437,7 @@ test('v9.6: Khám 2 ngày chỉ ghi qua chepMotBe và PatientDetail của dòng 
   const s = boChuThich(read('src/components/KhamHaiNgay.jsx'));
   const nhap = [...s.matchAll(/import\s*\{([^}]*)\}\s*from\s*'([^']+)'/g)];
   const tuActions = nhap.filter((m) => /actions\.js$/.test(m[2])).flatMap((m) => m[1].split(',').map((x) => x.trim()).filter(Boolean));
-  assert.deepEqual(tuActions, ['chepMotBe']);
+  assert.deepEqual(tuActions, ['chepMotBe', 'batTatDaNhapMay'], '23/11: thêm nút "đã nhập máy tính" cho dòng HÔM NAY (batTatDaNhapMay)');
   assert.doesNotMatch(s, /\bdb\./);
   assert.match(s, /ph\.examDate === homNay/);
   assert.match(s, /<BeChiXem /);
@@ -482,7 +483,7 @@ test('xoá phòng: giao diện luôn gọi removeRoom kèm homNay; danh sách h�
   assert.match(ex, /bé ở các ngày trước vẫn xem được trong Lịch Khám, nhưng không chép sang hôm nay được nữa\./);
   const demRoomList = (app.match(/<RoomList rooms=\{roomsHomNay\}/g) || []).length;
   assert.equal(demRoomList, 2, 'RoomList (iPhone và PC) phải dùng roomsHomNay');
-  const demManager = (app.match(/<RoomManager rooms=\{rooms\} roomUse=\{roomUse\} roomUsePast=\{roomUsePast\} homNay=\{homNay\} \/>/g) || []).length;
+  const demManager = (app.match(/<RoomManager rooms=\{rooms\} roomUse=\{roomUse\} roomUsePast=\{roomUsePast\} homNay=\{homNay\} onClose=\{\(\) => setRoomEdit\(false\)\} \/>/g) || []).length;
   assert.equal(demManager, 2, 'RoomManager (iPhone và PC) phải nhận roomUsePast và homNay (ngày làm việc, không phải ngày lịch)');
   assert.match(ex, /\{!r\.daXoa && \(\s*<button type="button" className="room-add"/);
 });
@@ -540,4 +541,102 @@ test('mức 2: ExamActions tách phần dùng chung cho bảng "…" (nhãn, dò
   assert.match(ex, /await copyPatientsFrom\(prev\.date, today\)/);
   assert.match(ex, /const \{ none, label, hint \} = thongTinLayDanhSach\(prev, today\)/); // ExamActions (PC) dùng lại, nhãn và dòng phụ như cũ
   assert.match(ex, /Lấy danh sách ngày \$\{fmtDM\(prev\.date\)\}/);
+});
+
+
+// ===== Đợt 22/11 (phần A, D): bảng trượt và bàn phím iPhone; nút X ở thẻ Quản lý phòng =====
+test('22/11 A: bàn phím chỉ mở khi phần bị che > 80px (không tính offsetTop một mình); đóng thì gỡ top/height, đưa trang về đỉnh', () => {
+  const hooks = read('src/hooks.js').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+  assert.match(hooks, /che > 80/);
+  assert.doesNotMatch(hooks, /offsetTop\s*>\s*0/, 'offsetTop > 0 một mình không được coi là bàn phím mở');
+  assert.match(hooks, /export function veDinhTrang\(/);
+  const ui = read('src/components/ui.jsx');
+  assert.match(ui, /el\.style\.top = ''; el\.style\.bottom = ''; el\.style\.height = '';/, 'bàn phím đóng phải gỡ top/height của bảng');
+  assert.match(ui, /bang\.scrollTop \+=/, 'ô đang gõ phải được cuộn vào vùng thấy của chính bảng');
+  assert.doesNotMatch(ui.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, ''), /scrollIntoView/, 'không dùng scrollIntoView trong Sheet (nó kéo cả trang phía sau)');
+});
+
+test('22/11 A: khoá cuộn trang phía sau đúng cách trên iOS (body position:fixed + trả lại vị trí); .sheet overscroll-behavior: contain', () => {
+  const ui = read('src/components/ui.jsx');
+  assert.match(ui, /s\.position = 'fixed'/);
+  assert.match(ui, /window\.scrollTo\(0, k\.y\)/);
+  assert.match(read('src/App.css'), /\.sheet\{overscroll-behavior:contain\}/);
+});
+
+test('22/11 D: thẻ Quản lý phòng có nút X 44px, aria-label "Đóng quản lý phòng", App truyền onClose tắt roomEdit (iPhone và PC)', () => {
+  const ex = read('src/components/Exam.jsx');
+  assert.match(ex, /aria-label="Đóng quản lý phòng" onClick=\{onClose\}/);
+  assert.match(ex, /export function RoomManager\([^)]*onClose[^)]*\)/);
+  const app = read('src/App.jsx');
+  assert.equal((app.match(/<RoomManager [^>]*onClose=\{\(\) => setRoomEdit\(false\)\}/g) || []).length, 2, 'cả bản iPhone và PC');
+});
+
+// ===== Đợt 22/11 (phần B, C, E, G) =====
+test('22/11 B: nhãn MT hiện bằng biểu tượng máy tính (không chữ "Đã nhập máy"); 9 nhãn có đủ biến màu sáng và tối', () => {
+  const viec = read('src/lib/viec.js');
+  assert.match(viec, /TAG_BIEU_TUONG = \{ MT: 'may-tinh' \}/);
+  const ui = read('src/components/ui.jsx');
+  assert.match(ui, /export const MayTinhIcon/);
+  assert.match(ui, /TEN_BIEU_TUONG = \{ MT: 'Máy tính' \}/);
+  assert.match(ui, /hinh \|\| tag/, 'TagDot vẽ hình thay chữ');
+  assert.match(read('src/components/Tasks.jsx'), /hinh \|\| tag/, 'nút chọn nhãn vẽ hình thay chữ');
+  for (const f of SRC.filter((x) => /\.jsx$/.test(x))) assert.doesNotMatch(read(f), /Đã nhập máy(?!\s*tính)/, f + ': không ghi chữ "Đã nhập máy" trên nhãn');
+  const V = bienMau();
+  for (const che of ['sang', 'toi']) for (const k of ['VIP', 'G', 'ST', 'MT']) {
+    assert.ok(V[che]['--t' + k] && V[che]['--t' + k + 'i'], `${che} thiếu --t${k}`);
+  }
+  assert.match(read('src/App.css'), /\.task-form-ph \.pri-pick\.tag-hang,[^{]*\{[^}]*overflow-x:auto/, 'hàng 9 nhãn ở thanh thêm việc vuốt ngang, không tràn trang');
+});
+
+test('22/11 C: nút "đã nhập máy tính" trên dòng bé: aria-pressed, aria-label, gọi batTatDaNhapMay, nằm trước nhãn "Còn n việc", chỉ ở danh sách hôm nay', () => {
+  const ex = read('src/components/Exam.jsx');
+  assert.match(ex, /className="pat-may" aria-pressed=\{!!p\.daNhapMay\}/);
+  assert.match(ex, /'Đã nhập máy tính' : 'Chưa nhập máy tính'/);
+  assert.match(ex, /batTatDaNhapMay\(p\)/);
+  assert.ok(ex.indexOf('className="pat-may"') < ex.indexOf('className="left-badge"'), 'nút máy tính bên trái nhãn Còn n việc');
+  assert.doesNotMatch(read('src/components/KhamNgayTruoc.jsx'), /pat-may|batTatDaNhapMay|setDaNhapMay/, 'ngày trước chỉ xem');
+  const css = read('src/App.css');
+  assert.match(css, /\.pat-may\{[^}]*width:44px;height:44px/);
+  assert.match(css, /\.pat-may\[aria-pressed="true"\]\{background:var\(--tint\);color:var\(--tintInk\)\}/);
+});
+
+test('22/11 E: ngày trước có nút "Chép sang hôm nay" cho từng phòng, hỏi xác nhận trong trang, gọi chepPhongSangHomNay, Hoàn tác gọi hoanTacChepPhong', () => {
+  const nt = read('src/components/KhamNgayTruoc.jsx');
+  assert.match(nt, /chepPhongSangHomNay\(r\.id, iso, today\)/);
+  assert.match(nt, /hoanTacChepPhong\(kq\.ids\)/);
+  assert.match(nt, /sang hôm nay, kèm ghi chú và mọi việc \(cả việc đã xong\)\?/);
+  assert.doesNotMatch(nt.replace(/\/\/.*$/gm, ''), /window\.confirm|confirm\(/, 'hỏi trong trang, không dùng hộp thoại trình duyệt');
+  assert.match(nt, /bé đã có hôm nay nên bỏ qua/);
+  assert.match(nt, /phòng-?\s*cùng tên|phòng cùng tên/);
+  assert.match(read('src/App.css'), /\.nt-chep-phong\{[^}]*min-height:44px[^}]*font-size:15px/);
+});
+
+test('22/11 G: thư viện viết tắt hiện /t có sẵn đầu danh sách (không sửa/xoá được) và chặn tạo key đã có sẵn', () => {
+  const tv = read('src/components/ThuVien.jsx');
+  assert.match(tv, /mucCoSan\(\)/);
+  assert.match(tv, /laCoSan\(k\)/);
+  assert.match(tv, /là viết tắt có sẵn/);
+  assert.match(tv, /className="vt-hang co-san"/);
+  assert.doesNotMatch(tv.slice(tv.indexOf('coSan.map'), tv.indexOf('hien.map')), /SwipeRow|onClick/, 'dòng có sẵn không có vuốt/chạm sửa');
+});
+
+test('22/11: không thêm màu cứng mới ngoài khai báo biến ở nhãn/nút mới (dùng biến màu có sẵn)', () => {
+  const css = read('src/App.css');
+  for (const sel of ['.pat-may', '.nt-chep-phong', '.vt-co-san', '.tag-ic']) {
+    for (const m of css.matchAll(new RegExp('^' + sel.replace('.', '\\.') + '[^{]*\\{([^}]*)\\}', 'gm'))) assert.doesNotMatch(m[1], /#[0-9a-fA-F]{3,6}\b|rgb\(/, sel + ' dùng màu cứng');
+  }
+});
+
+// ===== 23/11: nút máy tính ở chế độ 2 ngày; tổng hợp nhiều ngày bỏ dòng "Tuổi thai ghi là…" =====
+test('23/11: chế độ 2 ngày có nút "đã nhập máy tính" trên thẻ có dòng HÔM NAY (không có ở thẻ chỉ hôm qua), cùng kiểu PatientRow', () => {
+  const hn = read('src/components/KhamHaiNgay.jsx');
+  assert.match(hn, /\{t\.homNay && \(\s*<button type="button" className="pat-may" aria-pressed=\{!!t\.homNay\.daNhapMay\}/);
+  assert.match(hn, /'Đã nhập máy tính' : 'Chưa nhập máy tính'/);
+  assert.match(hn, /batTatDaNhapMay\(t\.homNay\)/, 'ghi vào dòng HÔM NAY, không bao giờ vào dòng hôm qua');
+  assert.doesNotMatch(hn, /batTatDaNhapMay\(t\.homQua\)/);
+  assert.match(read('src/App.css'), /\.hn-the \.pat-may\{/);
+});
+
+test('23/11: tổng hợp nhiều ngày không còn dòng "Tuổi thai ghi là…"', () => {
+  assert.doesNotMatch(read('src/lib/tong-hop.js'), /Tuổi thai ghi là/);
 });

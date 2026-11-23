@@ -268,7 +268,7 @@ function AppChinh({ mocPhut, homNay, homQua, ngayLich, cheDo, setCheDo }) {
         ) : (
           <>
             <main className="pc-main exam">
-              {roomEdit && <RoomManager rooms={rooms} roomUse={roomUse} roomUsePast={roomUsePast} homNay={homNay} />}
+              {roomEdit && <RoomManager rooms={rooms} roomUse={roomUse} roomUsePast={roomUsePast} homNay={homNay} onClose={() => setRoomEdit(false)} />}
               <RoomList rooms={roomsHomNay} patients={patients} todosByPid={todosByPid} collapsed={roomCollapsed}
                 onToggle={toggleIn(setRoomCollapsed)} selPid={selPid} onOpen={setSelPid} today={homNay} />
               <div className="tong-hop-wrap"><button type="button" className="btn" aria-expanded={sumOpen} onClick={() => setSumOpen(true)}>Tổng hợp y lệnh</button></div>
@@ -341,7 +341,7 @@ function AppChinh({ mocPhut, homNay, homQua, ngayLich, cheDo, setCheDo }) {
         <KhamHaiNgay homQua={homQua} homNay={homNay} mocPhut={mocPhut} ngayLich={ngayLich} />
       ) : (
         <main className="ph-main exam">
-          {roomEdit && <RoomManager rooms={rooms} roomUse={roomUse} roomUsePast={roomUsePast} homNay={homNay} />}
+          {roomEdit && <RoomManager rooms={rooms} roomUse={roomUse} roomUsePast={roomUsePast} homNay={homNay} onClose={() => setRoomEdit(false)} />}
           <RoomList rooms={roomsHomNay} patients={patients} todosByPid={todosByPid} collapsed={roomCollapsed}
             onToggle={toggleIn(setRoomCollapsed)} selPid={selPid} onOpen={setSelPid} today={homNay} />
           <div className="tong-hop-wrap"><button type="button" className="btn" onClick={() => setSumOpen(true)}>Tổng hợp y lệnh</button></div>

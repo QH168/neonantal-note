@@ -1,7 +1,7 @@
 // Biểu tượng và các phần giao diện dùng chung.
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { TAGS } from '../lib/viec.js';
+import { TAGS, TAG_BIEU_TUONG } from '../lib/viec.js';
 import { huongCuChi, doDich, quaMoc, nenHien, ketQuaKhiTha } from '../lib/vuot.js';
 import { theoDoiBanPhim } from '../hooks.js';
 
@@ -97,9 +97,24 @@ export const mauNhan = (tag) => {
   return { '--tb': `var(--t${k})`, '--ti': `var(--t${k}i)` };
 };
 
-/** Huy hiệu tròn chữ nhãn loại việc (NV/BM/CK/HC/XN). Việc đã xong: mờ ~0,5. */
+/** Biểu tượng máy tính (màn hình + đế), nét theo màu chữ: dùng cho nhãn MT và nút "đã nhập máy tính" của bé. */
+export const MayTinhIcon = ({ size = 20, className = 'tag-ic' }) => (
+  <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <rect x="3" y="4" width="18" height="12" rx="2" /><path d="M8 20h8M12 16v4" />
+  </svg>
+);
+/** Tên tiếng Việt của nhãn hiện bằng biểu tượng (cho aria-label). */
+export const TEN_BIEU_TUONG = { MT: 'Máy tính' };
+/** Nhãn hiện bằng hình thì trả phần tử hình, không thì null. */
+export const hinhNhan = (tag) => (TAG_BIEU_TUONG[tag] === 'may-tinh' ? <MayTinhIcon /> : null);
+
+/** Huy hiệu tròn chữ nhãn loại việc (NV/BM/CK/HC/XN/VIP/G/ST) hoặc biểu tượng (MT). Việc đã xong: mờ ~0,5. */
 export function TagDot({ tag, faded, className = '' }) {
-  return <span className={'tag-dot ' + className} style={{ ...mauNhan(tag), opacity: faded ? 0.5 : 1 }}>{tag}</span>;
+  const hinh = hinhNhan(tag);
+  return (
+    <span className={'tag-dot ' + className} style={{ ...mauNhan(tag), opacity: faded ? 0.5 : 1 }}
+      role={hinh ? 'img' : undefined} aria-label={hinh ? TEN_BIEU_TUONG[tag] : undefined}>{hinh || tag}</span>
+  );
 }
 
 // ----- Dòng vuốt (v9.2): vuốt phải = xong, vuốt trái = xoá; mốc 1/3 chiều rộng -----
@@ -247,10 +262,23 @@ const THOI_GIAN_DONG = 360; // bảng 220ms; nền mờ tắt trễ 120ms + 220m
 // Bảng chồng bảng: chỉ bảng trên cùng nhận phím Esc; khoá cuộn trang đếm theo số bảng đang mở.
 const chongSheet = [];
 let khoaDem = 0;
-let khoaTruoc = '';
+let khoaTruoc = null;
+// Khoá cuộn trang phía sau cho iOS: overflow:hidden một mình không chặn được cú kéo trên Safari, nên ghim body (position:fixed,
+// top = -vị trí đang cuộn) rồi trả lại đúng vị trí khi mở khoá.
 const khoaCuon = () => {
-  if (khoaDem++ === 0) { khoaTruoc = document.body.style.overflow; document.body.style.overflow = 'hidden'; document.body.classList.add('co-bang'); }
-  return () => { if (--khoaDem === 0) { document.body.style.overflow = khoaTruoc; document.body.classList.remove('co-bang'); } };
+  if (khoaDem++ === 0) {
+    const b = document.body, s = b.style;
+    khoaTruoc = { y: window.scrollY, overflow: s.overflow, position: s.position, top: s.top, left: s.left, right: s.right, width: s.width };
+    s.overflow = 'hidden'; s.position = 'fixed'; s.top = -khoaTruoc.y + 'px'; s.left = '0'; s.right = '0'; s.width = '100%';
+    b.classList.add('co-bang');
+  }
+  return () => {
+    if (--khoaDem !== 0) return;
+    const b = document.body, s = b.style, k = khoaTruoc;
+    s.overflow = k.overflow; s.position = k.position; s.top = k.top; s.left = k.left; s.right = k.right; s.width = k.width;
+    b.classList.remove('co-bang');
+    if (k.y) window.scrollTo(0, k.y);
+  };
 };
 
 /**
@@ -295,17 +323,36 @@ export function Sheet({ label, onClose, children, wide, className = '' }) {
   useEffect(() => { // cách tính bàn phím dùng chung với thanh thêm việc và thanh Hoàn tác (hooks.js)
     const el = wrap.current;
     if (!el) return undefined;
-    return theoDoiBanPhim((k) => {
+    let mo = false;
+    const timers = [];
+    // Ô đang gõ nằm trong bảng: cuộn CHÍNH bảng cho ô vào vùng còn thấy (không dùng scrollIntoView vì nó kéo cả trang phía sau)
+    const hienO = () => {
+      const bang = el.querySelector('.sheet'), o = document.activeElement;
+      if (!mo || !bang || !o || !bang.contains(o) || !o.matches?.('input,textarea')) return;
+      const s = bang.getBoundingClientRect(), r = o.getBoundingClientRect(), le = 12;
+      if (r.bottom > s.bottom - le) bang.scrollTop += r.bottom - (s.bottom - le);
+      else if (r.top < s.top + le) bang.scrollTop -= (s.top + le) - r.top;
+    };
+    const hienOSau = () => { // sau khi bố cục đổi xong, và lại sau chuyển động mở bảng (~480ms)
+      timers.forEach(clearTimeout); timers.length = 0;
+      requestAnimationFrame(hienO);
+      timers.push(setTimeout(hienO, 120), setTimeout(hienO, 500));
+    };
+    const huy = theoDoiBanPhim((k) => {
+      mo = !!k;
       if (k) {
         el.classList.add('kb');
         el.style.top = k.top + 'px';
         el.style.bottom = 'auto';
         el.style.height = k.height + 'px';
+        hienOSau();
       } else {
         el.classList.remove('kb');
         el.style.top = ''; el.style.bottom = ''; el.style.height = '';
       }
     });
+    el.addEventListener('focusin', hienOSau); // bàn phím đang mở mà chuyển sang ô khác trong bảng
+    return () => { huy(); el.removeEventListener('focusin', hienOSau); timers.forEach(clearTimeout); };
   }, []);
   // Vẽ thẳng vào <body>: trên Safari iPhone, bảng nằm trong vùng cuộn sẽ bị phần đầu/thanh dưới che.
   return createPortal(

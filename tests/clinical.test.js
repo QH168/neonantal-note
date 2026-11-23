@@ -35,9 +35,9 @@ test('tổng hợp y lệnh', () => {
   ];
   const todosByPid = { a: [{ text: 'Cân bé', done: true }, { text: 'Cập nhật y lệnh', done: false }] };
   const s = buildSummary({ rooms, patients, todosByPid, now: NOW });
-  assert.match(s, /^KHÁM SÁNG 20\/10\/2026 - Y LỆNH/);
-  assert.match(s, /Còn 1 việc ở 1 bệnh nhân\./);
-  assert.match(s, /PHÒNG 1\nGiường 1 - 36w4d - 1850 g\n- Cập nhật y lệnh\nGhi chú: Theo dõi cân\n\nGiường 3 - Tiếp tục y lệnh cũ/);
+  assert.match(s, /^KHÁM SÁNG 20\/10\/2026\n/);
+  assert.doesNotMatch(s, /Y LỆNH|Còn 1 việc|Tuổi thai ghi là/);
+  assert.match(s, /PHÒNG 1\n1\. Giường 1 - 36w4d - 1850 g\n- Cập nhật y lệnh\nGhi chú: Theo dõi cân\n\n2\. Giường 3 - Tiếp tục y lệnh cũ/);
   assert.doesNotMatch(s, /PHÒNG 2/);
 });
 
@@ -82,25 +82,23 @@ test('6 ví dụ đã thống nhất (tính ngày 21/10/2026)', () => {
   }
 });
 
-test('v9.5: buildSummary không truyền ngayTruoc cho văn bản y như cũ từng chữ', () => {
+test('v9.5 (đổi theo phiếu 22/11): buildSummary không truyền ngayTruoc cho cùng văn bản với ngayTruoc: false', () => {
   const rooms = [{ id: 'r1', name: 'Phòng 1' }, { id: 'r2', name: 'Phòng 2' }];
   const patients = [
     { id: 'a', roomId: 'r1', code: 'Giường 1', dob: '0810', ga: '346', wt: '1850', note: 'Theo dõi cân' },
     { id: 'b', roomId: 'r1', code: 'Giường 3', dob: '', ga: '', wt: '' }
   ];
   const todosByPid = { a: [{ text: 'Cân bé', done: true }, { text: 'Cập nhật y lệnh', done: false }] };
-  // Bản cũ, ghi tay từng chữ (20/10/2026: sinh 08/10 = 12 ngày tuổi, 244 + 12 = 256 = 36w4d)
+  // Ghi tay từng chữ (20/10/2026: sinh 08/10 = 12 ngày tuổi, 244 + 12 = 256 = 36w4d). Phòng 2 bé nên có số thứ tự.
   const CU = [
-    'KHÁM SÁNG 20/10/2026 - Y LỆNH',
-    'Tuổi thai ghi là tuổi thai hiệu chỉnh hôm nay.',
-    'Còn 1 việc ở 1 bệnh nhân.',
+    'KHÁM SÁNG 20/10/2026',
     '',
     'PHÒNG 1',
-    'Giường 1 - 36w4d - 1850 g',
+    '1. Giường 1 - 36w4d - 1850 g',
     '- Cập nhật y lệnh',
     'Ghi chú: Theo dõi cân',
     '',
-    'Giường 3 - Tiếp tục y lệnh cũ'
+    '2. Giường 3 - Tiếp tục y lệnh cũ'
   ].join('\n');
   assert.equal(buildSummary({ rooms, patients, todosByPid, now: NOW }), CU);
   assert.equal(buildSummary({ rooms, patients, todosByPid, now: NOW, ngayTruoc: false }), CU);
@@ -114,9 +112,7 @@ test('v9.5: buildSummary ngayTruoc: true đổi đúng dòng hai và câu danh s
   const todosByPid = { a: [{ text: 'Cập nhật y lệnh', done: false }] };
   const ngay = new Date(2026, 10, 3); // 03/11/2026: sinh 08/10 = 23 + 3 = 26 ngày tuổi; 244 + 26 = 270 = 38w4d
   assert.equal(buildSummary({ rooms, patients, todosByPid, now: ngay, ngayTruoc: true }), [
-    'KHÁM SÁNG 03/11/2026 - Y LỆNH',
-    'Tuổi thai ghi là tuổi thai hiệu chỉnh ngày 03/11.',
-    'Còn 1 việc ở 1 bệnh nhân.',
+    'KHÁM SÁNG 03/11/2026',
     '',
     'PHÒNG 1',
     'Giường 1 - 38w4d - 1850 g',
@@ -204,12 +200,35 @@ test('v9.6 buildSummary ngayTruoc: bé sinh sau nửa đêm có tuổi đúng th
   const rooms = [{ id: 'r1', name: 'Phòng 1' }];
   const patients = [{ id: 'a', roomId: 'r1', code: 'G05', dob: '0511', ga: '342', wt: '1950', note: '', examDate: '2026-11-04', createdAt: gio(2026, 11, 5, 2, 30) }];
   assert.equal(buildSummary({ rooms, patients, todosByPid: {}, now: new Date(2026, 10, 4), ngayTruoc: true }), [
-    'KHÁM SÁNG 04/11/2026 - Y LỆNH',
-    'Tuổi thai ghi là tuổi thai hiệu chỉnh ngày 04/11.',
-    'Không có việc mới, tiếp tục y lệnh cũ.',
+    'KHÁM SÁNG 04/11/2026',
     '',
     'PHÒNG 1',
     'G05 - 34w2d - 1950 g - Tiếp tục y lệnh cũ'
+  ].join('\n'));
+});
+
+test('22/11 buildSummary: đánh số theo từng phòng (phòng 1 bé không số), bé chưa có mã, nhiều phòng, không đổi tuổi', () => {
+  const rooms = [{ id: 'r1', name: 'Phòng 1' }, { id: 'r2', name: 'Phòng 2' }, { id: 'r3', name: 'Phòng 3' }];
+  const patients = [
+    { id: 'a', roomId: 'r1', code: 'G01', dob: '0810', ga: '346', wt: '1850', note: '' },
+    { id: 'b', roomId: 'r1', code: '', dob: '', ga: '', wt: '' },
+    { id: 'c', roomId: 'r1', code: 'G03', dob: '0810', ga: '346', wt: '' },
+    { id: 'd', roomId: 'r2', code: 'G10', dob: '0810', ga: '346', wt: '1900' }
+  ];
+  const todosByPid = { d: [{ text: 'Đo bilirubin', done: false }] };
+  assert.equal(buildSummary({ rooms, patients, todosByPid, now: NOW }), [
+    'KHÁM SÁNG 20/10/2026',
+    '',
+    'PHÒNG 1',
+    '1. G01 - 36w4d - 1850 g - Tiếp tục y lệnh cũ',
+    '',
+    '2. Chưa có mã - Tiếp tục y lệnh cũ',
+    '',
+    '3. G03 - 36w4d - Tiếp tục y lệnh cũ',
+    '',
+    'PHÒNG 2',
+    'G10 - 36w4d - 1900 g',
+    '- Đo bilirubin'
   ].join('\n'));
 });
 

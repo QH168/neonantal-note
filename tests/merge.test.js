@@ -251,3 +251,33 @@ test('9.6: bé chép từ chepMotBe (có copiedFrom) gộp được như dòng t
   // chepMotBe thật sự ghi copiedFrom (đọc mã)
   assert.match(docMa('../src/lib/actions.js'), /export async function chepMotBe[\s\S]*?copiedFrom: src\.id/);
 });
+// ---- 22/11: trường daNhapMay của bé (không đánh chỉ mục, gộp theo updatedAt cả dòng) ----
+test('daNhapMay: file sao lưu cũ (bé không có trường) vẫn hợp lệ, nhập vào máy trống thì thêm nguyên dòng', () => {
+  const cu = { format: BACKUP_FORMAT, version: 1, tables: { exam_patients: [{ id: 'be1', examDate: '2026-11-20', code: 'G01', updatedAt: 10 }] } };
+  assert.equal(validateBackup(cu, BANG), null);
+  const r = mergeRows([], cu.tables.exam_patients);
+  assert.equal(r.added, 1);
+  assert.equal('daNhapMay' in r.toPut[0], false); // thiếu trường = chưa nhập
+  assert.ok(!r.toPut[0].daNhapMay);
+});
+
+test('daNhapMay: bản sửa sau cùng thắng, cả khi bật rồi tắt', () => {
+  const may = [{ id: 'be1', code: 'G01', daNhapMay: true, updatedAt: 100 }];
+  // file cũ hơn (chưa nhập) không đè bản đã nhập trên máy
+  assert.equal(mergeRows(may, [{ id: 'be1', code: 'G01', updatedAt: 50 }]).toPut.length, 0);
+  // file mới hơn tắt dấu → thắng
+  const r = mergeRows(may, [{ id: 'be1', code: 'G01', daNhapMay: false, updatedAt: 200 }]);
+  assert.equal(r.updated, 1);
+  assert.equal(r.toPut[0].daNhapMay, false);
+  // máy chưa có trường, file mới hơn có trường → thắng
+  const r2 = mergeRows([{ id: 'be1', code: 'G01', updatedAt: 100 }], [{ id: 'be1', code: 'G01', daNhapMay: true, updatedAt: 300 }]);
+  assert.equal(r2.toPut[0].daNhapMay, true);
+  // bằng nhau: giữ bản trên máy
+  assert.equal(mergeRows(may, [{ id: 'be1', daNhapMay: false, updatedAt: 100 }]).toPut.length, 0);
+});
+
+test('daNhapMay: bé chép sang ngày khác là dòng mới (id khác, không trường) nên không bị file cũ đè hay mang dấu', () => {
+  const r = mergeRows([{ id: 'goc', daNhapMay: true, updatedAt: 5 }], [{ id: 'chep', copiedFrom: 'goc', updatedAt: 6 }]);
+  assert.equal(r.added, 1);
+  assert.equal(r.toPut[0].daNhapMay, undefined);
+});

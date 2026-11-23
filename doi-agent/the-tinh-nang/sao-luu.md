@@ -31,6 +31,11 @@
 - Mốc chỉ nằm trong `meta`; không thuộc `DATA_TABLES` nên không xuất, không nhập, không gộp. Máy chưa đặt thì mốc là 07:00 (420).
 - `db.version`, `BACKUP_VERSION` (vẫn 1), `merge.js`, `backup.js` không đổi. File sao lưu cũ và mới đều nhập được.
 
+## Đã nhập máy của bé (22/11/2026)
+- Trường `daNhapMay` (true/false) của bé trong `exam_patients`, ghi qua `updateRow` nên có `updatedAt`. Là trường thường: KHÔNG đổi `db.version(1)`, không đổi `BACKUP_VERSION` (vẫn 1), không đổi `merge.js`, `backup.js`, không đổi định dạng file.
+- Gộp theo `updatedAt` như các trường khác. File cũ không có `daNhapMay` vẫn nhập được; bé đó coi như chưa nhập.
+- Dấu không mang sang ngày sau: `copyPatientsFrom`, `chepMotBe`, `chepPhongSangHomNay` tự dựng danh sách trường nên không chép `daNhapMay`.
+
 ## Điểm dễ hỏng
 - iOS chỉ cho mở bảng Chia sẻ ngay trong lần bấm nút (`NotAllowedError` → hiện nút "Chia sẻ file").
 - `meta` (deviceId, lastExport, thư mục, mocNgayLamViec) không nằm trong file sao lưu — cố ý.

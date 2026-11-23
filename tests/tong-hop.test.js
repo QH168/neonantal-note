@@ -6,7 +6,6 @@ import { tongHopNhieuNgay, phongChoXem } from '../src/lib/tong-hop.js';
 
 const R1 = { id: 'r1', name: 'Phòng 1', order: 1 };
 const R2 = { id: 'r2', name: 'Phòng 2', order: 2 };
-const HEADER_2 = 'Tuổi thai ghi là tuổi thai hiệu chỉnh của từng ngày.';
 
 let seq = 0;
 const be = (roomId, examDate, over = {}) => ({
@@ -41,7 +40,6 @@ function duLieuCanvas() {
 
 const THEO_MA = [
   'TỔNG HỢP 02/11 - 04/11/2026',
-  HEADER_2,
   '',
   'PHÒNG 1 - G01',
   '02/11: 37w5d - 1800 g - Đo bilirubin',                 // 264 = 37w5d
@@ -71,7 +69,6 @@ test('theo ngày: nhóm NGÀY, trong đó PHÒNG, bé theo thứ tự order', ()
   const r = tongHopNhieuNgay({ tuNgay: '2026-11-02', denNgay: '2026-11-04', ...duLieuCanvas(), cachXep: 'ngay' });
   const mong = [
     'TỔNG HỢP 02/11 - 04/11/2026',
-    HEADER_2,
     '',
     'NGÀY 02/11',
     'PHÒNG 1',
@@ -115,7 +112,6 @@ test('qua năm, ngày sinh không ghi năm: tuổi từng ngày tính theo ngày
   const r = tongHopNhieuNgay({ tuNgay: '2026-12-28', denNgay: '2027-01-02', rooms: [R1], patients, todosByPid: {}, cachXep: 'ma' });
   assert.equal(r.text, [
     'TỔNG HỢP 28/12/2026 - 02/01/2027',
-    HEADER_2,
     '',
     'PHÒNG 1 - G05',
     '28/12: 32w0d - 1900 g - Tiếp tục y lệnh cũ',
@@ -147,7 +143,7 @@ test('tháng 2 năm nhuận 2028 (có 29/02) và năm thường 2027', () => {
     be('r1', '2028-03-01', { code: 'G09', dob: '27/02/2028', ga: '300', wt: '1510' }),
   ];
   const a = tongHopNhieuNgay({ tuNgay: '2028-02-29', denNgay: '2028-03-01', rooms: [R1], patients: nhuan, todosByPid: {}, cachXep: 'ma' });
-  assert.equal(a.text.split('\n').slice(3).join('\n'), [
+  assert.equal(a.text.split('\n').slice(2).join('\n'), [
     'PHÒNG 1 - G09',
     '29/02: 30w2d - 1500 g - Tiếp tục y lệnh cũ',
     '01/03: 30w3d - 1510 g - Tiếp tục y lệnh cũ',
@@ -177,7 +173,7 @@ test('nhiều việc: theo thứ tự order, chưa xong kèm (chưa xong), nối
 test('ghi chú: thêm dòng ngay dưới; tuổi không tính được thì bỏ tuổi; thiếu cân thì bỏ cân', () => {
   const p = be('r1', '2026-11-02', { code: 'G01', dob: '', ga: '', wt: '', note: '  Theo dõi vàng da  ' });
   const r = tongHopNhieuNgay({ tuNgay: '2026-11-02', denNgay: '2026-11-02', rooms: [R1], patients: [p], todosByPid: {}, cachXep: 'ma' });
-  assert.equal(r.text.split('\n').slice(3).join('\n'), [
+  assert.equal(r.text.split('\n').slice(2).join('\n'), [
     'PHÒNG 1 - G01',
     '02/11: Tiếp tục y lệnh cũ',
     'Ghi chú: Theo dõi vàng da',
@@ -193,7 +189,7 @@ test('bé không có mã không bị ghép: mỗi dòng một nhóm "Chưa có m
   const x3 = be('r1', '2026-11-03', { code: '', wt: '980', order: 1 });
   const c = be('r1', '2026-11-02', { code: 'G01', wt: '1000', order: 3 });
   const r = tongHopNhieuNgay({ tuNgay: '2026-11-02', denNgay: '2026-11-03', rooms: [R1], patients: [x3, x2, c, x1], todosByPid: {}, cachXep: 'ma' });
-  assert.equal(r.text.split('\n').slice(3).join('\n'), [
+  assert.equal(r.text.split('\n').slice(2).join('\n'), [
     'PHÒNG 1 - G01',
     '02/11: 1000 g - Tiếp tục y lệnh cũ',
     '',
@@ -225,7 +221,7 @@ test('trùng phòng và mã trong cùng ngày: giữ đủ hai dòng, không g�
   }
   const m = tongHopNhieuNgay({ tuNgay: '2026-11-02', denNgay: '2026-11-02', rooms: [R1], patients: [b, a], todosByPid: {}, cachXep: 'ma' });
   assert.equal(m.soMaGiuong, 1);
-  assert.equal(m.text.split('\n').slice(3).join('\n'), [
+  assert.equal(m.text.split('\n').slice(2).join('\n'), [
     'PHÒNG 1 - G01',
     '02/11: 1800 g - Tiếp tục y lệnh cũ',
     '02/11: 2500 g - Tiếp tục y lệnh cũ',
@@ -237,7 +233,7 @@ test('ghép nhóm bỏ khoảng trắng hai đầu và không phân biệt hoa t
   const b = be('r1', '2026-11-03', { code: 'G01 ', wt: '1820' });
   const r = tongHopNhieuNgay({ tuNgay: '2026-11-02', denNgay: '2026-11-03', rooms: [R1], patients: [b, a], todosByPid: {}, cachXep: 'ma' });
   assert.equal(r.soMaGiuong, 1);
-  assert.equal(r.text.split('\n').slice(3).join('\n'), [
+  assert.equal(r.text.split('\n').slice(2).join('\n'), [
     'PHÒNG 1 - g01',
     '02/11: 1800 g - Tiếp tục y lệnh cũ',
     '03/11: 1820 g - Tiếp tục y lệnh cũ',

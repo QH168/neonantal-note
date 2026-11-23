@@ -99,7 +99,6 @@ export function tuoiCuaDong(p, now = new Date()) {
  */
 export function buildSummary({ rooms, patients, todosByPid, now = new Date(), ngayTruoc = false }) {
   const dateStr = p2(now.getDate()) + '/' + p2(now.getMonth() + 1) + '/' + now.getFullYear();
-  let nTodo = 0, nPat = 0;
   const blocks = [];
   const theoPhong = nhomTheo(patients, (p) => p.roomId); // chia một lượt, không lọc lại cả danh sách cho từng phòng
   rooms.forEach((r) => {
@@ -110,11 +109,11 @@ export function buildSummary({ rooms, patients, todosByPid, now = new Date(), ng
       const pend = (todosByPid[p.id] || []).filter((t) => !t.done);
       // Hôm nay: theo ngày lịch của `now`. Ngày trước: theo ngày tính tuổi của chính dòng (bé sinh sau nửa đêm).
       const c = ngayTruoc ? tuoiCuaDong(p, now) : calcAge(p, now);
-      const head = [p.code || 'Chưa có mã'];
+      // Phòng có từ 2 bé trở lên: đánh số thứ tự đầu dòng mỗi bé; phòng 1 bé thì không số.
+      const head = [(ps.length >= 2 ? (i + 1) + '. ' : '') + (p.code || 'Chưa có mã')];
       if (!c.err) head.push(c.pma);
       if (p.wt) head.push(p.wt + ' g');
       if (!pend.length) head.push('Tiếp tục y lệnh cũ');
-      else { nTodo += pend.length; nPat += 1; }
       if (i > 0) rb.push('');
       rb.push(head.join(' - '));
       pend.forEach((t) => rb.push('- ' + t.text));
@@ -123,15 +122,7 @@ export function buildSummary({ rooms, patients, todosByPid, now = new Date(), ng
     blocks.push(rb.join('\n'));
   });
   if (!blocks.length) return 'KHÁM SÁNG ' + dateStr + '\nChưa có bệnh nhân trong danh sách ' + (ngayTruoc ? 'ngày này.' : 'hôm nay.');
-  return [
-    'KHÁM SÁNG ' + dateStr + ' - Y LỆNH',
-    ngayTruoc
-      ? 'Tuổi thai ghi là tuổi thai hiệu chỉnh ngày ' + p2(now.getDate()) + '/' + p2(now.getMonth() + 1) + '.'
-      : 'Tuổi thai ghi là tuổi thai hiệu chỉnh hôm nay.',
-    nTodo > 0 ? 'Còn ' + nTodo + ' việc ở ' + nPat + ' bệnh nhân.' : 'Không có việc mới, tiếp tục y lệnh cũ.',
-    '',
-    blocks.join('\n\n')
-  ].join('\n');
+  return ['KHÁM SÁNG ' + dateStr, '', blocks.join('\n\n')].join('\n');
 }
 
 /** Chép văn bản vào bộ nhớ tạm; có cách dự phòng cho Safari cũ. */

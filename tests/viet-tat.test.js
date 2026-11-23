@@ -139,3 +139,59 @@ test('moRongKhiGui: moRong và bộ mẫu không đổi', () => {
   assert.equal(go('/ctm ').text, 'Công thức máu ');
   assert.equal(BO_MAU.length, 13);
 });
+// ---- 22/11: /t là viết tắt có sẵn, chèn giờ máy 24h HH:mm ----
+import { gioHienTai, mucCoSan, mapDayDu, laCoSan, CO_SAN } from '../src/lib/viet-tat.js';
+const GIO_7H05 = new Date(2026, 10, 22, 7, 5);
+const GIO_14H30 = new Date(2026, 10, 22, 14, 30);
+
+test('/t: gioHienTai dạng 24h có số 0 đứng đầu', () => {
+  assert.equal(gioHienTai(GIO_7H05), '07:05');
+  assert.equal(gioHienTai(GIO_14H30), '14:30');
+  assert.equal(gioHienTai(new Date(2026, 10, 22, 0, 0)), '00:00');
+  assert.equal(gioHienTai(new Date(2026, 10, 22, 23, 59)), '23:59');
+});
+
+test('/t + dấu cách thay bằng giờ máy, giữ chữ xung quanh', () => {
+  const r = moRong('Đo /t ', 'Đo /t '.length, map, GIO_7H05);
+  assert.equal(r.text, 'Đo 07:05 ');
+  assert.equal(r.caret, 'Đo 07:05 '.length);
+  assert.equal(moRong('/T ', 3, map, GIO_14H30).text, '14:30 ');            // hoa thường như mọi viết tắt
+  assert.equal(moRong('/t\n', 3, {}, GIO_14H30).text, '14:30\n');          // xuống dòng cũng kích hoạt; map rỗng vẫn có /t
+  assert.equal(moRong('/t ', 3, null, GIO_14H30).text, '14:30 ');
+});
+
+test('/t: không chạy khi không đúng token (/tt, a/t, thiếu dấu cách)', () => {
+  assert.equal(moRong('/tt ', 4, map, GIO_7H05), null);
+  assert.equal(moRong('a/t ', 4, map, GIO_7H05), null);
+  assert.equal(moRong('/t', 2, map, GIO_7H05), null);
+});
+
+test('/t: hoàn tác trả về /t, và moRongKhiGui thay /t ở cuối', () => {
+  const r = moRong('Mổ lúc /t ', 'Mổ lúc /t '.length, map, GIO_14H30);
+  assert.deepEqual(hoanTac(r.text, r), { text: 'Mổ lúc /t ', caret: 'Mổ lúc /t '.length });
+  assert.equal(moRongKhiGui('Mổ lúc /t', map, GIO_14H30), 'Mổ lúc 14:30');
+  assert.equal(moRongKhiGui('/t', map, GIO_7H05), '07:05');
+});
+
+test('/t: mục tự tạo trùng key t không đè mục có sẵn (có sẵn thắng), map gốc không bị đổi', () => {
+  const mapNguoiDung = taoMap([{ key: 't', text: 'tự tạo' }, { key: 'ctm', text: 'Công thức máu' }]);
+  assert.equal(mapNguoiDung.t, 'tự tạo');
+  assert.equal(moRong('/t ', 3, mapNguoiDung, GIO_7H05).text, '07:05 ');
+  assert.equal(mapNguoiDung.t, 'tự tạo');
+  assert.equal(mapDayDu(mapNguoiDung, GIO_7H05).ctm, 'Công thức máu');
+  assert.equal(mapDayDu({}, GIO_7H05).t, '07:05');
+});
+
+test('/t: gợi ý có /t (giờ) ở cuối, bỏ mục tự tạo trùng key t', () => {
+  const ds = [{ key: 't', text: 'tự tạo' }, { key: 'ta', text: 'Tăng sữa' }];
+  const g = goiY('/t', 2, ds, 4, GIO_14H30);
+  assert.deepEqual(g.map((x) => [x.key, x.text]), [['t', '14:30'], ['ta', 'Tăng sữa']]);
+  assert.deepEqual(goiY('/c', 2, ds, 4, GIO_14H30), []);
+});
+
+test('/t: danh sách có sẵn cho thư viện', () => {
+  assert.equal(CO_SAN.length, 1);
+  assert.deepEqual(mucCoSan(GIO_14H30), [{ key: 't', text: '14:30', moTa: 'giờ hiện tại (vd. 14:05)', coSan: true }]);
+  assert.equal(laCoSan('/T'), true);
+  assert.equal(laCoSan('ctm'), false);
+});

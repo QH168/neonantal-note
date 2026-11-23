@@ -10,7 +10,7 @@ import { useBanPhim, useChamHaiLan, useTuLuu } from '../hooks.js';
 import { useVietTat } from './VietTat.jsx';
 import { KhungLich } from './Lich.jsx';
 import { useHoanTac } from './HoanTac.jsx';
-import { PriDot, PRI_NAME, Chevron, SwipeRow, TagDot, TickOk, TrangThaiXong, mauNhan, Sheet, PlusIcon, DongBtn, DauChiTietViec, ChanChiTietViec, giuConTro, useDongSheet } from './ui.jsx';
+import { PriDot, PRI_NAME, Chevron, SwipeRow, TagDot, TickOk, TrangThaiXong, mauNhan, hinhNhan, TEN_BIEU_TUONG, Sheet, PlusIcon, DongBtn, DauChiTietViec, ChanChiTietViec, giuConTro, useDongSheet } from './ui.jsx';
 
 /** Thanh khu vực: dạng cột (PC) hoặc chip vuốt ngang (iPhone). */
 export function ZoneNav({ dayTasks, active, onPick, chips }) {
@@ -38,12 +38,15 @@ export function ZoneNav({ dayTasks, active, onPick, chips }) {
 /** 5 nút nhãn bật/tắt độc lập (dùng ở form thêm việc và bảng chi tiết việc). */
 function TagBtns({ tags, onToggle, label, giuConTro: giu = false }) {
   return (
-    <div className="pri-pick" role="group" aria-label={label}>
-      {TAGS.map((tag) => (
-        <button key={tag} type="button" aria-label={`Nhãn ${tag}`} aria-pressed={tags.includes(tag)} onClick={() => onToggle(tag)}
-          onPointerDown={giu ? giuConTro : undefined} onMouseDown={giu ? giuConTro : undefined}
-          className="pri-btn tag-btn" style={mauNhan(tag)}>{tag}</button>
-      ))}
+    <div className="pri-pick tag-hang noscroll" role="group" aria-label={label}>
+      {TAGS.map((tag) => {
+        const hinh = hinhNhan(tag);
+        return (
+          <button key={tag} type="button" aria-label={`Nhãn ${TEN_BIEU_TUONG[tag] || tag}`} aria-pressed={tags.includes(tag)} onClick={() => onToggle(tag)}
+            onPointerDown={giu ? giuConTro : undefined} onMouseDown={giu ? giuConTro : undefined}
+            className={'pri-btn tag-btn' + (hinh ? ' co-bt' : '')} style={mauNhan(tag)}>{hinh || tag}</button>
+        );
+      })}
     </div>
   );
 }

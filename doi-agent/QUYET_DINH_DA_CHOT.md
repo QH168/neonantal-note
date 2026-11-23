@@ -21,8 +21,8 @@
 - PC giữ cỡ chữ cũ.
 
 ## Việc
-- ⚙ Khu vực (việc mới): NICU, CT, KAN, PS-PM, Ngoại Trú, DV, HP, HS (bác sĩ duyệt 28/10/2026). Khu cũ BM không còn trong ô chọn, chỉ hiện khi còn việc cũ mang khu BM. (luat.test.js luật 7, viec.test.js)
-- ⚙ Nhãn loại việc thay mức ưu tiên: NV, BM, CK, HC, XN; chọn nhiều, có thể không nhãn (bác sĩ duyệt 28/10/2026). Màu nhãn dùng bảng màu 16a: nền nhạt + chữ đậm cùng tông, biến `--tNV/--tNVi`… (NV đỏ phấn, BM vàng nhạt, CK xanh lơ, HC xanh chàm nhạt, XN tím nhạt), có cả sáng và tối; `--p1…--p5` giữ cho số ưu tiên của việc cũ, chấm đỏ đám mây, cảnh báo (bác sĩ duyệt 05/11/2026, v9.1). Thay quyết định cũ "màu nhãn dùng --p1…--p5". Sửa nhãn trong bảng chi tiết việc (chạm 2 lần vào việc). (viec.test.js, luat.test.js v9.1)
+- ⚙ Khu vực (việc mới): NICU, CT, KAN, PS-PM, Ngoại Trú, DV, HP, HS (bác sĩ duyệt 28/10/2026). (Thay 22/11/2026: PS và PM tách, xem mục cuối.) Khu cũ BM không còn trong ô chọn, chỉ hiện khi còn việc cũ mang khu BM. (luat.test.js luật 7, viec.test.js)
+- ⚙ Nhãn loại việc thay mức ưu tiên: NV, BM, CK, HC, XN; chọn nhiều, có thể không nhãn (bác sĩ duyệt 28/10/2026). (Thêm VIP, G, ST, MT: 22/11/2026, xem mục cuối.) Màu nhãn dùng bảng màu 16a: nền nhạt + chữ đậm cùng tông, biến `--tNV/--tNVi`… (NV đỏ phấn, BM vàng nhạt, CK xanh lơ, HC xanh chàm nhạt, XN tím nhạt), có cả sáng và tối; `--p1…--p5` giữ cho số ưu tiên của việc cũ, chấm đỏ đám mây, cảnh báo (bác sĩ duyệt 05/11/2026, v9.1). Thay quyết định cũ "màu nhãn dùng --p1…--p5". Sửa nhãn trong bảng chi tiết việc (chạm 2 lần vào việc). (viec.test.js, luat.test.js v9.1)
 - ⚙ Việc xếp: chưa xong trước, rồi theo thứ tự thêm (cả việc cũ), không xếp theo nhãn/mức. (viec.test.js)
 - Chi tiết việc (bác sĩ duyệt 29/10/2026): chạm 2 lần (trong 1 giây) vào việc → bảng "chi tiết việc" (sửa tên, khu, nhãn, ghi chú; không tiêu đề; không chữ "Tự lưu"); ghi chú hiện chữ nhỏ dưới tên việc. Bỏ chạm 3 lần, bảng nhãn riêng, vòng tròn nét đứt. (bác sĩ duyệt 05/11/2026, v9.2) Bảng cao ~76% màn hình theo bảng 15c (trước là ~50%), khu vực là hàng chip (trước là ô chọn khu; khu cũ BM vẫn hiện khi việc đang ở đó), có dòng trạng thái: "Chưa xong" + "Hoàn thành" hoặc "Đã xong lúc hh:mm" + "Bỏ đánh dấu xong"; chữ "Xoá việc" đỏ dịu #A8473D.
 - Đánh dấu xong và xoá việc (bác sĩ duyệt 05/11/2026, v9.2; thay "ô tick nhỏ 80% ở đầu dòng" và "xoá kiểu C" của 29/10/2026):
@@ -45,9 +45,9 @@
   - Dòng phòng: nút "+" tròn thay ô gạch đứt "+ Thêm bệnh nhân"; phòng đang thu gọn thì bấm "+" tự mở phòng rồi thêm bé và mở chi tiết bé.
   - Chi tiết bé mới theo bảng 16b: mã giường ở tiêu đề (sửa được, bé mới tự đặt con trỏ vào ô mã), chip tên phòng, hàng 3 ô Ngày sinh | Tuổi thai | Cân nặng, nút "Tính tuần tuổi" + ô kết quả (Ngày tuổi, Hiệu chỉnh). VẪN CHỈ TÍNH TUỔI KHI BẤM; sửa ngày sinh hoặc tuổi thai thì xoá kết quả cũ. Trạng thái "Chưa khám" + "Hoàn tất khám" / "Đã khám lúc hh:mm" + "Bỏ đánh dấu đã khám" (bé cũ chưa có giờ chỉ ghi "Đã khám"). "Xoá khỏi hôm nay" vẫn hỏi xác nhận. Nút "Tổng hợp" đổi thành "Tổng hợp y lệnh", nút trong bảng đổi thành "Soạn lại" (nội dung tổng hợp không đổi).
   - Dữ liệu bé cũ không đổi khi mở app.
-- "Lấy danh sách hôm qua": chép bé + việc chưa xong từ ngày khám gần nhất trước hôm nay, không trùng phòng + mã. (bác sĩ duyệt 14/11/2026) Chép luôn GHI CHÚ của bé sang hôm nay; áp dụng cho cả "Chép sang hôm nay" (xem ngày trước) và "Chép sang" một bé (xem 2 ngày). Thay "bé chép sang có ghi chú trống". Bé nguồn không đổi; trạng thái đã khám không mang theo. ⚙ (ảnh chụp thử tự động) Từ 09/11/2026 trên iPhone nút này nằm trong bảng "…" (xem mục cuối); PC giữ nút.
+- "Lấy danh sách hôm qua": chép bé + việc chưa xong từ ngày khám gần nhất trước hôm nay, không trùng phòng + mã. (bác sĩ duyệt 14/11/2026) Chép luôn GHI CHÚ của bé sang hôm nay; áp dụng cho cả "Chép sang hôm nay" (xem ngày trước) và "Chép sang" một bé (xem 2 ngày). Thay "bé chép sang có ghi chú trống". Bé nguồn không đổi; trạng thái đã khám không mang theo. ⚙ (ảnh chụp thử tự động) (22/11/2026: nút này vẫn chỉ chép việc CHƯA xong; chép phòng từ ngày trước thì chép hết, xem mục cuối.) Từ 09/11/2026 trên iPhone nút này nằm trong bảng "…" (xem mục cuối); PC giữ nút.
   Giữ đúng thứ tự bé như ngày nguồn; bé thêm tay nằm cuối phòng (bác sĩ duyệt 28/10/2026). ⚙ (tests/thu-tu.test.js)
-- "Tổng hợp y lệnh": văn bản sửa được, có nút Sao chép; bé không có việc mới ghi "Tiếp tục y lệnh cũ". ⚙
+- "Tổng hợp y lệnh": văn bản sửa được, có nút Sao chép; bé không có việc mới ghi "Tiếp tục y lệnh cũ". ⚙ (Thay 22/11/2026: định dạng mới, xem mục cuối: không còn chữ "Y LỆNH", bỏ dòng "Tuổi thai ghi là…" và dòng "Còn n việc".)
 
 ## Viết tắt (bác sĩ duyệt 28/10/2026)
 - ⚙ Gõ "/chữ tắt" rồi dấu cách ở mọi ô gõ chữ (thêm việc, tên và ghi chú việc, việc của bé, ghi chú của bé, khung Tổng hợp y lệnh) → tự thay bằng nội dung; không phân biệt hoa/thường. (viet-tat.test.js)
@@ -104,3 +104,27 @@ Các điểm dưới do Điều phối đề xuất cho đợt 9.5; bác sĩ đ�
 - Đã duyệt: PC không đổi.
 - Chờ bác sĩ (app giữ như hiện nay, khác bản vẽ; xem "Chờ duyệt" #52–#54 trong `doi-agent/NHAT_KY.md`): (1) bảng 21D khi gõ việc: giữ hàng chip khu; (2) đáy tab Việc: giữ ô "Ghi việc cần làm…" và nút tròn "+" (v9.3), bản vẽ ghi "Thêm việc…" và nút chữ "Thêm"; (3) bảng 21A: giữ dòng ngày của app "Hôm qua 08/11 và hôm nay 09/11", bản vẽ ghi "Thứ Hai, 09/11 · Đã xong 2/6".
 - Chưa làm: ảnh chuẩn đợt này chưa lưu, chờ bác sĩ duyệt ảnh. Chưa thử trên iPhone thật.
+
+## Đợt 22/11/2026 — bảng trượt bàn phím, nhãn mới, chép phòng (bác sĩ duyệt 22/11/2026)
+Phiếu: `doi-agent/phieu-viec/2026-11-22-bang-truot-ban-phim-iphone.json`. Bác sĩ quyết 6 điểm:
+1. VIP, G, ST là nhãn (như NV, BM, CK, HC, XN), không phải khu. Thêm vào hàng nhãn ở ô thêm việc.
+2. PS-PM tách thành hai khu PS và PM. Việc cũ giữ khu PS-PM, hiện như khu cũ (giống BM), không tự đổi.
+3. Nhãn MT (biểu tượng máy tính) trong ô thêm việc chỉ là biểu tượng, không ghi chữ "Đã nhập máy".
+4. Dấu "đã nhập máy" của bé không giữ khi chép sang ngày sau.
+5. Chép phòng từ ngày trước: chép hết việc, kể cả việc đã xong (giữ trạng thái xong/chưa xong như ngày đó), kèm ghi chú. "Lấy danh sách hôm qua" vẫn chỉ chép việc chưa xong (nút cũ, không đổi).
+6. Chữ "G" cuối ghi chú tổng hợp là gõ dở: bỏ qua.
+
+Các phần còn lại làm theo phiếu (bác sĩ không hỏi thêm):
+- Nút máy tính (đã nhập máy) trên dòng bé: đặt bên trái "Còn n việc"; bật thì nền xanh nhạt; độc lập với vuốt phải (đã khám).
+- Chép phòng: mỗi phòng ở màn ngày trước có nút "Chép sang hôm nay", có Hoàn tác 6 giây. Phòng ngày trước đã xoá thì chép vào phòng còn sống cùng tên.
+- Nút X đóng thẻ "Quản lý phòng" (iPhone và PC).
+- Viết tắt "/t" là giờ HH:mm (có sẵn, không sửa, không xoá).
+- Bàn phím iPhone: bảng chỉ coi là mở khi phần bị che lớn hơn 80px; ô đang gõ được cuộn vào vùng thấy. Chưa thử trên iPhone thật.
+
+Định dạng tổng hợp y lệnh mới (thay định dạng cũ):
+- Dòng đầu "KHÁM SÁNG dd/mm/yyyy"; bỏ chữ "Y LỆNH".
+- Bỏ dòng "Tuổi thai ghi là…" và dòng "Còn … việc".
+- Phòng có từ hai bé thì đánh số 1., 2.; có một bé thì không đánh số.
+- Bản nhiều ngày (`src/lib/tong-hop.js`) chưa đổi, chờ bác sĩ (`doi-agent/NHAT_KY.md` mục 56).
+
+Chỗ cũ bị thay (không xoá lịch sử ở trên): định dạng tổng hợp cũ (mục Khám, mục "Tổng hợp y lệnh"); nhãn chỉ có NV/BM/CK/HC/XN và khu PS-PM (mục Việc).

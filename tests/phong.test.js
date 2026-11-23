@@ -87,3 +87,126 @@ test('lưới an toàn: bé đã xoá mềm ở phòng đã xoá không làm ph�
   const kq = phongHomNay([R1, R3x], [be('a', 'r3', HOM_NAY, { deleted: true })]);
   assert.deepEqual(kq.map((r) => r.id), ['r1']);
 });
+
+// ---- 22/11: chép cả phòng ngày trước sang hôm nay ----
+import { phongDichChep, lapKeHoachChepPhong } from '../src/lib/phong.js';
+import { readFileSync } from 'node:fs';
+
+const TU = '2026-11-21';
+const PH = [
+  { id: 'r1', name: 'Phòng 1', order: 1 },
+  { id: 'r2', name: 'Phòng 2', order: 2 },
+  { id: 'r1x', name: 'phòng  1 ', order: 9, deleted: true },
+  { id: 'r5x', name: 'Phòng 5', order: 5, deleted: true }
+];
+const bn = (id, code, order, extra = {}) => ({ id, roomId: 'r1', examDate: TU, code, dob: '0810', ga: '346', wt: '1800', note: 'ghi chú ' + code, order, ...extra });
+const vi = (id, text, done, order, extra = {}) => ({ id, patientId: 'x', text, done, order, ...extra });
+const kehoach = (o = {}) => lapKeHoachChepPhong({
+  rooms: PH, roomId: 'r1', tuNgay: TU, homNay: HOM_NAY, cur: [],
+  beNguon: [bn('a', 'G01', 1), bn('b', 'G02', 2), bn('o', 'G09', 1, { roomId: 'r2' })],
+  viecTheoBe: {
+    a: [vi('t2', 'Việc xong', true, 2, { doneAt: 1234 }), vi('t1', 'Việc chưa xong', false, 1), vi('t3', 'Việc đã xoá', false, 3, { deleted: true })],
+    b: []
+  }, ...o
+});
+
+test('chép phòng: chép mọi bé còn sống của đúng phòng, kèm ghi chú và TẤT CẢ việc (xong và chưa xong)', () => {
+  const k = kehoach({ homNay: '2026-11-22' });
+  assert.equal(k.ok, true);
+  assert.deepEqual([k.soBe, k.soViec, k.boQua.length], [2, 2, 0]);
+  assert.deepEqual(k.ke.map((x) => x.be.code), ['G01', 'G02']);
+  assert.equal(k.ke[0].be.note, 'ghi chú G01');
+  assert.equal(k.ke[0].be.roomId, 'r1');
+  assert.equal(k.ke[0].be.examDate, '2026-11-22');
+  assert.equal(k.ke[0].be.copiedFrom, 'a');
+  assert.equal(k.ke[0].be.done, false);
+  // việc: theo order, đánh số lại từ 1, giữ xong/chưa xong và giờ xong; việc đã xoá không chép
+  assert.deepEqual(k.ke[0].viec, [
+    { text: 'Việc chưa xong', done: false, doneAt: null, order: 1 },
+    { text: 'Việc xong', done: true, doneAt: 1234, order: 2 }
+  ]);
+});
+
+test('chép phòng: KHÔNG mang daNhapMay (và không mang trường lạ nào khác)', () => {
+  const k = lapKeHoachChepPhong({
+    rooms: PH, roomId: 'r1', tuNgay: TU, homNay: '2026-11-22', cur: [],
+    beNguon: [bn('a', 'G01', 1, { daNhapMay: true, done: true, id2: 'x' })], viecTheoBe: {}
+  });
+  assert.equal(k.ke[0].be.daNhapMay, undefined);
+  assert.equal(k.ke[0].be.done, false);
+  assert.deepEqual(Object.keys(k.ke[0].be).sort(), ['code', 'copiedFrom', 'dob', 'done', 'examDate', 'ga', 'note', 'order', 'roomId', 'wt']);
+});
+
+test('chép phòng: bé đã có hôm nay (cùng phòng + mã, không phân biệt hoa thường; hoặc đã chép từ bé này) bị bỏ qua', () => {
+  const cur = [
+    { id: 'h1', roomId: 'r1', examDate: '2026-11-22', code: ' g01 ', order: 4 },
+    { id: 'h2', roomId: 'r1', examDate: '2026-11-22', code: '', copiedFrom: 'b', order: 5 },
+    { id: 'h3', roomId: 'r2', examDate: '2026-11-22', code: 'G02', order: 6 }, // phòng khác: không chặn
+    { id: 'h4', roomId: 'r1', examDate: '2026-11-22', code: 'G02', deleted: true }
+  ];
+  const k = kehoach({ homNay: '2026-11-22', cur });
+  assert.deepEqual(k.boQua, [{ id: 'a', ly: 'trung' }, { id: 'b', ly: 'trung' }]);
+  assert.deepEqual([k.ok, k.soBe, k.soViec, k.ke.length], [true, 0, 0, 0]);
+});
+
+test('chép phòng: hai bé trùng mã trong cùng lượt chỉ chép một; bé không mã đều chép; thứ tự nối tiếp bé hôm nay', () => {
+  const cur = [{ id: 'h', roomId: 'r2', examDate: '2026-11-22', code: 'Z', order: 7 }];
+  const k = kehoach({
+    homNay: '2026-11-22', cur,
+    beNguon: [bn('a', 'G01', 1), bn('a2', 'g01', 2), bn('n1', '', 3), bn('n2', '', 4)], viecTheoBe: {}
+  });
+  assert.deepEqual(k.ke.map((x) => x.nguonId), ['a', 'n1', 'n2']);
+  assert.deepEqual(k.boQua, [{ id: 'a2', ly: 'trung' }]);
+  assert.deepEqual(k.ke.map((x) => x.be.order), [8, 9, 10]);
+});
+
+test('chép phòng: phòng ngày trước đã xoá → chép vào phòng còn sống cùng tên; không có thì báo lý do', () => {
+  assert.deepEqual(phongDichChep(PH, 'r1x'), { room: PH[0], doiPhong: true }); // "phòng  1 " = "Phòng 1"
+  assert.deepEqual(phongDichChep(PH, 'r1'), { room: PH[0], doiPhong: false });
+  assert.equal(phongDichChep(PH, 'r5x'), null);
+  assert.equal(phongDichChep(PH, 'khong-co'), null);
+  const k = kehoach({ homNay: '2026-11-22', roomId: 'r1x', beNguon: [bn('a', 'G01', 1, { roomId: 'r1x' })], viecTheoBe: {} });
+  assert.equal(k.ok, true);
+  assert.equal(k.doiPhong, true);
+  assert.equal(k.phongDich.id, 'r1');
+  assert.equal(k.ke[0].be.roomId, 'r1');
+  assert.deepEqual(kehoach({ homNay: '2026-11-22', roomId: 'r5x' }), { ok: false, ly: 'phong-xoa-khong-co-phong-cung-ten' });
+  assert.deepEqual(kehoach({ homNay: '2026-11-22', roomId: 'khong-co' }), { ok: false, ly: 'khong-thay-phong' });
+});
+
+test('chép phòng: ngày sai (tuNgay không trước homNay, sai dạng) không chép', () => {
+  for (const [tu, nay] of [[TU, TU], ['2026-11-22', TU], ['21/11', '2026-11-22'], [undefined, '2026-11-22'], [TU, '']]) {
+    assert.deepEqual(kehoach({ tuNgay: tu, homNay: nay }), { ok: false, ly: 'ngay-sai' }, String(tu) + '/' + nay);
+  }
+});
+
+test('chép phòng: qua tháng, qua năm; bé ngày khác và bé đã xoá của nguồn không chép', () => {
+  const k = lapKeHoachChepPhong({
+    rooms: PH, roomId: 'r1', tuNgay: '2026-12-31', homNay: '2027-01-01', cur: [],
+    beNguon: [bn('a', 'G01', 1, { examDate: '2026-12-31' }), bn('b', 'G02', 2, { examDate: '2026-12-30' }), bn('c', 'G03', 3, { examDate: '2026-12-31', deleted: true })],
+    viecTheoBe: {}
+  });
+  assert.deepEqual(k.ke.map((x) => x.nguonId), ['a']);
+  assert.equal(k.ke[0].be.examDate, '2027-01-01');
+});
+
+test('chép phòng: phòng không có bé nguồn → ok, 0 bé (giao diện báo "phòng này không có bé")', () => {
+  const k = kehoach({ homNay: '2026-11-22', beNguon: [] });
+  assert.deepEqual([k.ok, k.soBe, k.soViec, k.boQua], [true, 0, 0, []]);
+});
+
+test('daNhapMay: các hàm chép bé trong actions.js không nhắc tới trường này', () => {
+  const src = readFileSync(new URL('../src/lib/actions.js', import.meta.url), 'utf8');
+  const tu = src.indexOf('export async function copyPatientsFrom');
+  const den = src.indexOf('Chép CẢ PHÒNG'); // hết chepMotBe, trước chú thích của hàm chép phòng
+  assert.ok(tu > 0 && den > tu);
+  assert.doesNotMatch(src.slice(tu, den), /daNhapMay/);
+  assert.match(src, /setDaNhapMay = \(id, giaTri\) => updateRow\('exam_patients', id, \{ daNhapMay: !!giaTri \}\)/);
+});
+
+test('daNhapMay: không cần db.version mới (không là chỉ mục)', () => {
+  const db = readFileSync(new URL('../src/db.js', import.meta.url), 'utf8');
+  assert.doesNotMatch(db, /daNhapMay/);
+  assert.match(db, /exam_patients: 'id, examDate, roomId, \[examDate\+roomId\], updatedAt'/);
+  assert.equal((db.match(/^db\.version\(\d+\)/gm) || []).length, 2); // vẫn chỉ version(1) và version(2) (abbrevs)
+});

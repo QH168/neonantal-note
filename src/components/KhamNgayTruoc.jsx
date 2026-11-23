@@ -1,15 +1,17 @@
 // Khám: xem lại một ngày trước (v9.5, bảng 16d). TUYỆT ĐỐI CHỈ XEM.
-// - Chỉ có MỘT thao tác ghi: "Chép sang hôm nay" (copyPatientsFrom). Không nút "+", không vuốt, không quản lý phòng.
+// - Chỉ có hai thao tác ghi, cùng là chép SANG HÔM NAY (không sửa ngày cũ): "Chép sang hôm nay" cả ngày (copyPatientsFrom) và
+//   "Chép sang hôm nay" từng phòng (chepPhongSangHomNay, có xác nhận trong trang + Hoàn tác). Không nút "+", không vuốt, không quản lý phòng.
 // - Chi tiết bé viết riêng (BeChiXem): không dùng PatientDetail hay useTuLuu, không có ô nhập, không tự lưu.
 // - Tuổi tính theo NGÀY ĐÓ của chính dòng (tuoiCuaDong: bé ghi sau nửa đêm không bị lùi một năm), không bao giờ theo hôm nay.
 // - Bé nào cũng hiện: phòng đã xoá, phòng không tìm thấy (hook trả phongChoXem).
 import { useMemo, useState } from 'react';
-import { copyPatientsFrom } from '../lib/actions.js';
+import { copyPatientsFrom, chepPhongSangHomNay, hoanTacChepPhong } from '../lib/actions.js';
 import { nhomTheo } from '../lib/chung.js';
 import { buildSummary, tuoiCuaDong, ngayTinhTuoi, gaFmt } from '../lib/clinical.js';
 import { fmtDM, parseIso } from '../lib/dates.js';
 import { gioXong } from '../lib/viec.js';
 import { useBeNgay } from '../hooks.js';
+import { useHoanTac } from './HoanTac.jsx';
 import { SummaryPanel } from './Exam.jsx';
 import { Sheet, DongBtn, TickOk, XIcon } from './ui.jsx';
 
@@ -107,6 +109,29 @@ export default function KhamNgayTruoc({ iso, today, wide, onVeHomNay }) {
       setMsg(n ? `Đã chép ${n} bé sang hôm nay` : 'Không có bé nào cần chép');
     } finally { setDangChep(false); }
   };
+  // Chép CẢ PHÒNG sang hôm nay (22/11): hỏi xác nhận ngay trong trang (không dùng hộp thoại trình duyệt), rồi Hoàn tác 6 giây
+  const hoanTac = useHoanTac();
+  const [hoiPhong, setHoiPhong] = useState(null); // id phòng đang hỏi xác nhận
+  const [dangChepPhong, setDangChepPhong] = useState(false);
+  const chepPhong = async (r, ten) => {
+    if (dangChepPhong) return;
+    setDangChepPhong(true);
+    setHoiPhong(null);
+    try {
+      const kq = await chepPhongSangHomNay(r.id, iso, today);
+      if (!kq.ok) {
+        setMsg(kq.ly === 'phong-xoa-khong-co-phong-cung-ten'
+          ? `Không chép được: ${r.name} đã bị xoá và hôm nay chưa có phòng cùng tên. Hãy tạo phòng cùng tên rồi chép lại.`
+          : kq.ly === 'ngay-sai' ? 'Chỉ chép được từ ngày trước hôm nay.' : 'Không tìm thấy phòng này để chép.');
+        return;
+      }
+      const bo = kq.boQua.length;
+      const phu = (bo ? ` ${bo} bé đã có hôm nay nên bỏ qua.` : '') + (kq.doiPhong ? ` ${r.name} đã bị xoá nên chép vào phòng cùng tên ${kq.phongDich.name}.` : '');
+      if (kq.soBe === 0) { setMsg(`Không chép bé nào.${phu || ' Phòng này không có bé nào mới.'}`); return; }
+      setMsg(`Đã chép ${kq.soBe} bé, ${kq.soViec} việc sang ${kq.phongDich.name}.${phu}`);
+      hoanTac.hien({ nhan: `Đã chép ${kq.soBe} bé sang ${kq.phongDich.name}`, lam: async () => { await hoanTacChepPhong(kq.ids); setMsg(''); } });
+    } finally { setDangChepPhong(false); }
+  };
   const build = () => buildSummary({ rooms, patients, todosByPid, now: parseIso(iso), ngayTruoc: true });
 
   const dai = (
@@ -124,10 +149,23 @@ export default function KhamNgayTruoc({ iso, today, wide, onVeHomNay }) {
         if (!ps) return null;
         return (
           <section key={r.id} className="group nt-phong">
-            <h2 className="nt-phong-h">
-              <span className="group-title">{tenPhong({ roomId: r.id })}</span>
-              <span className="muted small">Đã khám {ps.filter((p) => p.done).length}/{ps.length}</span>
-            </h2>
+            <div className="nt-phong-hang">
+              <h2 className="nt-phong-h">
+                <span className="group-title">{tenPhong({ roomId: r.id })}</span>
+                <span className="muted small">Đã khám {ps.filter((p) => p.done).length}/{ps.length}</span>
+              </h2>
+              <button type="button" className="nt-chep-phong" disabled={dangChepPhong} aria-expanded={hoiPhong === r.id}
+                aria-label={'Chép ' + tenPhong({ roomId: r.id }) + ' sang hôm nay'} onClick={() => setHoiPhong(hoiPhong === r.id ? null : r.id)}>Chép sang hôm nay</button>
+            </div>
+            {hoiPhong === r.id && (
+              <div className="vt-ask" role="alertdialog" aria-label={'Xác nhận chép ' + tenPhong({ roomId: r.id })}>
+                <div>Chép {ps.length} bé của {tenPhong({ roomId: r.id })} sang hôm nay, kèm ghi chú và mọi việc (cả việc đã xong)?</div>
+                <div className="row8">
+                  <button type="button" className="btn primary grow" onClick={() => chepPhong(r, tenPhong({ roomId: r.id }))}>Chép {ps.length} bé</button>
+                  <button type="button" className="btn grow" onClick={() => setHoiPhong(null)}>Thôi</button>
+                </div>
+              </div>
+            )}
             <div className="stack8">
               {ps.map((p) => {
                 const ts = todosByPid[p.id] || [];

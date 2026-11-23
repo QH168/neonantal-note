@@ -1,5 +1,5 @@
 // Mọi thao tác ghi dữ liệu của app. Luôn đi qua addRow/updateRow/softDelete để có updatedAt.
-import { phongXoaDuoc } from './phong.js';
+import { phongXoaDuoc, lapKeHoachChepPhong } from './phong.js';
 import { chuanHoaTags, chuanTenViec } from './viec.js';
 import { sapBe, orderTiepTheo } from './thu-tu.js';
 import { chuanKey, BO_MAU } from './viet-tat.js';
@@ -140,6 +140,16 @@ export async function addPatient(roomId, examDate) {
 export const updatePatient = (id, changes) => updateRow('exam_patients', id, changes);
 // Đánh dấu đã khám / bỏ đánh dấu: p là dòng bé; done mặc định đảo trạng thái hiện tại. Ghi doneAt cùng lúc.
 export const setPatientDone = (p, done = !p.done) => updateRow('exam_patients', p.id, phanDoiXong(done));
+// "Đã nhập máy" của bé (22/11): trường boolean `daNhapMay`, không đánh chỉ mục (không cần db.version mới), ghi qua updateRow nên có updatedAt.
+// Bé chưa từng đặt thì không có trường = chưa nhập. Độc lập với `done` (đã khám). Mọi đường chép bé sang ngày khác
+// (copyPatientsFrom, chepMotBe, chepPhongSangHomNay) tự dựng danh sách trường nên KHÔNG mang daNhapMay theo.
+export const setDaNhapMay = (id, giaTri) => updateRow('exam_patients', id, { daNhapMay: !!giaTri });
+// Đảo trạng thái theo dòng bé p đang hiện; trả giá trị mới.
+export async function batTatDaNhapMay(p) {
+  const moi = !p.daNhapMay;
+  await setDaNhapMay(p.id, moi);
+  return moi;
+}
 export async function removePatient(id) {
   await ghiMotLuot([db.exam_patients, db.patient_todos], async () => {
     const todos = await db.patient_todos.where('patientId').equals(id).filter(alive).toArray();
@@ -227,6 +237,56 @@ export async function chepMotBe(patientId, homNay) {
     kq = { added: 1, id: np.id };
   });
   return kq;
+}
+
+/**
+ * Chép CẢ PHÒNG của ngày tuNgay sang homNay (22/11, bác sĩ duyệt): mọi bé còn sống của phòng + ghi chú + TẤT CẢ việc của bé
+ * (kể cả việc đã xong, giữ nguyên xong/chưa xong). Không chép bé đã có hôm nay (cùng luật chepMotBe: phòng + mã, copiedFrom, kể cả
+ * hai bé trùng mã trong cùng lượt). Không mang daNhapMay. Phòng ngày trước đã xoá → chép vào phòng còn sống cùng tên; không có → không chép.
+ * Một giao dịch: hoặc ghi hết hoặc không ghi gì. Luật nằm ở lapKeHoachChepPhong (src/lib/phong.js).
+ * @param roomId id phòng của ngày tuNgay (có thể là phòng đã xoá)
+ * @returns { ok: true, soBe, soViec, boQua: [{ id, ly:'trung' }], ids: [id bé mới], idViec: [id việc mới], phongDich: { id, name }, doiPhong }
+ *   hoặc { ok: false, ly: 'ngay-sai' | 'khong-thay-phong' | 'phong-xoa-khong-co-phong-cung-ten', soBe: 0, soViec: 0, boQua: [], ids: [] }.
+ *   Hoàn tác 6 giây: hoanTacChepPhong(kq.ids). soBe = 0 với ok:true nghĩa là mọi bé đều đã có hôm nay (boQua cho biết).
+ */
+export async function chepPhongSangHomNay(roomId, tuNgay, homNay) {
+  let kq = { ok: false, ly: 'khong-thay-phong', soBe: 0, soViec: 0, boQua: [], ids: [] };
+  await ghiMotLuot([db.exam_patients, db.patient_todos, db.rooms], async () => {
+    const rooms = await db.rooms.toArray(); // kể cả phòng đã xoá
+    const beNguon = await db.exam_patients.where('examDate').equals(tuNgay).filter((p) => alive(p) && p.roomId === roomId).toArray();
+    const cur = await db.exam_patients.where('examDate').equals(homNay).filter(alive).toArray();
+    const viecTheoBe = beNguon.length
+      ? Object.fromEntries(nhomTheo(await db.patient_todos.where('patientId').anyOf(beNguon.map((p) => p.id)).filter(alive).toArray(), (t) => t.patientId))
+      : {};
+    const kh = lapKeHoachChepPhong({ rooms, roomId, beNguon, cur, viecTheoBe, tuNgay, homNay });
+    if (!kh.ok) { kq = { ok: false, ly: kh.ly, soBe: 0, soViec: 0, boQua: [], ids: [] }; return; }
+    const ids = [], idViec = [];
+    for (const k of kh.ke) {
+      const np = await addRow('exam_patients', k.be);
+      ids.push(np.id);
+      for (const v of k.viec) idViec.push((await addRow('patient_todos', { patientId: np.id, ...v })).id);
+    }
+    kq = {
+      ok: true, soBe: kh.soBe, soViec: kh.soViec, boQua: kh.boQua, ids, idViec,
+      phongDich: { id: kh.phongDich.id, name: kh.phongDich.name }, doiPhong: kh.doiPhong
+    };
+  });
+  return kq;
+}
+
+/** Hoàn tác chepPhongSangHomNay: xoá mềm các bé mới (ids) và việc của chúng, một giao dịch. Trả số bé đã xoá. */
+export async function hoanTacChepPhong(ids) {
+  let n = 0;
+  await ghiMotLuot([db.exam_patients, db.patient_todos], async () => {
+    for (const id of ids || []) {
+      const be = await db.exam_patients.get(id);
+      if (!be || be.deleted) continue;
+      for (const t of await db.patient_todos.where('patientId').equals(id).filter(alive).toArray()) await softDelete('patient_todos', t.id);
+      await softDelete('exam_patients', id);
+      n++;
+    }
+  });
+  return n;
 }
 
 // ---------- Dời việc sang hôm nay (v9.6) ----------

@@ -1,8 +1,11 @@
 // Luật thuần cho tab Việc (nhãn, sắp xếp, khu hiển thị, đếm chạm). Không import db/React để Node kiểm được.
 
-export const TAGS = ['NV', 'BM', 'CK', 'HC', 'XN'];
-// Nhãn → số màu: giao diện dùng var(--pN)
-export const TAG_COLOR = { NV: 1, BM: 2, CK: 3, HC: 4, XN: 5 };
+// 5 nhãn đầu giữ nguyên nghĩa và thứ tự (22/11: thêm VIP, G, ST và MT = biểu tượng máy tính, hiện bằng hình, không có chữ).
+export const TAGS = ['NV', 'BM', 'CK', 'HC', 'XN', 'VIP', 'G', 'ST', 'MT'];
+// Nhãn → số màu: giao diện dùng var(--pN). Bảng màu hiện có p1..p5 nên nhãn mới dùng lại số màu; muốn khác biệt hơn thì thêm --p6.. rồi đổi số ở đây.
+export const TAG_COLOR = { NV: 1, BM: 2, CK: 3, HC: 4, XN: 5, VIP: 4, G: 3, ST: 2, MT: 1 };
+// Nhãn hiện bằng biểu tượng thay vì chữ (giao diện vẽ hình theo tên biểu tượng, aria-label tiếng Việt do giao diện đặt).
+export const TAG_BIEU_TUONG = { MT: 'may-tinh' };
 
 // Việc mới có mảng tags (kể cả rỗng); việc cũ chỉ có urgency.
 export const laViecMoi = (t) => Array.isArray(t?.tags);

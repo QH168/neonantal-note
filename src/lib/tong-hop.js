@@ -121,6 +121,6 @@ export function tongHopNhieuNgay({ tuNgay, denNgay, rooms, patients, todosByPid,
     }
   }
 
-  const text = [dau, 'Tuổi thai ghi là tuổi thai hiệu chỉnh của từng ngày.', '', khoi.join('\n\n')].join('\n');
+  const text = [dau, '', khoi.join('\n\n')].join('\n');
   return { ...base, text };
 }

@@ -4,8 +4,8 @@
 
 /* v9 đợt 9.1 — màu nhãn mới (bảng 16a): --tXX = nền nhạt, --tXXi = chữ đậm cùng tông.
    --p1…--p5 ở trên KHÔNG đổi: còn dùng cho số 1–4/NV của việc cũ, chấm đỏ đám mây, cảnh báo. */
-.th{--tNV:#F8D7D3;--tNVi:#8C2A20;--tBM:#F7E6B8;--tBMi:#6E4E00;--tCK:#D3EAF0;--tCKi:#1B5566;--tHC:#DDE3F6;--tHCi:#2C3F86;--tXN:#E8DDF3;--tXNi:#573884}
-.th.dark{--tNV:#4C2723;--tNVi:#F5C4BD;--tBM:#4A3B15;--tBMi:#F0D88F;--tCK:#173A44;--tCKi:#A9D8E5;--tHC:#232D52;--tHCi:#BFCBF3;--tXN:#34284A;--tXNi:#D8C7EF}
+.th{--tNV:#F8D7D3;--tNVi:#8C2A20;--tBM:#F7E6B8;--tBMi:#6E4E00;--tCK:#D3EAF0;--tCKi:#1B5566;--tHC:#DDE3F6;--tHCi:#2C3F86;--tXN:#E8DDF3;--tXNi:#573884;--tVIP:#FBE0CC;--tVIPi:#8A4410;--tG:#D5EBD7;--tGi:#2A6030;--tST:#F6D6E6;--tSTi:#8A2A5C;--tMT:#DCE3EA;--tMTi:#33475A}
+.th.dark{--tNV:#4C2723;--tNVi:#F5C4BD;--tBM:#4A3B15;--tBMi:#F0D88F;--tCK:#173A44;--tCKi:#A9D8E5;--tHC:#232D52;--tHCi:#BFCBF3;--tXN:#34284A;--tXNi:#D8C7EF;--tVIP:#4D3220;--tVIPi:#F5CFAE;--tG:#1F3A25;--tGi:#B6DFBB;--tST:#4A2438;--tSTi:#F2BEDA;--tMT:#26323D;--tMTi:#C5D3E0}
 /* v9 đợt 9.1 — màu trạng thái (mục 1.3): mới khai báo, chưa áp vào hành vi (thuộc đợt 9.2 trở đi).
    okBg/okInk: tích đã xong · swR/swR2: nền vuốt phải (trước/qua mốc 1/3) · swL/swL2: nền vuốt trái
    delInk/delBg: chữ và nền nút xoá dịu · doneLine/doneInk: viền và chữ nút "Hoàn thành"
@@ -170,6 +170,10 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .sheet-wrap{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;justify-content:flex-end}
 .sheet-backdrop{position:absolute;inset:0;width:100%;height:100%;padding:0;border:0;background:var(--overlay)}
 .sheet{position:relative;max-height:90%;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 16px calc(24px + env(safe-area-inset-bottom));background:var(--surface);border-radius:20px 20px 0 0;display:flex;flex-direction:column;gap:14px}
+.sheet{overscroll-behavior:contain} /* cú kéo hết đầu/cuối danh sách không chuyển sang trang phía sau (iOS 16+) */
+.sheet-wrap{overscroll-behavior:contain}
+.sheet-backdrop{touch-action:none}
+.sheet-wrap.kb .sheet{max-height:100%} /* bàn phím mở: khung còn thấy ít, dùng hết */
 .sheet-wrap.center{justify-content:center;align-items:center;padding:24px}
 .sheet-wrap.center .sheet{width:min(560px,100%);border-radius:16px;padding:16px}
 
@@ -282,6 +286,22 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 :is(.phone-app,.sheet-ph) .tag-dot.big{width:32px;height:32px;font-size:12px}
 /* nút chọn nhãn 44px tròn. Tắt: nền bề mặt, viền 1,5px, chữ màu nhãn. Bật: nền nhạt của nhãn, viền 2px màu chữ nhãn */
 .tag-btn{font-size:13px;letter-spacing:-.02em;border:1.5px solid var(--line);background:var(--surface);color:var(--ti)}
+.tag-ic{display:block;flex:none}
+.tag-dot .tag-ic{width:16px;height:16px}.tag-dot.big .tag-ic{width:20px;height:20px}
+.tag-btn.co-bt{display:flex;align-items:center;justify-content:center}.tag-btn .tag-ic{width:22px;height:22px}
+.pri-pick.tag-hang{flex-wrap:wrap}.pri-pick.tag-hang .pri-btn{flex:none}
+.task-form-ph .pri-pick.tag-hang,.sheet-ph .pri-pick.tag-hang{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;margin-right:-16px;padding:2px 16px 2px 0;-webkit-overflow-scrolling:touch} /* 9 nÃºt nhÃ£n: má»™t hÃ ng vuá»‘t ngang Ä‘Æ°á»£c, khÃ´ng trÃ n trang */
+.pat-may{flex:none;width:44px;height:44px;margin:0 0 0 2px;padding:0;border:0;border-radius:12px;background:transparent;color:var(--muted);display:flex;align-items:center;justify-content:center;touch-action:manipulation}
+.pat-may[aria-pressed="true"]{background:var(--tint);color:var(--tintInk)}
+.pat-may:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.pat-may svg{display:block}
+.pat-row .left-badge{margin-left:4px}
+.hn-the .pat-may{align-self:center;margin:0 6px 0 0}
+.nt-phong-hang{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}.nt-phong-hang .nt-phong-h{flex:1;min-width:0}
+.nt-chep-phong{flex:none;margin-left:auto;min-height:44px;padding:0 14px;border:1px solid var(--accent);border-radius:12px;background:var(--surface);color:var(--accent);font-size:15px;font-weight:600}
+.nt-chep-phong:disabled{opacity:.5}
+.vt-co-san{flex:none;margin-left:6px;padding:1px 8px;border-radius:10px;background:var(--surface2);color:var(--muted);font-size:12px;font-weight:600;white-space:nowrap}
+.vt-item-wrap.co-san .vt-hang{cursor:default}
 .tag-btn[aria-pressed="true"]{border:2px solid var(--ti);background:var(--tb)}
 :is(.phone-app,.sheet-ph) .tag-btn{font-size:13px}
 /* v9 đợt 9.1: iPhone bỏ cỡ 12,5 / 14 / 18 — ghi chú dưới tên việc 13, tên việc trong bảng chi tiết 17 */

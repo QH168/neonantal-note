@@ -2,7 +2,7 @@
 import { useRef, useState } from 'react';
 import { useAbbrevs } from '../hooks.js';
 import { addAbbrev, updateAbbrev, removeAbbrev, khoiPhucAbbrev } from '../lib/actions.js';
-import { chuanKey } from '../lib/viet-tat.js';
+import { chuanKey, laCoSan, mucCoSan } from '../lib/viet-tat.js';
 import { useHoanTac } from './HoanTac.jsx';
 import { boDemCham, themCham } from '../lib/viec.js';
 import { Sheet, SheetHead, SwipeRow, PlusIcon } from './ui.jsx';
@@ -34,6 +34,7 @@ export default function ThuVien({ wide, onClose }) {
   const gui = async (e) => {
     e.preventDefault();
     setLoi(''); setHoi(null); setTin('');
+    if (laCoSan(k)) { setLoi(`/${chuanKey(k)} là viết tắt có sẵn, không thêm hoặc sửa được. Hãy chọn chữ khác.`); return; }
     const r = sua ? await updateAbbrev(sua.id, { key: k, text: v }) : await addAbbrev(k, v);
     if (r.loi) { setLoi(LOI[r.loi] || 'Chưa lưu được.'); return; }
     if (r.trung) {
@@ -80,6 +81,8 @@ export default function ThuVien({ wide, onClose }) {
 
   const qq = boDau(q.trim().replace(/^\//, ''));
   const hien = qq ? list.filter((m) => boDau(m.key).includes(qq) || boDau(m.text).includes(qq)) : list;
+  // Viết tắt có sẵn (/t): luôn đầu danh sách, không sửa/xoá được, nội dung là giờ máy lúc mở bảng
+  const coSan = mucCoSan().filter((m) => !qq || boDau(m.key).includes(qq) || boDau(m.moTa).includes(qq));
 
   return (
     <Sheet label="Thư viện viết tắt" onClose={onClose} wide={wide} className="vt-sheet">
@@ -126,7 +129,16 @@ export default function ThuVien({ wide, onClose }) {
       <div className="row-between muted small vt-dem"><span>{list.length} mục</span><span>Được sao lưu cùng dữ liệu</span></div>
 
       <div className="vt-list" role="list" aria-label="Danh sách viết tắt">
-        {hien.length === 0 && <div className="empty vt-empty">{list.length ? 'Không có mục nào khớp.' : 'Thư viện đang trống.'}</div>}
+        {coSan.map((m) => (
+          <div role="listitem" key={'co-san-' + m.key} className="vt-item-wrap co-san">
+            <div className="vt-item"><div className="vt-hang co-san" aria-label={`/${m.key}, viết tắt có sẵn, ${m.moTa}`}>
+              <span className="vt-k">/{m.key}</span>
+              <span className="vt-v">{m.moTa}</span>
+              <span className="vt-co-san">có sẵn</span>
+            </div></div>
+          </div>
+        ))}
+        {hien.length === 0 &&<div className="empty vt-empty">{list.length ? 'Không có mục nào khớp.' : 'Thư viện đang trống.'}</div>}
         {hien.map((m) => (
           <div role="listitem" key={m.id} className={'vt-item-wrap' + (sua?.id === m.id ? ' on' : '')}>
             <SwipeRow kind="viết tắt" label={'/' + m.key} className="vt-item" onDelete={() => xoa(m)}>

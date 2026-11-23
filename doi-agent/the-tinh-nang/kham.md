@@ -6,6 +6,9 @@
 - `src/components/MenuThem.jsx` (phiếu 09/11 mức 2, chỉ iPhone): nút "…" và bảng xổ xuống. Tab Khám, chế độ Hôm nay, không xem 2 ngày và không xem ngày trước: nhóm "Danh sách khám" gồm "Lấy danh sách hôm qua" (dòng phụ "Chép n bé, ghi chú và việc chưa xong." từ 14/11/2026; chưa có ngày trước thì dòng mờ) và "Quản lý phòng" / "Đóng quản lý phòng" (dòng phụ "Đổi tên, thêm hoặc xoá phòng."). Sau khi chép, dòng "Đã chép n bệnh nhân." hoặc "Không có bệnh nhân mới để chép." hiện 3 giây dưới đầu trang (`role="status"`). Chi tiết bố cục ở `khung-chung.md`.
 - `src/components/Exam.jsx`
   - `ExamActions` — PC: nút "Lấy danh sách hôm qua" (hoặc "ngày dd/mm" nếu ngày khám gần nhất không phải hôm qua) + "Quản lý phòng". Từ 09/11/2026 iPhone không dùng `ExamActions`: hai việc đó nằm trong bảng "…" (`MenuThem.jsx`). Hai hàm dùng chung: `thongTinLayDanhSach(prev, today)` (trả `label`, `hint` dài cho PC, `hintNgan` cho bảng "…", `none`) và `chepDanhSach(prev, today)` (gọi `copyPatientsFrom`, trả câu báo). Luật không trùng bé vẫn ở `copyPatientsFrom`. Từ 14/11/2026 (bác sĩ duyệt) `copyPatientsFrom` và `chepMotBe` chép luôn GHI CHÚ của bé nguồn sang bé mới, cùng với việc chưa xong; bé nguồn không đổi, trạng thái đã khám không mang theo.
+  - 22/11/2026: `RoomManager` có nút X tròn 44px ở góc trên bên phải (`aria-label` "Đóng quản lý phòng", prop `onClose`), trên cả iPhone và PC; chỉ đóng thẻ, không đổi dữ liệu.
+  - 22/11/2026, chép phòng từ ngày trước (`src/components/KhamNgayTruoc.jsx`): mỗi phòng có nút "Chép sang hôm nay" → `chepPhongSangHomNay(roomId, tuNgay, homNay)` (`src/lib/actions.js`), luật thuần `phongDichChep` và `lapKeHoachChepPhong` (`src/lib/phong.js`). Chép bé, ghi chú và MỌI việc còn sống, kể cả việc đã xong (giữ trạng thái xong/chưa xong và giờ xong của ngày đó). Không chép dấu "đã nhập máy". Không chép trùng bé. Phòng ngày trước đã xoá thì chép vào phòng còn sống cùng tên; không có thì không chép. Có Hoàn tác 6 giây (`hoanTacChepPhong`).
+  - 22/11/2026, dấu "đã nhập máy" của bé: nút `pat-may` ở dòng bé (`PatientRow`, `aria-pressed`), đặt bên trái "Còn n việc". Bật thì nền `--tint`. Gọi `setDaNhapMay` và `batTatDaNhapMay(p)` (`src/lib/actions.js`). Độc lập với vuốt phải (đã khám). Có cả trên PC.
   - `RoomManager`, `RoomNameInput` — thêm/đổi tên/xoá phòng. Luật xoá (phiếu 09/11, bác sĩ duyệt 09/11/2026): xoá được khi hôm nay và các ngày sau không còn bé; hôm nay còn bé thì nút khoá. Phòng hôm nay trống mà có bé ngày trước thì hỏi xác nhận rồi xoá, có Hoàn tác 6 giây (`khoiPhucRoom`). Hàm `removeRoom(id, homNay)` đếm lại bé lúc xoá.
   - `RoomList` (v9.4; phiếu 09/11 dùng `roomsHomNay`: phòng đã xoá có bé hôm nay vẫn hiện, ghi "(đã xoá)", không có nút "+") — mỗi dòng phòng có nút "+" tròn 32px viền xanh (vùng chạm 44px, `room-add`, `aria-label` "Thêm bé vào <tên phòng>") căn phải, nằm NGOÀI nút thu gọn nên chạm "+" không thu gọn phòng. Bấm "+" thì thêm bé (`addPatient`) rồi mở chi tiết bé; phòng đang thu gọn thì tự mở trước. Không còn ô gạch đứt "+ Thêm bệnh nhân". Áp cả PC.
   - `PatientRow` (v9.4) — dòng bé là `SwipeRow` chỉ vuốt phải: không ô tick, không mũi tên, không vuốt trái, không nút thùng rác. Vuốt phải qua 1/3 = đã khám (`setPatientDone`, ghi `doneAt`); bé đã khám vuốt phải chỉ nhúc nhích. Đã khám: chữ nhạt `--muted`, KHÔNG gạch ngang, `TickOk` cuối dòng; "Còn n việc" vẫn hiện khi đã khám. Số đo dạng "25w0d, 1850 g". Chạm 1 lần mở chi tiết (nút `pat-open`; `SwipeRow` chặn click ngay sau khi vuốt). Việc của bé hiện thành chữ, việc xong chữ nhạt.
@@ -25,7 +28,7 @@
 
 ## Dữ liệu
 - `rooms`: `id, name, order, …`
-- `exam_patients`: `id, examDate, roomId, code, dob, ga, wt, note, done, doneAt?, order, copiedFrom?, …` (`order`, `doneAt` là trường thường, không phải chỉ mục)
+- `exam_patients`: `id, examDate, roomId, code, dob, ga, wt, note, done, doneAt?, daNhapMay?, order, copiedFrom?, …` (`daNhapMay` từ 22/11/2026, xem `sao-luu.md`) (`order`, `doneAt` là trường thường, không phải chỉ mục)
 - `patient_todos`: `id, patientId, text, done, doneAt?, order, …`
 - `doneAt` (v9.2): giờ đánh dấu xong / đã khám, null khi bỏ đánh dấu; dòng cũ không có thì chỉ hiện "Đã xong". Bé chép sang hôm nay không mang `doneAt`.
 
@@ -33,6 +36,8 @@
 Xem mục "Khám" trong `doi-agent/QUYET_DINH_DA_CHOT.md`.
 
 ## Điểm dễ hỏng
+- 22/11/2026: "Lấy danh sách hôm qua" vẫn chỉ chép việc CHƯA xong (nút cũ, không đổi). "Chép sang hôm nay" theo phòng chép MỌI việc, kể cả đã xong. Hai nút khác nhau có chủ ý.
+- 22/11/2026: nút "đã nhập máy" chỉ có ở dòng bé tab Khám hôm nay; chưa có ở chế độ 2 ngày (`KhamHaiNgay.jsx`). Dấu chỉ bật/tắt, không có giờ, không mang sang ngày sau (`NHAT_KY.md` mục 57).
 - `copyPatientsFrom` chống trùng theo **phòng + mã**; bé chưa có mã ("") sẽ bị coi là trùng với bé chưa có mã khác cùng phòng (xem "Chờ duyệt" #34 trong `NHAT_KY.md`).
 - Thứ tự bé: `copyPatientsFrom` sắp bé nguồn rồi gán `order`; `addPatient` gán `order` để bé thêm tay nằm cuối. Bé cũ không có `order` vẫn xếp theo giờ tạo. Đừng bỏ `sapBe` khi đổi cách hiển thị (kiểm bằng `tests/thu-tu.test.js`).
 - `roomUse` đếm bé từ hôm nay trở đi bằng một truy vấn theo chỉ mục `examDate`, không đọc các ngày trước. `roomUsePast` chỉ đếm cho phòng hôm nay đã trống. Bé ngày sau hôm nay khoá xoá nhưng danh sách hôm nay có thể không hiện bé đó (xem "Chờ duyệt" #48). Hoàn tác chỉ trả phòng xoá sau cùng (#49); thứ tự phòng sau Hoàn tác có thể lệch (#50); nhóm "(đã xoá)" chưa có ở Tổng hợp y lệnh (#51).

@@ -23,10 +23,16 @@
 - Mọi thay đổi trong thẻ này phải kèm ca mới trong bảng ca chuẩn nếu thêm cách nhập/luật mới.
 - Ca bé sinh sau nửa đêm (v9.6) đã thêm vào `doi-agent/ca-chuan-lam-sang.md`: bé ghi lúc 02:30 ngày 05/11 cho ngày sinh '0511' có ngày khám 04/11; tuổi theo ngày ghi (05/11) ra 0 ngày, không ra 364 ngày.
 
+## Định dạng tổng hợp y lệnh (22/11/2026)
+- Dòng đầu: "KHÁM SÁNG dd/mm/yyyy" (không còn chữ "Y LỆNH").
+- Bỏ dòng "Tuổi thai ghi là…" và dòng "Còn … việc" trong `buildSummary`.
+- Trong mỗi phòng: có từ hai bé trở lên thì đánh số "1.", "2."…; có một bé thì không đánh số.
+- Áp cho tổng hợp hôm nay và "Tổng hợp ngày này" (`ngayTruoc`). Tổng hợp nhiều ngày (`src/lib/tong-hop.js`) chưa đổi, chờ bác sĩ.
+
 ## Quyết định đã chốt
 Xem mục "Tính tuần tuổi" trong `doi-agent/QUYET_DINH_DA_CHOT.md`. Đặc biệt: KHÔNG hiện "còn bao nhiêu ngày đến 40w".
 
 ## Điểm dễ hỏng
 - Luôn tính theo ngày lịch giờ máy (bỏ giờ phút), không dùng UTC.
-- `buildSummary` ghi "Tuổi thai ghi là tuổi thai hiệu chỉnh hôm nay." — đổi định dạng PMA thì tổng hợp cũng đổi.
+- `buildSummary` (22/11/2026) không còn dòng "Tuổi thai ghi là…" và không còn dòng "Còn … việc". Đổi định dạng PMA vẫn làm đổi tổng hợp. `tong-hop.js` (nhiều ngày) CHƯA đổi: vẫn ghi "Tuổi thai ghi là tuổi thai hiệu chỉnh của từng ngày." (chờ bác sĩ, `doi-agent/NHAT_KY.md` mục 56).
 - Tuổi ngày trước và tổng hợp nhiều ngày tính theo ngày của từng dòng (`ngayTinhTuoi`: `examDate`, hoặc ngày ghi nếu muộn hơn), không dùng hôm nay và không dùng đầu hoặc cuối khoảng. Dùng `tuoiCuaDong`, không gọi `calcAge(p, examDate)` thẳng: bé sinh sau nửa đêm sẽ bị lùi một năm. Tuổi trang hôm nay vẫn theo ngày lịch của máy. Đổi `calcAge`, `parseDob` hoặc `parseGa` thì chạy `tests/tong-hop.test.js` và `tests/clinical.test.js`.

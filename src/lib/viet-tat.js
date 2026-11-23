@@ -22,6 +22,34 @@ export function taoMap(list) {
   return map;
 }
 
+// ---------- Viết tắt có sẵn (không sửa, không xoá được) ----------
+// /t → giờ máy lúc gõ dạng 24h HH:mm (07:05, 14:30). Không lưu trong CSDL, không nằm trong file sao lưu.
+// Mục tự tạo trùng key 't' trong thư viện KHÔNG bị xoá hay sửa, nhưng khi gõ thì mục có sẵn thắng.
+export const CO_SAN = [{ key: 't', moTa: 'giờ hiện tại (vd. 14:05)' }];
+
+/** Giờ máy dạng 24h 'HH:mm' (hàm thuần: nhận 
+ow). */
+export function gioHienTai(now = new Date()) {
+  const hai = (n) => String(n).padStart(2, '0');
+  return hai(now.getHours()) + ':' + hai(now.getMinutes());
+}
+
+/** Key (đã chuẩn hoá) có phải viết tắt có sẵn không. */
+export const laCoSan = (key) => CO_SAN.some((m) => m.key === chuanKey(key));
+
+/** Nội dung các viết tắt có sẵn tại thời điểm 
+ow: [{ key, text, moTa, coSan: true }]. Giao diện thư viện dùng để hiện đầu danh sách. */
+export function mucCoSan(now = new Date()) {
+  return CO_SAN.map((m) => ({ key: m.key, text: gioHienTai(now), moTa: m.moTa, coSan: true }));
+}
+
+/** map người dùng + viết tắt có sẵn (có sẵn thắng khi trùng key). Không đổi map gốc. */
+export function mapDayDu(map, now = new Date()) {
+  const out = { ...(map || {}) };
+  for (const m of mucCoSan(now)) out[m.key] = m.text;
+  return out;
+}
+
 const LA_TRANG = /\s/;
 
 /** Tìm token '/key' kết thúc đúng tại vị trí `den` (không gồm); trả { batDau, key, goc } hoặc null. */
@@ -38,8 +66,9 @@ function tokenTruoc(text, den) {
  * Trả { text, caret, key, goc, noiDung, batDau, phim } hoặc null (không khớp: giữ nguyên).
  * `goc` là đoạn người dùng đã gõ (giữ hoa/thường), `phim` là ký tự kích hoạt (' ' hoặc '\n').
  */
-export function moRong(text, caret, map) {
-  if (typeof text !== 'string' || !map || caret < 2 || caret > text.length) return null;
+export function moRong(text, caret, map, now = new Date()) {
+  if (typeof text !== 'string' || caret < 2 || caret > text.length) return null;
+  map = mapDayDu(map, now);
   const phim = text[caret - 1];
   if (phim !== ' ' && phim !== '\n') return null;
   const tk = tokenTruoc(text, caret - 1);
@@ -57,10 +86,10 @@ export function moRong(text, caret, map) {
  * Khoảng trắng thừa ở cuối bị bỏ khi xét; nếu có thay thì kết quả không còn khoảng trắng cuối.
  * Không khớp (hoặc rỗng/map rỗng): trả đúng chuỗi gốc.
  */
-export function moRongKhiGui(text, map) {
+export function moRongKhiGui(text, map, now = new Date()) {
   if (typeof text !== 'string' || !map) return text;
   const cat = text.replace(/\s+$/, '');
-  const r = moRong(cat + ' ', cat.length + 1, map);
+  const r = moRong(cat + ' ', cat.length + 1, map, now);
   return r ? r.text.slice(0, -1) : text;
 }
 
@@ -81,13 +110,13 @@ export function hoanTac(text, ketQua) {
  * (không phân biệt hoa thường), xếp theo key. Mỗi phần tử: { key, text, batDau } (batDau = vị trí '/').
  * Không đang gõ → [].
  */
-export function goiY(text, caret, list, toiDa = 4) {
+export function goiY(text, caret, list, toiDa = 4, now = new Date()) {
   if (typeof text !== 'string' || caret < 2 || caret > text.length) return [];
   const tk = tokenTruoc(text, caret);
   if (!tk) return [];
   const q = tk.key.toLowerCase();
   const out = [];
-  for (const m of list || []) {
+  for (const m of [...(list || []).filter((x) => !laCoSan(x?.key)), ...mucCoSan(now)]) {
     const k = chuanKey(m?.key);
     if (k && m.text && k.startsWith(q)) out.push({ key: k, text: m.text, batDau: tk.batDau });
   }

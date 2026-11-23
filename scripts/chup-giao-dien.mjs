@@ -423,7 +423,7 @@ async function thuThuVien(page, T, tien, cdp) {
   const hop = page.getByRole('dialog', { name: 'Thư viện viết tắt' });
   await hop.waitFor();
   await hop.locator('.vt-item-wrap').first().waitFor();
-  const dem = () => hop.locator('.vt-item-wrap').count();
+  const dem = () => hop.locator('.vt-item-wrap:not(.co-san)').count(); // /t có sẵn (22/11) không tính vào số mục của người dùng
   T.thuVienMau = await dem();
   if (T.thuVienMau !== 13) ketQua.loi.push('Thư viện: có ' + T.thuVienMau + ' mục mẫu (mong đợi 13)');
   await chup(page, tien + '-thu-vien', true);
@@ -461,7 +461,7 @@ async function thuThuVien(page, T, tien, cdp) {
   // (thay phép kiểm cũ: bấm nút bút chì "Sửa /hcn")
   {
     const dongH = () => hop.locator('.vt-item-wrap', { hasText: '/hcn' });
-    const tamH = async () => { const b = await dongH().locator('.vt-hang').boundingBox(); return { x: b.x + b.width / 2, y: b.y + b.height / 2 }; };
+    const tamH = async () => { await dongH().scrollIntoViewIfNeeded(); const b = await dongH().locator('.vt-hang').boundingBox(); return { x: b.x + b.width / 2, y: b.y + b.height / 2 }; };
     T.butChi = await hop.locator('.icon-btn', { has: page.locator('svg') }).evaluateAll((es) => es.filter((e) => /^Sửa /.test(e.getAttribute('aria-label') || '')).length);
     if (T.butChi) ketQua.loi.push('Thư viện: còn ' + T.butChi + ' nút bút chì "Sửa …"');
     const dangSua = () => hop.getByText('Đang sửa /hcn', { exact: true }).count();
@@ -479,6 +479,7 @@ async function thuThuVien(page, T, tien, cdp) {
     if (T.chamCham1s) ketQua.loi.push('Thư viện: hai lần chạm cách nhau hơn 1 giây lại mở sửa');
     // chạm lần lượt hai dòng khác nhau (trong 1 giây) không tính là chạm 2 lần
     const dongKhac = hop.locator('.vt-item-wrap', { hasText: '/ctm' }).locator('.vt-hang');
+    await dongKhac.scrollIntoViewIfNeeded();
     const bk = await dongKhac.boundingBox();
     await datGio(4000);
     if (cdp) { await page.touchscreen.tap(bk.x + bk.width / 2, bk.y + bk.height / 2); } else { await page.mouse.click(bk.x + bk.width / 2, bk.y + bk.height / 2); }
@@ -883,7 +884,7 @@ async function thuThuVien(page, T, tien, cdp) {
     if (/Sửa việc/.test(chuBang)) ketQua.loi.push('Bảng chi tiết còn chữ "Sửa việc"');
     if (/Tự lưu/.test(chuBang)) ketQua.loi.push('Bảng chi tiết còn chữ "Tự lưu"');
     const nhanTrongBang = await bang.getByRole('button', { name: /^Nhãn / }).count();
-    if (nhanTrongBang !== 5) ketQua.loi.push('Bảng chi tiết có ' + nhanTrongBang + ' nút nhãn (mong đợi 5)');
+    if (nhanTrongBang !== 9) ketQua.loi.push('Bảng chi tiết có ' + nhanTrongBang + ' nút nhãn (mong đợi 9)');
     // ghi chú là khung lớn nhất
     const ghiChuCao = (await bang.getByRole('textbox', { name: 'Ghi chú' }).boundingBox()).height;
     T.ghiChuCao = Math.round(ghiChuCao);
@@ -899,7 +900,7 @@ async function thuThuVien(page, T, tien, cdp) {
       const chips = await nhom.getByRole('button').evaluateAll((es) => es.map((e) => ({ chu: e.textContent.trim(), bat: e.getAttribute('aria-pressed'), nen: getComputedStyle(e).backgroundColor, cao: Math.round(e.getBoundingClientRect().height) })));
       const accent = await mauBien(page, '--accent');
       T.chipKhu = chips.map((x) => x.chu + (x.bat === 'true' ? '*' : '')).join(' ');
-      if (chips.map((x) => x.chu).join() !== 'NICU,CT,KAN,PS-PM,Ngoại Trú,DV,HP,HS') ketQua.loi.push('Chip khu trong chi tiết việc: ' + T.chipKhu);
+      if (chips.map((x) => x.chu).join() !== 'NICU,CT,KAN,PS,PM,Ngoại Trú,DV,HP,HS') ketQua.loi.push('Chip khu trong chi tiết việc: ' + T.chipKhu);
       if (chips.filter((x) => x.bat === 'true').map((x) => x.chu).join() !== 'NICU') ketQua.loi.push('Chip khu: aria-pressed không đúng (việc đang ở NICU): ' + T.chipKhu);
       if (chips.some((x) => (x.bat === 'true') !== (x.nen === accent))) ketQua.loi.push('Chip khu: chỉ chip đang chọn được nền xanh (--accent)');
       if (chips.some((x) => x.cao !== 44)) ketQua.loi.push('Chip khu không cao 44px: ' + chips.map((x) => x.cao).join(','));
@@ -2022,8 +2023,8 @@ const IPHONE_OPTS = { viewport: { width: 393, height: 852 }, deviceScaleFactor: 
   const b = T.bung;
   T.bung.focus = await focusId();
   if (T.bung.focus !== 'ph-draft' || !(await dangBung())) ketQua.loi.push('Chạm vào ô gõ không bung / mất con trỏ: ' + T.bung.focus);
-  if (b.khu.join(',') !== 'NICU*,CT,KAN,PS-PM,Ngoại Trú,DV,HP,HS') ketQua.loi.push('Chip khu vực của ô thêm việc: ' + b.khu.join(',') + ' (cần NICU*,CT,KAN,PS-PM,Ngoại Trú,DV,HP,HS; không có BM)');
-  if (b.nhan.join('|') !== ['NV', 'BM', 'CK', 'HC', 'XN'].map((x) => `Nhãn ${x}:false:44x44`).join('|')) ketQua.loi.push('5 nút nhãn chưa đúng (44x44, chưa chọn): ' + b.nhan.join('|'));
+  if (b.khu.join(',') !== 'NICU*,CT,KAN,PS,PM,Ngoại Trú,DV,HP,HS') ketQua.loi.push('Chip khu vực của ô thêm việc: ' + b.khu.join(',') + ' (cần NICU*,CT,KAN,PS,PM,Ngoại Trú,DV,HP,HS; không có BM, không có PS-PM)');
+  if (b.nhan.join('|') !== ['NV', 'BM', 'CK', 'HC', 'XN', 'VIP', 'G', 'ST', 'Máy tính'].map((x) => `Nhãn ${x}:false:44x44`).join('|')) ketQua.loi.push('9 nút nhãn chưa đúng (44x44, chưa chọn): ' + b.nhan.join('|'));
   if (b.caoChip.some((h) => h !== 44) || !b.khuDuoiO || !b.nhanDuoiKhu) ketQua.loi.push('Hàng chip khu / nhãn không nằm đúng chỗ hoặc chip không cao 44px ' + JSON.stringify(b));
   if (b.khuCuon !== 'auto' || +b.khuRong.split('/')[0] <= +b.khuRong.split('/')[1]) ketQua.loi.push('Hàng chip khu vực không vuốt ngang được: ' + b.khuRong + ' ' + b.khuCuon);
   if (b.chuGhiChu) ketQua.loi.push('Có dòng chú thích nhỏ trong thanh thêm việc (phiếu 9.3 bảo KHÔNG hiện)');
@@ -2390,6 +2391,302 @@ const IPHONE_OPTS = { viewport: { width: 393, height: 852 }, deviceScaleFactor: 
   await ctx.close();
 }
 
+// v22/11 (phần A): bảng phải chạm đáy sau khi mở rồi đóng bàn phím giả (offsetTop còn lệch); ô đang gõ nằm trong vùng thấy của bảng
+// (visualViewport GIẢ, KHÔNG phải bàn phím iPhone thật — kiểm sâu hơn nằm ở scripts/gia-lap-iphone.mjs, WebKit)
+{
+  const { ctx, page } = await moApp(IPHONE_OPTS, {
+    init: () => {
+      const vv = new EventTarget();
+      Object.assign(vv, { width: 393, height: 852, offsetTop: 0, offsetLeft: 0, scale: 1 });
+      Object.defineProperty(window, 'visualViewport', { value: vv, configurable: true });
+      window.__vv = vv;
+    }
+  });
+  const T = ketQua.thuChucNang.bangChamDayBanPhimGia = { luuY: 'visualViewport giả, không phải bàn phím iPhone thật' };
+  const BAN_PHIM = 336;
+  const datVv = (cao, top) => page.evaluate(([c, t]) => { window.__vv.height = c; window.__vv.offsetTop = t; window.__vv.dispatchEvent(new Event('resize')); window.__vv.dispatchEvent(new Event('scroll')); }, [cao, top]);
+  const doBang = () => page.evaluate(() => { const s = document.querySelector('.sheet').getBoundingClientRect(); const w = document.querySelector('.sheet-wrap'); return { day: Math.round(s.bottom), top: Math.round(s.top), kb: w.classList.contains('kb'), wrapTop: w.style.top, wrapCao: w.style.height, thanTop: document.body.style.position }; });
+  await page.getByRole('button', { name: 'Khám', exact: true }).tap();
+  await page.waitForTimeout(400);
+  await page.locator('.room-add').first().tap(); // thêm bé mới ở Phòng 1: mở chi tiết bé (ngày hôm nay chưa có bé mẫu)
+  await page.locator('.sheet-be').waitFor();
+  await page.waitForTimeout(700);
+  const o = page.getByPlaceholder('Thêm việc cần làm…');
+  await o.scrollIntoViewIfNeeded();
+  await o.tap();
+  if (!(await page.evaluate(() => document.activeElement?.getAttribute('placeholder') === 'Thêm việc cần làm…'))) await o.focus();
+  await datVv(852 - BAN_PHIM, 150); // bàn phím mở, iOS đẩy khung nhìn lên 150px
+  await page.waitForTimeout(700);
+  T.moBanPhim = await doBang();
+  T.oTrongVungThay = await page.evaluate(() => { const a = document.activeElement.getBoundingClientRect(); const s = document.querySelector('.sheet').getBoundingClientRect(); const vv = window.__vv; return a.top >= Math.max(s.top, vv.offsetTop) - 1 && a.bottom <= Math.min(s.bottom, vv.offsetTop + vv.height) + 1; });
+  if (!T.moBanPhim.kb) ketQua.loi.push('Bàn phím giả mở mà bảng không co theo: ' + JSON.stringify(T.moBanPhim));
+  if (!T.oTrongVungThay) ketQua.loi.push('Bàn phím giả mở: ô đang gõ nằm ngoài vùng thấy của bảng');
+  await datVv(852, 120); // bàn phím đóng nhưng Safari để offsetTop còn lệch 120px
+  await page.waitForTimeout(500);
+  T.dongBanPhim = await doBang();
+  if (T.dongBanPhim.kb || Math.abs(T.dongBanPhim.day - 852) > 1) ketQua.loi.push('Bàn phím giả đóng (offsetTop còn 120): bảng không chạm đáy ' + JSON.stringify(T.dongBanPhim));
+  await chup(page, 'iphone-bang-cham-day-sau-ban-phim-gia', true);
+  await ctx.close();
+}
+// ---------- Phiếu 22/11, phần B, C, E, G: nhãn mới (VIP, G, ST, MT), nút "đã nhập máy tính", chép từng phòng, /t có sẵn ----------
+const OPTS320 = { viewport: { width: 320, height: 700 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, userAgent: IPHONE_UA };
+// trang không được cuộn ngang; thanh thêm việc / bảng không tràn ngang (hàng nhãn tự vuốt ngang bên trong thì được)
+const khongCuonNgang = (page) => page.evaluate(() => {
+  const w = window.innerWidth, d = document.documentElement;
+  const f = document.querySelector('.task-form-ph'), s = document.querySelector('.sheet');
+  return { trang: d.scrollWidth <= w + 1 && document.body.scrollWidth <= w + 1, form: f ? f.scrollWidth <= f.clientWidth + 1 : true, bang: s ? s.scrollWidth <= s.clientWidth + 1 : true, w, sw: d.scrollWidth };
+});
+const dem22 = async (page, bang) => (await docBang(page, bang)).filter((r) => !r.deleted);
+for (const [rong, dark] of [[393, false], [393, true], [320, false], [320, true]]) {
+  const sfx = (dark ? '-toi' : '-sang') + (rong === 320 ? '-320' : '');
+  const { ctx, page } = await moApp({ ...(rong === 320 ? OPTS320 : IPHONE_OPTS), colorScheme: dark ? 'dark' : 'light' });
+  const T = ketQua.thuChucNang['nhanMoi' + sfx] = {};
+  const E22 = (m) => ketQua.loi.push('nhãn mới' + sfx + ': ' + m);
+  // --- B: ô thêm việc bung với 9 nhãn ---
+  await chamO(page, page.getByLabel('Nội dung công việc'));
+  await page.waitForTimeout(400);
+  T.nutNhan = await page.evaluate(() => [...document.querySelectorAll('.task-form-ph .tag-btn')].map((b) => { const r = b.getBoundingClientRect(); return b.getAttribute('aria-label') + ':' + Math.round(r.width) + 'x' + Math.round(r.height); }));
+  if (T.nutNhan.length !== 9 || T.nutNhan.some((x) => !/:44x44$/.test(x))) E22('9 nút nhãn 44x44: ' + T.nutNhan.join('|'));
+  T.chipKhu = await page.evaluate(() => [...document.querySelectorAll('.task-form-ph .chip')].map((c) => c.textContent.trim().replace(/\d+$/, '')));
+  if (!T.chipKhu.includes('PS') || !T.chipKhu.includes('PM') || T.chipKhu.includes('PS-PM')) E22('chip khu phải có PS và PM riêng: ' + T.chipKhu.join(','));
+  T.cuonNgang = await khongCuonNgang(page);
+  if (!T.cuonNgang.trang || !T.cuonNgang.form) E22('trang hoặc thanh thêm việc cuộn ngang: ' + JSON.stringify(T.cuonNgang));
+  T.hangNhanVuotNgang = await page.evaluate(() => { const h = document.querySelector('.task-form-ph .tag-hang'); return { cuon: h.scrollWidth > h.clientWidth, overflowX: getComputedStyle(h).overflowX }; });
+  // chạm nhãn Máy tính (vuốt hàng nhãn tới nút cuối): bật, thêm việc, dòng việc hiện biểu tượng
+  const nutMt = page.getByRole('button', { name: 'Nhãn Máy tính', exact: true });
+  await nutMt.scrollIntoViewIfNeeded();
+  await nutMt.tap();
+  T.mtBat = await nutMt.getAttribute('aria-pressed');
+  if (T.mtBat !== 'true') E22('chạm Nhãn Máy tính không bật');
+  T.mtKichThuoc = await nutMt.evaluate((b) => ({ svg: b.querySelectorAll('svg').length, chu: b.textContent.trim() }));
+  if (T.mtKichThuoc.svg !== 1 || T.mtKichThuoc.chu !== '') E22('nhãn MT phải là biểu tượng, không chữ: ' + JSON.stringify(T.mtKichThuoc));
+  const hangVip = page.getByRole('button', { name: 'Nhãn VIP', exact: true });
+  await hangVip.scrollIntoViewIfNeeded();
+  await hangVip.tap();
+  await page.waitForTimeout(150);
+  await chup(page, 'iphone-nhan-moi' + sfx, true);
+  await page.getByLabel('Nội dung công việc').fill('Thử nhãn máy tính');
+  await page.getByRole('button', { name: 'Thêm việc', exact: true }).tap();
+  await page.waitForTimeout(500);
+  T.dongViec = await page.evaluate(() => { const r = [...document.querySelectorAll('.swipe')].find((e) => /Thử nhãn máy tính/.test(e.textContent)); return r ? { mt: !!r.querySelector('.tag-dot[aria-label="Máy tính"] svg'), chuVip: [...r.querySelectorAll('.tag-dot')].map((x) => x.textContent.trim() || x.getAttribute('aria-label')) } : null; });
+  if (!T.dongViec || !T.dongViec.mt) E22('dòng việc không hiện biểu tượng máy tính: ' + JSON.stringify(T.dongViec));
+  if (dark === false && rong === 393) {
+    // chi tiết việc: 9 nhãn xuống dòng gọn, không tràn
+    await page.locator('.task-main', { hasText: 'Thử nhãn máy tính' }).first().dblclick().catch(() => {});
+    await page.waitForTimeout(700);
+    if (await page.locator('.sheet-half').count()) {
+      T.chiTiet = await page.evaluate(() => { const g = document.querySelector('.sheet .tag-hang'); return { nut: g.querySelectorAll('.tag-btn').length, tran: g.scrollWidth > g.clientWidth + 1, cao: Math.round(g.getBoundingClientRect().height) }; });
+      if (T.chiTiet.nut !== 9) E22('chi tiết việc: phải có 9 nhãn ' + JSON.stringify(T.chiTiet)); // hàng nhãn vuốt ngang bên trong bảng (không làm trang/bảng tràn)
+      T.chiTietCuonNgang = await khongCuonNgang(page);
+      if (!T.chiTietCuonNgang.trang || !T.chiTietCuonNgang.bang) E22('chi tiết việc cuộn ngang ' + JSON.stringify(T.chiTietCuonNgang));
+      await chup(page, 'iphone-nhan-moi-chi-tiet' + sfx, true);
+    } else E22('không mở được chi tiết việc để kiểm 9 nhãn');
+  }
+  await ctx.close();
+}
+
+for (const dark of [false, true]) {
+  const sfx = dark ? '-toi' : '-sang';
+  const { ctx, page } = await moApp({ ...IPHONE_OPTS, colorScheme: dark ? 'dark' : 'light' });
+  const T = ketQua.thuChucNang['khamMayTinh' + sfx] = {};
+  const E22 = (m) => ketQua.loi.push('đã nhập máy tính' + sfx + ': ' + m);
+  await page.getByRole('button', { name: 'Khám', exact: true }).tap();
+  await page.waitForTimeout(400);
+  // hai bé hôm nay: G05 có 1 việc (có nhãn "Còn 1 việc"), G06 không có việc (nút ở cuối dòng)
+  for (const [ma, viec] of [['G05', 'Đo bilirubin'], ['G06', '']]) {
+    await page.locator('.room-add').first().tap();
+    await page.locator('.sheet-be').waitFor();
+    await page.waitForTimeout(500);
+    await page.locator('#be-ma').fill(ma);
+    if (viec) { await page.getByPlaceholder('Thêm việc cần làm…').fill(viec); await page.getByRole('button', { name: 'Thêm việc của bé', exact: true }).tap(); await page.waitForTimeout(400); }
+    await page.getByRole('button', { name: 'Đóng chi tiết', exact: true }).tap();
+    await page.waitForTimeout(700);
+  }
+  const dong = (ma) => page.locator('.swipe', { has: page.locator('.pat-code', { hasText: new RegExp('^' + ma + '$') }) });
+  T.hinhDang = await page.evaluate(() => [...document.querySelectorAll('.swipe')].filter((e) => e.querySelector('.pat-may')).map((e) => { const b = e.querySelector('.pat-may').getBoundingClientRect(), l = e.querySelector('.left-badge')?.getBoundingClientRect(); return { ma: e.querySelector('.pat-code').textContent, w: Math.round(b.width), h: Math.round(b.height), tronBen: l ? b.right <= l.left + 0.5 : null, pressed: e.querySelector('.pat-may').getAttribute('aria-pressed'), nhan: e.querySelector('.pat-may').getAttribute('aria-label') }; }));
+  if (T.hinhDang.length !== 2 || T.hinhDang.some((x) => x.w !== 44 || x.h !== 44 || x.pressed !== 'false' || x.nhan !== 'Chưa nhập máy tính')) E22('nút máy tính tắt: ' + JSON.stringify(T.hinhDang));
+  if (T.hinhDang.find((x) => x.ma === 'G05')?.tronBen !== true) E22('nút máy tính phải nằm bên trái nhãn "Còn n việc"');
+  const nutG05 = dong('G05').locator('.pat-may');
+  await nutG05.tap();
+  await page.waitForTimeout(400);
+  T.sauChamG05 = { pressed: await nutG05.getAttribute('aria-pressed'), nhan: await nutG05.getAttribute('aria-label'), moChiTiet: await page.locator('.sheet-be').count(), db: null };
+  const beG05 = (await docBang(page, 'exam_patients')).find((p) => p.code === 'G05' && !p.deleted);
+  T.sauChamG05.db = { daNhapMay: beG05?.daNhapMay, done: beG05?.done };
+  if (T.sauChamG05.pressed !== 'true' || T.sauChamG05.nhan !== 'Đã nhập máy tính' || T.sauChamG05.moChiTiet || beG05?.daNhapMay !== true || beG05?.done) E22('chạm nút bật: ' + JSON.stringify(T.sauChamG05));
+  T.mauBat = await nutG05.evaluate((b) => ({ nen: getComputedStyle(b).backgroundColor, chu: getComputedStyle(b).color }));
+  if (T.mauBat.nen !== (await mauBien(page, '--tint')) || T.mauBat.chu !== (await mauBien(page, '--tintInk'))) E22('màu nút bật phải là --tint/--tintInk: ' + JSON.stringify(T.mauBat));
+  const mauTat = await dong('G06').locator('.pat-may').evaluate((b) => ({ nen: getComputedStyle(b).backgroundColor, chu: getComputedStyle(b).color }));
+  if (mauTat.nen !== 'rgba(0, 0, 0, 0)' || mauTat.chu !== (await mauBien(page, '--muted'))) E22('màu nút tắt phải là nét --muted, không nền: ' + JSON.stringify(mauTat));
+  await chup(page, 'iphone-kham-may-tinh' + sfx, true);
+  // chạm lần nữa thì tắt; vuốt phải (đã khám) vẫn riêng
+  await nutG05.tap();
+  await page.waitForTimeout(300);
+  if ((await nutG05.getAttribute('aria-pressed')) !== 'false') E22('chạm lần hai không tắt');
+  await nutG05.tap();
+  await page.waitForTimeout(300);
+  await ctx.close();
+}
+
+for (const dark of [false, true]) {
+  const sfx = dark ? '-toi' : '-sang';
+  const { ctx, page } = await moApp({ ...IPHONE_OPTS, colorScheme: dark ? 'dark' : 'light' });
+  const T = ketQua.thuChucNang['chepPhong' + sfx] = {};
+  const E22 = (m) => ketQua.loi.push('chép phòng' + sfx + ': ' + m);
+  const homNay = () => dem22(page, 'exam_patients').then((l) => l.filter((p) => p.examDate === '2026-10-21'));
+  await page.getByRole('button', { name: 'Khám', exact: true }).tap();
+  await page.waitForTimeout(400);
+  await page.getByRole('button', { name: 'Lịch khám', exact: true }).tap();
+  const hopK = page.getByRole('dialog', { name: 'Lịch khám' });
+  await hopK.waitFor();
+  await page.waitForTimeout(600);
+  await hopK.getByRole('button', { name: /^Ngày 20 tháng 10\b/ }).tap();
+  await page.waitForTimeout(900);
+  const nutP1 = page.getByRole('button', { name: 'Chép Phòng 1 sang hôm nay', exact: true });
+  T.nut = await nutP1.evaluate((b) => { const r = b.getBoundingClientRect(); return { cao: Math.round(r.height), chu: getComputedStyle(b).fontSize, text: b.textContent }; });
+  if (T.nut.cao < 44 || T.nut.chu !== '15px' || T.nut.text !== 'Chép sang hôm nay') E22('nút phòng: ' + JSON.stringify(T.nut));
+  await nutP1.tap();
+  await page.waitForTimeout(300);
+  const hop = page.getByRole('alertdialog', { name: 'Xác nhận chép Phòng 1' });
+  await hop.waitFor();
+  T.cauHoi = await hop.locator('div').first().textContent();
+  if (T.cauHoi !== 'Chép 2 bé của Phòng 1 sang hôm nay, kèm ghi chú và mọi việc (cả việc đã xong)?') E22('câu hỏi: ' + T.cauHoi);
+  await chup(page, 'iphone-ngay-truoc-chep-phong' + sfx, true);
+  if ((await homNay()).length) E22('chưa bấm đồng ý mà đã có bé hôm nay');
+  await hop.getByRole('button', { name: 'Chép 2 bé', exact: true }).tap();
+  await page.waitForTimeout(700);
+  T.sauChep = { be: (await homNay()).map((p) => p.code).sort(), thanh: await page.locator('.hoantac').innerText().catch(() => ''), msg: (await page.locator('.nt-msg').textContent().catch(() => '')) };
+  const idHom = new Set((await homNay()).map((p) => p.id));
+  T.viecDaChep = (await dem22(page, 'patient_todos')).filter((t) => idHom.has(t.patientId)).map((t) => t.text + (t.done ? ':xong' : ':chua')).sort();
+  if (T.sauChep.be.join() !== 'G01,G03') E22('bé hôm nay sau khi chép: ' + T.sauChep.be.join());
+  if (T.viecDaChep.join() !== 'Cân bé:xong,Tăng sữa 5 ml/cữ:chua,Đo bilirubin:chua') E22('việc đã chép (cả việc đã xong): ' + T.viecDaChep.join());
+  if (!/Đã chép 2 bé sang Phòng 1/.test(T.sauChep.thanh.replace(/\n/g, ' '))) E22('thanh Hoàn tác: ' + T.sauChep.thanh);
+  await chup(page, 'iphone-ngay-truoc-chep-phong-xong' + sfx, true);
+  // Hoàn tác xoá đúng các bé vừa chép
+  await page.locator('.hoantac').getByRole('button', { name: 'Hoàn tác', exact: true }).tap();
+  await page.waitForTimeout(600);
+  T.sauHoanTac = (await homNay()).length;
+  if (T.sauHoanTac !== 0) E22('Hoàn tác còn ' + T.sauHoanTac + ' bé hôm nay');
+  if ((await dem22(page, 'exam_patients')).filter((p) => p.examDate === '2026-10-20').length !== 3) E22('Hoàn tác làm mất bé ngày trước');
+  // chép 2 lần liên tiếp: lần hai không trùng bé
+  for (let lan = 1; lan <= 2; lan++) {
+    await page.getByRole('button', { name: 'Chép Phòng 1 sang hôm nay', exact: true }).tap();
+    await page.getByRole('alertdialog', { name: 'Xác nhận chép Phòng 1' }).getByRole('button', { name: /^Chép 2 bé$/ }).tap();
+    await page.waitForTimeout(700);
+    T['lan' + lan] = { be: (await homNay()).length, msg: (await page.locator('.nt-msg').textContent().catch(() => '')) };
+    await page.waitForTimeout(lan === 1 ? 100 : 0);
+  }
+  if (T.lan1.be !== 2 || T.lan2.be !== 2) E22('chép 2 lần phải vẫn 2 bé hôm nay: ' + JSON.stringify([T.lan1, T.lan2]));
+  if (!/2 bé đã có hôm nay nên bỏ qua/.test(T.lan2.msg)) E22('lần hai phải báo bé đã có nên bỏ qua: ' + T.lan2.msg);
+  await chup(page, 'iphone-ngay-truoc-chep-phong-lan-hai' + sfx, true);
+  // Tổng hợp y lệnh (định dạng mới) trên bé hôm nay
+  await page.locator('.dai-nut', { hasText: 'Về hôm nay' }).tap();
+  await page.waitForTimeout(700);
+  await page.getByRole('button', { name: 'Tổng hợp y lệnh', exact: true }).tap();
+  const hopT = page.getByRole('dialog', { name: 'Tổng hợp y lệnh' });
+  await hopT.waitFor();
+  await page.waitForTimeout(700);
+  T.tongHop = await hopT.locator('textarea').first().inputValue().catch(() => '');
+  if (!/^KHÁM SÁNG \d{2}\/\d{2}\/\d{4}/.test(T.tongHop) || /Y LỆNH|Tuổi thai ghi là/.test(T.tongHop)) E22('tổng hợp định dạng mới: ' + T.tongHop.slice(0, 200));
+  await chup(page, 'iphone-tong-hop-moi' + sfx, true);
+  await ctx.close();
+}
+
+{
+  // phòng ngày trước đã xoá: chép vào phòng cùng tên; không có phòng cùng tên: báo không chép được
+  const { ctx, page } = await moApp(IPHONE_OPTS);
+  const T = ketQua.thuChucNang.chepPhongDaXoa = {};
+  const E22 = (m) => ketQua.loi.push('chép phòng đã xoá: ' + m);
+  await page.evaluate(async () => {
+    const db = await new Promise((res) => { const r = indexedDB.open('ghichu-sosinh'); r.onsuccess = () => res(r.result); });
+    const tx = db.transaction('rooms', 'readwrite');
+    const st = tx.objectStore('rooms');
+    const all = await new Promise((res) => { const r = st.getAll(); r.onsuccess = () => res(r.result); });
+    const p1 = all.find((x) => x.name === 'Phòng 1');
+    st.put({ ...p1, deleted: true, updatedAt: Date.now() }); // xoá Phòng 1 (bé 20/10 vẫn nằm đó)
+    st.put({ ...p1, id: 'mau-phong-moi', name: 'Phòng 1', deleted: false, order: 99, updatedAt: Date.now() + 1, createdAt: Date.now() });
+    await new Promise((res) => { tx.oncomplete = res; });
+    db.close();
+  });
+  await page.reload();
+  await page.waitForSelector('.phone-app');
+  await page.getByRole('button', { name: 'Khám', exact: true }).tap();
+  await page.waitForTimeout(400);
+  await page.getByRole('button', { name: 'Lịch khám', exact: true }).tap();
+  const hopK = page.getByRole('dialog', { name: 'Lịch khám' });
+  await hopK.waitFor();
+  await page.waitForTimeout(600);
+  await hopK.getByRole('button', { name: /^Ngày 20 tháng 10\b/ }).tap();
+  await page.waitForTimeout(900);
+  T.cacNut = await page.locator('.nt-chep-phong').evaluateAll((l) => l.map((b) => b.getAttribute('aria-label')));
+  const nut = page.getByRole('button', { name: /đã xoá\) sang hôm nay$/ });
+  await nut.tap();
+  await page.locator('.vt-ask').getByRole('button', { name: /^Chép \d+ bé$/ }).tap();
+  await page.waitForTimeout(800);
+  T.msg = await page.locator('.nt-msg').textContent().catch(() => '');
+  if (!/đã bị xoá nên chép vào phòng cùng tên Phòng 1/.test(T.msg) || !/Đã chép 2 bé/.test(T.msg)) E22('phải nói chép vào phòng cùng tên: ' + T.msg);
+  await ctx.close();
+}
+
+{
+  // thư viện viết tắt có /t; gõ "/t " ra giờ HH:mm
+  const { ctx, page } = await moApp(IPHONE_OPTS);
+  const T = ketQua.thuChucNang.thuVienT = {};
+  const E22 = (m) => ketQua.loi.push('thư viện /t: ' + m);
+  await chonBangThem(page, 'Thư viện viết tắt', true);
+  const hop = page.getByRole('dialog', { name: 'Thư viện viết tắt' });
+  await hop.waitFor();
+  await page.waitForTimeout(700);
+  T.dongDau = await hop.evaluate((e) => { const d = e.querySelector('.vt-list [role="listitem"]'); return { chu: d.innerText.replace(/\n+/g, ' | '), vuot: !!d.querySelector('.swipe'), coSan: d.classList.contains('co-san'), onClick: d.querySelectorAll('[role="button"]').length }; });
+  if (!/^\/t \| giờ hiện tại \(vd\. 14:05\) \| có sẵn$/.test(T.dongDau.chu) || T.dongDau.vuot || T.dongDau.onClick) E22('dòng đầu thư viện: ' + JSON.stringify(T.dongDau));
+  await chup(page, 'iphone-thu-vien-t-sang', true);
+  await hop.getByPlaceholder('/hcn').fill('t');
+  await hop.getByPlaceholder('Hội chẩn ngoại khoa').fill('thử');
+  await hop.getByRole('button', { name: 'Thêm vào thư viện', exact: true }).tap();
+  await page.waitForTimeout(300);
+  T.baoLoi = await hop.locator('[role="alert"]').first().textContent().catch(() => '');
+  if (!/^\/t là viết tắt có sẵn/.test(T.baoLoi)) E22('tạo key t phải báo "/t là viết tắt có sẵn": ' + T.baoLoi);
+  if ((await dem22(page, 'abbrevs')).some((a) => a.key === 't')) E22('đã lưu key t vào thư viện');
+  await hop.getByRole('button', { name: 'Đóng thư viện', exact: true }).tap();
+  await page.waitForTimeout(700);
+  await page.locator('#ph-draft').pressSequentially('Làm /t ');
+  await page.waitForTimeout(300);
+  T.gio = await page.locator('#ph-draft').inputValue();
+  if (!/^Làm \d{2}:\d{2} $/.test(T.gio)) E22('gõ "/t " phải ra giờ HH:mm: "' + T.gio + '"');
+  await ctx.close();
+}
+{
+  const { ctx, page } = await moApp({ ...IPHONE_OPTS, colorScheme: 'dark' });
+  await chonBangThem(page, 'Thư viện viết tắt', true);
+  await page.getByRole('dialog', { name: 'Thư viện viết tắt' }).waitFor();
+  await page.waitForTimeout(700);
+  await chup(page, 'iphone-thu-vien-t-toi', true);
+  await ctx.close();
+}
+
+// Nút X ở thẻ Quản lý phòng (phần D): 44px, aria-label "Đóng quản lý phòng", bấm thì đóng thẻ; iPhone (sáng và tối) và PC
+for (const [pc, toi] of [[false, false], [false, true], [true, false]]) {
+  const { ctx, page } = await moApp(pc ? { viewport: { width: 1440, height: 900 } } : { ...IPHONE_OPTS, colorScheme: toi ? 'dark' : 'light' });
+  const T = ketQua.thuChucNang[pc ? 'nutXQuanLyPhongPc' : 'nutXQuanLyPhongIphone' + (toi ? 'Toi' : '')] = {};
+  if (pc) { await page.getByRole('button', { name: 'Khám', exact: true }).click(); await page.waitForTimeout(400); await page.getByRole('button', { name: 'Quản lý phòng', exact: true }).click(); }
+  else { await page.getByRole('button', { name: 'Khám', exact: true }).tap(); await page.waitForTimeout(400); await chonBangThem(page, 'Quản lý phòng', true); }
+  const the = page.locator('section[aria-label="Quản lý phòng"]');
+  await the.waitFor();
+  const x = the.getByRole('button', { name: 'Đóng quản lý phòng', exact: true });
+  T.soNut = await x.count();
+  const b = await x.boundingBox();
+  const bt = await the.boundingBox();
+  T.kichThuoc = b ? Math.round(b.width) + '×' + Math.round(b.height) : null;
+  T.gocTrenPhai = !!b && b.x + b.width >= bt.x + bt.width - 20 && b.y <= bt.y + 20;
+  if (T.soNut !== 1 || !b || b.width < 43.5 || b.height < 43.5) ketQua.loi.push((pc ? 'PC' : 'iPhone') + ': nút X quản lý phòng thiếu hoặc nhỏ hơn 44px: ' + JSON.stringify(T));
+  if (!T.gocTrenPhai) ketQua.loi.push((pc ? 'PC' : 'iPhone') + ': nút X không nằm ở góc trên phải thẻ Quản lý phòng');
+  await chup(page, (pc ? 'pc' : 'iphone') + '-quan-ly-phong-nut-x' + (pc ? '' : toi ? '-toi' : '-sang'), true);
+  if (pc) await x.click(); else await x.tap();
+  await page.waitForTimeout(300);
+  T.daDong = (await the.count()) === 0;
+  if (!T.daDong) ketQua.loi.push((pc ? 'PC' : 'iPhone') + ': bấm X mà thẻ Quản lý phòng không đóng');
+  await ctx.close();
+}
+
 // PC
 {
   const { ctx, page } = await moApp({ viewport: { width: 1440, height: 900 } });
@@ -2397,7 +2694,7 @@ const IPHONE_OPTS = { viewport: { width: 393, height: 852 }, deviceScaleFactor: 
     // v9.3: máy tính giữ nguyên form thêm việc cũ (ô chọn khu, 5 nhãn, nút chữ "Thêm việc")
     const f = await page.locator('.task-form-pc').evaluate((e) => ({ select: !!e.querySelector('select'), nut: [...e.querySelectorAll('button[type=submit]')].map((b) => b.textContent.trim()), nhan: e.querySelectorAll('.tag-btn').length, chuNhan: /Nhãn/.test(e.textContent), tf: !!e.querySelector('.tf-row') }));
     ketQua.thuChucNang.pcFormThemViec = f;
-    if (!f.select || f.nut.join() !== 'Thêm việc' || f.nhan !== 5 || !f.chuNhan || f.tf) ketQua.loi.push('PC: form thêm việc đã đổi bố cục ' + JSON.stringify(f));
+    if (!f.select || f.nut.join() !== 'Thêm việc' || f.nhan !== 9 || !f.chuNhan || f.tf) ketQua.loi.push('PC: form thêm việc đã đổi bố cục ' + JSON.stringify(f));
   }
   await chup(page, 'pc-viec-sang', false);
   {
@@ -2956,7 +3253,7 @@ async function luongIphoneV95(dark) {
   if (JSON.stringify(T.tongHopNhieu.cach) !== JSON.stringify([['Theo ngày', 'false'], ['Theo mã giường', 'true']])) E('nút gạt cách xếp: ' + JSON.stringify(T.tongHopNhieu.cach));
   if (T.tongHopNhieu.coChu !== '16px') E('ô sửa tổng hợp không 16px: ' + T.tongHopNhieu.coChu);
   if (T.tongHopNhieu.canhBao !== 'Cùng mã giường ở các ngày khác nhau có thể là bé khác. App ghép theo phòng và mã, hãy kiểm tra trước khi gửi.') E('dải cảnh báo sai chữ: ' + T.tongHopNhieu.canhBao);
-  for (const can of ['TỔNG HỢP 18/10 - 20/10/2026', 'Tuổi thai ghi là tuổi thai hiệu chỉnh của từng ngày.', 'PHÒNG 1 - G01', '18/10: 35w4d - 1800 g - Tiếp tục y lệnh cũ',
+  for (const can of ['TỔNG HỢP 18/10 - 20/10/2026', 'PHÒNG 1 - G01', '18/10: 35w4d - 1800 g - Tiếp tục y lệnh cũ',
     '19/10: 35w5d - 1820 g - Đo bilirubin (chưa xong); Cân bé', '20/10: 35w6d - 1850 g', 'Ghi chú: Theo dõi vàng da', 'PHÒNG 2 - G07', '19/10: 34w6d - 1500 g', '19/10: 34w6d - 1510 g',
     'PHÒNG 3 - Chưa có mã', 'PHÒNG CŨ - G99', '19/10: 36w4d - 2500 g - Siêu âm não (chưa xong)']) {
     if (!vanMa.includes(can)) E('tổng hợp theo mã giường thiếu dòng: ' + can);
@@ -3081,11 +3378,12 @@ async function luongIphoneV95(dark) {
   await page.waitForTimeout(650);
   const vanNgay = await page.locator('#tonghop-noidung').inputValue();
   T.tongHopNgay = vanNgay.split('\n').slice(0, 3);
-  for (const can of ['KHÁM SÁNG 19/10/2026 - Y LỆNH', 'Tuổi thai ghi là tuổi thai hiệu chỉnh ngày 19/10.', 'G01 - 35w5d - 1820 g', '- Đo bilirubin', 'PHÒNG CŨ', 'G99 - 36w4d - 2500 g', 'Chưa có mã - Tiếp tục y lệnh cũ']) {
+  if (/Y LỆNH|Tuổi thai ghi là|Còn \d+ việc/.test(vanNgay)) E('"Tổng hợp ngày này": còn dòng Y LỆNH / Tuổi thai ghi là / Còn n việc (đã bỏ 22/11)');
+  for (const can of ['KHÁM SÁNG 19/10/2026\n\nPHÒNG 1', '1. G01 - 35w5d - 1820 g', '2. G03 - 36w1d - 2070 g', '- Đo bilirubin', 'PHÒNG CŨ', 'G99 - 36w4d - 2500 g', 'Chưa có mã - Tiếp tục y lệnh cũ']) {
     if (!vanNgay.includes(can)) E('"Tổng hợp ngày này" thiếu: ' + can);
   }
   if (vanNgay.includes('GXOA')) E('"Tổng hợp ngày này" có dòng đã xoá');
-  if ((vanNgay.match(/^G07 - 34w6d/gm) || []).length !== 2) E('"Tổng hợp ngày này": hai bé trùng mã G07 phải giữ đủ hai dòng');
+  if ((vanNgay.match(/^(\d+\. )?G07 - 34w6d/gm) || []).length !== 2) E('"Tổng hợp ngày này": hai bé trùng mã G07 phải giữ đủ hai dòng');
   await coChuV95(page, 'tổng hợp ngày này', dark);
   await nutNhoV95(page, 'tổng hợp ngày này', dark);
   await chup(page, 'iphone-tong-hop-ngay-nay' + sfx, true);
@@ -3228,7 +3526,7 @@ for (const toi of [false, true]) { try { await luongIphoneV95(toi); } catch (e) 
   await page.getByRole('button', { name: 'Tổng hợp ngày này', exact: true }).click();
   await page.waitForTimeout(400);
   const vanPc = await page.locator('#tonghop-noidung').inputValue();
-  if (!/^KHÁM SÁNG 19\/10\/2026 - Y LỆNH\nTuổi thai ghi là tuổi thai hiệu chỉnh ngày 19\/10\./.test(vanPc)) E('PC tổng hợp ngày này: ' + vanPc.slice(0, 120));
+  if (!/^KHÁM SÁNG 19\/10\/2026\n\nPHÒNG 1\n1\. G01/.test(vanPc) && !/Y LỆNH|Tuổi thai ghi là/.test(vanPc)) E('PC tổng hợp ngày này: ' + vanPc.slice(0, 120));
   // tổng hợp nhiều ngày: bảng rộng giữa màn hình
   await page.getByRole('button', { name: 'Lịch khám', exact: true }).click();
   await hopK.waitFor();
@@ -3730,7 +4028,7 @@ async function luongTruocMoc(dark) {
   await page.locator('#tonghop-noidung').waitFor();
   const vanY = await page.locator('#tonghop-noidung').inputValue();
   T.tongHopHomNay = vanY.split('\n')[0];
-  if (!/^KHÁM SÁNG 05\/11\/2026 - Y LỆNH/.test(vanY) || !/B0511 - 34w2d/.test(vanY)) E('tổng hợp y lệnh lúc 02:30 phải theo ngày lịch 05/11 và bé B0511 34w2d: ' + vanY.slice(0, 160));
+  if (!/^KHÁM SÁNG 05\/11\/2026\n/.test(vanY) || !/B0511 - 34w2d/.test(vanY)) E('tổng hợp y lệnh lúc 02:30 phải theo ngày lịch 05/11 và bé B0511 34w2d: ' + vanY.slice(0, 160));
   await page.getByRole('button', { name: 'Đóng tổng hợp', exact: true }).tap();
   await page.waitForTimeout(700);
 
@@ -3905,7 +4203,7 @@ async function luongXoaPhong(dark) {
   await page.waitForTimeout(400);
 
   // === Trạng thái nút: Phòng 1 (chỉ bé ngày trước) mở, Phòng 2 (có bé hôm nay) khoá, Phòng 3 (trống) mở ===
-  T.nut = await page.evaluate(() => [...document.querySelectorAll('section[aria-label="Quản lý phòng"] .icon-btn')].map((b) => [b.getAttribute('aria-label'), b.disabled]));
+  T.nut = await page.evaluate(() => [...document.querySelectorAll('section[aria-label="Quản lý phòng"] .row4 .icon-btn')].map((b) => [b.getAttribute('aria-label'), b.disabled]));
   const canNut = [['Xoá Phòng 1', false], ['Không xoá được Phòng 2 vì hôm nay còn 1 bé', true], ['Xoá Phòng 3', false]];
   if (JSON.stringify(T.nut) !== JSON.stringify(canNut)) E('nút xoá phòng (Phòng 1 chỉ có bé ngày trước phải mở; Phòng 2 có bé hôm nay phải khoá): ' + JSON.stringify(T.nut));
   T.chuDuoi = doiMau(await page.locator('section[aria-label="Quản lý phòng"] .muted.xsmall').last().innerText());
@@ -4029,7 +4327,7 @@ for (const toi of [false, true]) { try { await luongXoaPhong(toi); } catch (e) {
   await page.locator('section[aria-label="Quản lý phòng"]').waitFor();
   await page.waitForTimeout(400);
   T.dai = await daiMocText(page);
-  T.nut = await page.evaluate(() => [...document.querySelectorAll('section[aria-label="Quản lý phòng"] .icon-btn')].map((b) => [b.getAttribute('aria-label'), b.disabled]));
+  T.nut = await page.evaluate(() => [...document.querySelectorAll('section[aria-label="Quản lý phòng"] .row4 .icon-btn')].map((b) => [b.getAttribute('aria-label'), b.disabled]));
   const can = [['Không xoá được Phòng 1 vì hôm nay còn 1 bé', true], ['Xoá Phòng 2', false], ['Xoá Phòng 3', false]];
   if (JSON.stringify(T.nut) !== JSON.stringify(can)) E('bé ngày làm việc 21/10 (đang 02:30 ngày 22/10) phải khoá Phòng 1: ' + JSON.stringify(T.nut));
   await page.locator('section[aria-label="Quản lý phòng"] .icon-btn:disabled').first().click({ force: true, timeout: 3000 }).catch(() => {});
@@ -4055,7 +4353,7 @@ for (const toi of [false, true]) { try { await luongXoaPhong(toi); } catch (e) {
   await page.getByRole('button', { name: 'Quản lý phòng', exact: true }).click();
   await page.locator('section[aria-label="Quản lý phòng"]').waitFor();
   await page.waitForTimeout(500);
-  T.nut = await page.evaluate(() => [...document.querySelectorAll('section[aria-label="Quản lý phòng"] .icon-btn')].map((b) => [b.getAttribute('aria-label'), b.disabled]));
+  T.nut = await page.evaluate(() => [...document.querySelectorAll('section[aria-label="Quản lý phòng"] .row4 .icon-btn')].map((b) => [b.getAttribute('aria-label'), b.disabled]));
   T.tieuDe = await page.evaluate(() => [...document.querySelectorAll('section.group .group-title')].map((e) => e.textContent));
   T.nutCong = await page.evaluate(() => [...document.querySelectorAll('.room-add')].map((e) => e.getAttribute('aria-label')));
   if (T.nut[0]?.join() !== 'Không xoá được Phòng 2 vì hôm nay còn 1 bé,true') E('nút xoá Phòng 2 trên PC: ' + JSON.stringify(T.nut));
@@ -4212,6 +4510,34 @@ for (const dark of [false, true]) {
     }
     await g.ctx.close();
   }
+}
+// 23/11: nút "đã nhập máy tính" cũng có ở chế độ 2 ngày (chỉ thẻ có dòng HÔM NAY; thẻ chỉ có hôm qua là chỉ xem nên không có nút)
+for (const dark of [false, true]) {
+  const sfx = dark ? '-toi' : '-sang';
+  const g = await moAppHaiNgay({ ...IPHONE96, colorScheme: dark ? 'dark' : 'light' });
+  const page = g.page;
+  const T = ketQua.thuChucNang['haiNgayMayTinh' + sfx] = {};
+  const E23 = (m) => ketQua.loi.push('2 ngày, nút máy tính' + sfx + ': ' + m);
+  await page.getByRole('button', { name: 'Khám', exact: true }).tap();
+  await page.waitForTimeout(400);
+  await page.locator('.ph-2ngay').tap();
+  await page.locator('.hn-the').first().waitFor();
+  await page.waitForTimeout(700);
+  T.the = await page.evaluate(() => [...document.querySelectorAll('.hn-the')].map((e) => { const b = e.querySelector('.pat-may'), r = b?.getBoundingClientRect(); return { ma: e.querySelector('.pat-code').textContent, chiQua: e.classList.contains('chi-qua'), nut: !!b, w: r ? Math.round(r.width) : 0, h: r ? Math.round(r.height) : 0, nhan: b?.getAttribute('aria-label') || null, pressed: b?.getAttribute('aria-pressed') || null }; }));
+  const sai = T.the.filter((x) => (x.chiQua ? x.nut : !(x.nut && x.w === 44 && x.h === 44 && x.pressed === 'false' && x.nhan === 'Chưa nhập máy tính')));
+  if (!T.the.some((x) => x.chiQua) || !T.the.some((x) => !x.chiQua)) E23('dữ liệu mẫu phải có cả thẻ chỉ-hôm-qua và thẻ có hôm nay: ' + JSON.stringify(T.the));
+  if (sai.length) E23('thẻ sai: ' + JSON.stringify(sai));
+  const the = page.locator('.hn-the', { has: page.locator('.pat-code', { hasText: /^G01$/ }) });
+  const nut = the.locator('.pat-may');
+  await nut.tap();
+  await page.waitForTimeout(400);
+  const be = (await docBang(page, 'exam_patients')).find((x) => x.id === 'h-g01');
+  T.sauCham = { pressed: await nut.getAttribute('aria-pressed'), nhan: await nut.getAttribute('aria-label'), moChiTiet: await page.locator('.sheet-be').count(), db: { daNhapMay: be?.daNhapMay, done: be?.done } };
+  if (T.sauCham.pressed !== 'true' || T.sauCham.nhan !== 'Đã nhập máy tính' || T.sauCham.moChiTiet || be?.daNhapMay !== true || be?.done) E23('chạm nút: ' + JSON.stringify(T.sauCham));
+  const hQua = (await docBang(page, 'exam_patients')).find((x) => x.id === 'q-g01');
+  if (hQua?.daNhapMay) E23('không được ghi vào dòng của hôm qua');
+  await chup(page, 'iphone-kham-hai-ngay-may-tinh' + sfx, true);
+  await g.ctx.close();
 }
 await browser.close();
 server.close();

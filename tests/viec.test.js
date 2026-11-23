@@ -1,10 +1,39 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { TAGS, TAG_COLOR, laViecMoi, chuanHoaTags, batTatNhan, soSanhViec, sapViec, khuHienThi, boDemCham, themCham, chuanTenViec, khuDeChon, khuMacDinh, khiRoiOThemViec } from '../src/lib/viec.js';
+import { ZONES, LEGACY_ZONES } from '../src/db.js';
+import { TAGS, TAG_COLOR, TAG_BIEU_TUONG,laViecMoi, chuanHoaTags, batTatNhan, soSanhViec, sapViec, khuHienThi, boDemCham, themCham, chuanTenViec, khuDeChon, khuMacDinh, khiRoiOThemViec } from '../src/lib/viec.js';
 
 test('TAGS và màu', () => {
-  assert.deepEqual(TAGS, ['NV', 'BM', 'CK', 'HC', 'XN']);
-  assert.deepEqual(TAG_COLOR, { NV: 1, BM: 2, CK: 3, HC: 4, XN: 5 });
+  // 5 nhãn cũ giữ nguyên thứ tự và màu; 22/11 thêm VIP, G, ST, MT (biểu tượng máy tính) ở cuối
+  assert.deepEqual(TAGS, ['NV', 'BM', 'CK', 'HC', 'XN', 'VIP', 'G', 'ST', 'MT']);
+  assert.deepEqual(TAGS.slice(0, 5), ['NV', 'BM', 'CK', 'HC', 'XN']);
+  for (const [k, v] of Object.entries({ NV: 1, BM: 2, CK: 3, HC: 4, XN: 5 })) assert.equal(TAG_COLOR[k], v, k);
+  for (const t of TAGS) assert.ok(TAG_COLOR[t] >= 1 && TAG_COLOR[t] <= 5, 'nhãn ' + t + ' phải có màu 1..5');
+  assert.deepEqual(TAG_BIEU_TUONG, { MT: 'may-tinh' });
+});
+
+test('22/11 nhãn mới: chuẩn hoá giữ thứ tự TAGS, việc cũ không đổi', () => {
+  assert.deepEqual(chuanHoaTags(['MT', 'G', 'NV', 'VIP', 'ST', 'MT']), ['NV', 'VIP', 'G', 'ST', 'MT']);
+  assert.deepEqual(chuanHoaTags(['NV', 'XN']), ['NV', 'XN']); // việc cũ lưu 5 nhãn cũ: y như trước
+  assert.deepEqual(batTatNhan(['XN'], 'MT'), ['XN', 'MT']);
+  assert.deepEqual(batTatNhan(['XN', 'MT'], 'MT'), ['XN']);
+  assert.deepEqual(batTatNhan([], 'VIP'), ['VIP']);
+});
+
+test('22/11 khu: PS và PM thay PS-PM; việc cũ khu PS-PM vẫn hiện như BM', () => {
+  assert.deepEqual(ZONES, ['NICU', 'CT', 'KAN', 'PS', 'PM', 'Ngoại Trú', 'DV', 'HP', 'HS']);
+  assert.equal(ZONES.indexOf('PS'), 3); // đúng chỗ của PS-PM cũ
+  assert.deepEqual(LEGACY_ZONES, ['BM', 'PS-PM']);
+  assert.ok(!ZONES.includes('PS-PM'));
+  const tasks = [{ zone: 'PS-PM' }, { zone: 'NICU' }, { zone: 'BM', deleted: true }];
+  assert.deepEqual(khuHienThi(tasks, ZONES, LEGACY_ZONES), [...ZONES, 'PS-PM']); // BM đã xoá nên ẩn
+  assert.deepEqual(khuHienThi([{ zone: 'NICU' }], ZONES, LEGACY_ZONES), [...ZONES]); // không còn việc PS-PM thì ẩn
+  assert.deepEqual(khuDeChon(ZONES, 'PS-PM'), [...ZONES, 'PS-PM']); // ô chọn khu không làm mất khu cũ
+  assert.deepEqual(khuDeChon(ZONES, 'PS'), [...ZONES]);
+  assert.equal(khuMacDinh('PS-PM', ZONES), 'NICU'); // chip khu cũ: việc mới về khu đầu
+  assert.equal(khuMacDinh('PM', ZONES), 'PM');
+  assert.deepEqual(khiRoiOThemViec({ chu: '', khuLoc: 'PS-PM', khuHienTai: 'PM', nhanHienTai: ['MT'] }, ZONES), { thuLai: true, khu: 'NICU', nhan: [] });
+  assert.deepEqual(khiRoiOThemViec({ chu: 'x', khuLoc: 'PS-PM', khuHienTai: 'PM', nhanHienTai: ['MT'] }, ZONES), { thuLai: false, khu: 'PM', nhan: ['MT'] });
 });
 
 test('laViecMoi: có mảng tags (kể cả rỗng) là việc mới', () => {
