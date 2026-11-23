@@ -313,13 +313,13 @@ export function TaskForm({ variant, date, zone, setZone, tags, setTags, khuLoc =
     const f = formRef.current;
     if (!ph || !f) return undefined;
     const root = document.documentElement;
-    const do_ = () => root.style.setProperty('--tf-cao', Math.round(f.getBoundingClientRect().height) + 'px');
+    const do_ = () => root.style.setProperty('--tf-cao', Math.round(f.getBoundingClientRect().height + (parseFloat(getComputedStyle(f).marginBottom) || 0)) + 'px'); // gồm cả khoảng cách dưới của thanh nổi
     do_();
     root.classList.add('co-form-viec');
     const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(do_) : null;
     ro?.observe(f);
     return () => { ro?.disconnect(); root.classList.remove('co-form-viec'); root.style.removeProperty('--tf-cao'); };
-  }, [ph]);
+  }, [ph, !!banPhim]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const submit = async (e) => {
     e.preventDefault();

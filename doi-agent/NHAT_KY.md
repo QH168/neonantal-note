@@ -56,6 +56,24 @@
 | 58 | Nhãn mới VIP, G, ST, MT nằm trong hàng nhãn vuốt ngang trên iPhone; phải vuốt mới thấy đủ. | Lưu ý | Bác sĩ thử trên iPhone; nếu khó thấy thì đổi cách xếp hàng nhãn. | Giao diện |
 | 59 | Chưa thử trên iPhone thật. Bảng trượt bàn phím (22/11) mới kiểm bằng giả lập WebKit (mô phỏng, `scripts/gia-lap-iphone.mjs`); cú kéo bằng ngón tay chưa giả lập được. | Lưu ý | Bác sĩ thử trên iPhone: gõ trong chi tiết bé, chi tiết việc, tổng hợp; xem bảng có sát đáy và ô gõ có hiện không. | Giao diện |
 | 60 | Ảnh chuẩn đợt 22/11 chưa lưu. | Đã xong | Bác sĩ duyệt ảnh 23/11/2026; đã lưu ảnh chuẩn bằng `--luu-chuan`. | Giao diện |
+| 61 | Thanh thêm việc iPhone đã đổi thành thanh nổi bo tròn (23/11/2026). Chưa thử trên iPhone và Safari thật, vuốt và Hoàn tác trên WebKit chưa kiểm; chưa lưu ảnh chuẩn. | Lưu ý | Bác sĩ duyệt ảnh và thử trên iPhone (thanh nổi, bàn phím, Hoàn tác trên thanh); ổn thì lưu ảnh chuẩn bằng `--luu-chuan`, vướng thì giao phiếu chỉnh. | Giao diện |
+
+## 23/11/2026 — Thanh thêm việc nổi bo tròn (chờ duyệt ảnh)
+
+Phiếu: `doi-agent/phieu-viec/2026-11-23-thanh-them-viec-noi.json`. Bác sĩ yêu cầu 23/11/2026, kèm ảnh mẫu thanh nổi kiểu iOS. Chưa lưu ảnh chuẩn, chưa commit, chưa đẩy lên `main`. Chờ bác sĩ duyệt ảnh.
+
+- **Bác sĩ thấy gì đổi:**
+  - Trên iPhone, thanh "Ghi việc cần làm…" và nút "+" ở đáy tab Việc thành thanh nổi: cách mép trái, phải và đáy, hai đầu bo tròn, viền mảnh, bóng nhẹ.
+  - Khi bàn phím mở hoặc khi bung ra (chọn khu, nhãn), bảng nhập bo tròn cả bốn góc, cách mép và bàn phím 8px.
+  - Thanh Hoàn tác vẫn nằm ngay trên thanh thêm việc, không che ô gõ.
+  - Chức năng không đổi.
+- **Kỹ thuật:**
+  - `src/App.css` `.task-form-ph`: lề 0 12px calc(8px + vùng an toàn đáy), đệm 8px, bo 30px, nền `--surface`, viền 1px `--line`, bóng `0 6px 20px rgba(0,0,0,.10)` (bản tối `.45`), `overflow: hidden`. `.mo` bo 24px. `.kb` lề 0 8px 8px, bo 24px. Chuyển đổi bo và đệm 0,18 giây chỉ khi máy không bật giảm chuyển động. Hàng chip có lề phải 12px để kết thúc trong khung.
+  - `src/components/Tasks.jsx`: `--tf-cao` tính cả lề đáy của form, đo lại khi bàn phím mở hoặc đóng.
+  - `scripts/chup-giao-dien.mjs`: kiểm bàn phím giả mong khoảng cách 8px.
+- **Kết quả kiểm:** `npm test` 304/304. Script chụp giao diện ĐẠT. Kiểm thử độc lập ĐẠT: hình học, vùng chạm 44px, hàng chip cuộn và chip cuối tới được, không tràn ngang ở 320px và 390px, vị trí thanh Hoàn tác có và không có bàn phím, giảm chuyển động.
+- **Chưa kiểm:** iPhone và Safari thật. Vuốt xoá và Hoàn tác trên WebKit (Playwright WebKit không có cử chỉ chạm). Bóng ở bản tối gần như không thấy; viền tách thanh khỏi nền.
+- **Chưa làm:** ảnh chuẩn chưa lưu. Chỉ lưu bằng `--luu-chuan` sau khi bác sĩ duyệt ảnh.
 
 ## 23/11/2026 — Đợt 22/11: bảng trượt bàn phím iPhone, nhãn mới, chép phòng (đã duyệt ảnh)
 

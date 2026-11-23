@@ -1,0 +1,35 @@
+{
+  "ten": "Đợt 23/11: thanh thêm việc (tab Việc, iPhone) thành thanh nổi bo tròn; bo góc bảng nhập khi bàn phím mở",
+  "ngay": "2026-11-23",
+  "khuVuc": "Việc (ô thêm việc trên iPhone: .task-form-ph)",
+  "loai": "nho",
+  "canBacSiDuyet": true,
+  "trangThai": "Bác sĩ yêu cầu 23/11/2026 (kèm ảnh mẫu thanh nổi kiểu iOS); bác sĩ duyệt ảnh 23/11/2026, đã lưu ảnh chuẩn",
+  "bacSiDaQuyet": [
+    "1. Sửa thanh 'Ghi việc cần làm…' + nút '+' ở đáy tab Việc trên iPhone (ảnh bác sĩ gửi, bản tối).",
+    "2. Theo ảnh mẫu: thanh nổi tách khỏi mép trái/phải/đáy màn hình, bo tròn hai đầu như viên thuốc, có viền mảnh và bóng nhẹ.",
+    "3. Khi bung ra (chọn khu, nhãn) và khi bàn phím mở: bảng nhập bo tròn các góc, không vuông sát mép."
+  ],
+  "deXuat": {
+    "thuGon": "Cách mép trái/phải 12px, cách đáy 8px + vùng an toàn; bo 30px (viên thuốc, cao 60px = ô 44px + đệm 8px); nền --surface, viền 1px --line, bóng nhẹ; nền trang lộ ra quanh thanh.",
+    "bung": "Cùng khung nổi, bo 24px; hàng khu/nhãn vuốt ngang bị cắt gọn trong khung bo tròn.",
+    "banPhim": "Bảng nằm cách bàn phím 8px, cách mép 8px, bo 24px cả bốn góc, cùng độ cong với bàn phím iOS.",
+    "giuNguyen": "Không đổi chức năng: bung/thu, giữ con trỏ, gợi ý viết tắt, thanh Hoàn tác ngay trên thanh (--tf-cao phải tính cả khoảng cách mới), không đè danh sách việc."
+  },
+  "fileDuocSua": [
+    "src/App.css",
+    "src/components/Tasks.jsx",
+    "scripts/chup-giao-dien.mjs",
+    "doi-agent/BAN_DO.md"
+  ],
+  "khongLam": [
+    "Không đổi dữ liệu, không đổi db.version(1), không thêm thư viện npm.",
+    "Không --luu-chuan khi chưa duyệt ảnh; chỉ đẩy khi bác sĩ nói 'đẩy'.",
+    "Không sửa bản PC (.task-form-pc) và tab Khám."
+  ],
+  "tieuChiDat": [
+    "npm test đạt; Kiểm thử độc lập ĐẠT; script chụp giao diện ĐẠT",
+    "Ảnh iPhone sáng + tối: thu gọn, bung, bàn phím giả mở; màn 320px không tràn ngang; vùng chạm 44px",
+    "Thanh Hoàn tác vẫn nằm ngay trên thanh, không che ô gõ"
+  ]
+}

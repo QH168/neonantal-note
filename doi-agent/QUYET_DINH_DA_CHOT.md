@@ -128,3 +128,6 @@ Các phần còn lại làm theo phiếu (bác sĩ không hỏi thêm):
 - Bản nhiều ngày (`src/lib/tong-hop.js`) chưa đổi, chờ bác sĩ (`doi-agent/NHAT_KY.md` mục 56).
 
 Chỗ cũ bị thay (không xoá lịch sử ở trên): định dạng tổng hợp cũ (mục Khám, mục "Tổng hợp y lệnh"); nhãn chỉ có NV/BM/CK/HC/XN và khu PS-PM (mục Việc).
+
+## Đợt 23/11/2026 — thanh thêm việc nổi trên iPhone (bác sĩ yêu cầu 23/11/2026)
+- Thanh "Ghi việc cần làm…" và nút "+" ở đáy tab Việc trên iPhone là thanh nổi bo tròn theo ảnh mẫu của bác sĩ: cách mép, viền mảnh, bóng nhẹ. Khi bàn phím mở hoặc bảng nhập bung ra, bảng bo tròn bốn góc. Chức năng không đổi. Chờ bác sĩ duyệt ảnh trước khi lưu ảnh chuẩn.

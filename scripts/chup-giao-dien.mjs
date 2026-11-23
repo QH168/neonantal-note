@@ -2334,7 +2334,7 @@ const IPHONE_OPTS = { viewport: { width: 393, height: 852 }, deviceScaleFactor: 
   await page.waitForTimeout(300);
   T.duoiKhiMo = await duoiForm();
   T.lopKb = await form.evaluate((f) => f.classList.contains('kb'));
-  if (!T.lopKb || Math.abs(T.duoiKhiMo - (852 - BAN_PHIM)) > 1) ketQua.loi.push('Thanh thêm việc không nằm sát trên bàn phím giả: đáy ' + T.duoiKhiMo + ' (cần ' + (852 - BAN_PHIM) + ')');
+  if (!T.lopKb || Math.abs(T.duoiKhiMo - (852 - BAN_PHIM - 8)) > 1) ketQua.loi.push('Thanh thêm việc không nằm cách bàn phím giả 8px: đáy ' + T.duoiKhiMo + ' (cần ' + (852 - BAN_PHIM - 8) + ')');
   {
     // minh hoạ: vẽ hộp "bàn phím" giả ở đáy chỉ cho ảnh chụp rồi gỡ
     await page.evaluate((c) => { const d = document.createElement('div'); d.id = 'ban-phim-gia'; d.textContent = 'Bàn phím mô phỏng (không phải bàn phím thật)'; d.style.cssText = `position:fixed;left:0;right:0;bottom:0;height:${c}px;background:#CBD3DA;color:#2C3E4E;font:13px sans-serif;display:flex;align-items:center;justify-content:center;z-index:200`; document.body.appendChild(d); }, BAN_PHIM);

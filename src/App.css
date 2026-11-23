@@ -128,8 +128,11 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 /* form thêm việc */
 .task-form-pc{display:flex;flex-direction:column;gap:4px}
 .task-form-bar{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding-top:8px;border-top:1px solid var(--line)}
-.task-form-ph{flex:none;position:relative;z-index:40;display:flex;flex-direction:column;gap:10px;padding:10px 16px calc(12px + env(safe-area-inset-bottom));background:var(--surface);border-top:1px solid var(--line)}
-.task-form-ph.kb{padding-bottom:10px} /* bàn phím mở: thanh đã được đẩy lên sát bàn phím (Tasks.jsx, theo visualViewport) */
+.task-form-ph{flex:none;position:relative;z-index:40;display:flex;flex-direction:column;gap:10px;box-sizing:border-box;margin:0 12px calc(8px + env(safe-area-inset-bottom));padding:8px;overflow:hidden;background:var(--surface);border:1px solid var(--line);border-radius:30px;box-shadow:0 6px 20px rgba(0,0,0,.10)} /* thanh nổi kiểu viên thuốc, tách khỏi mép màn hình */
+.th.dark .task-form-ph{box-shadow:0 6px 20px rgba(0,0,0,.45)}
+.task-form-ph.mo{padding:10px 12px;border-radius:24px}
+.task-form-ph.kb{margin:0 8px 8px;border-radius:24px} /* bàn phím mở: thanh được đẩy lên (Tasks.jsx, theo visualViewport), cách bàn phím 8px, cách mép 8px */
+@media (prefers-reduced-motion:no-preference){.task-form-ph{transition:border-radius .18s ease,padding .18s ease}}
 .tf-row{display:flex;align-items:center;gap:8px}
 .tf-in{flex:1;min-width:0;height:44px;padding:0 16px;border:1px solid var(--edge);border-radius:22px;background:var(--surface2);font-size:16px;color:var(--ink)}
 .tf-in:focus{outline:none;border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);background:var(--surface)}
@@ -291,6 +294,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .tag-btn.co-bt{display:flex;align-items:center;justify-content:center}.tag-btn .tag-ic{width:22px;height:22px}
 .pri-pick.tag-hang{flex-wrap:wrap}.pri-pick.tag-hang .pri-btn{flex:none}
 .task-form-ph .pri-pick.tag-hang,.sheet-ph .pri-pick.tag-hang{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;margin-right:-16px;padding:2px 16px 2px 0;-webkit-overflow-scrolling:touch} /* 9 nÃºt nhÃ£n: má»™t hÃ ng vuá»‘t ngang Ä‘Æ°á»£c, khÃ´ng trÃ n trang */
+.task-form-ph .chips-sheet,.task-form-ph .pri-pick.tag-hang{margin-right:-12px;padding-right:12px} /* hàng vuốt ngang chạy tới mép trong khung bo, phần thừa bị cắt theo góc bo */
 .pat-may{flex:none;width:44px;height:44px;margin:0 0 0 2px;padding:0;border:0;border-radius:12px;background:transparent;color:var(--muted);display:flex;align-items:center;justify-content:center;touch-action:manipulation}
 .pat-may[aria-pressed="true"]{background:var(--tint);color:var(--tintInk)}
 .pat-may:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
