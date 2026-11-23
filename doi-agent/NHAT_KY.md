@@ -56,11 +56,11 @@
 | 58 | Nhãn mới VIP, G, ST, MT nằm trong hàng nhãn vuốt ngang trên iPhone; phải vuốt mới thấy đủ. | Lưu ý | Bác sĩ thử trên iPhone; nếu khó thấy thì đổi cách xếp hàng nhãn. | Giao diện |
 | 59 | Chưa thử trên iPhone thật. Bảng trượt bàn phím (22/11) mới kiểm bằng giả lập WebKit (mô phỏng, `scripts/gia-lap-iphone.mjs`); cú kéo bằng ngón tay chưa giả lập được. | Lưu ý | Bác sĩ thử trên iPhone: gõ trong chi tiết bé, chi tiết việc, tổng hợp; xem bảng có sát đáy và ô gõ có hiện không. | Giao diện |
 | 60 | Ảnh chuẩn đợt 22/11 chưa lưu. | Đã xong | Bác sĩ duyệt ảnh 23/11/2026; đã lưu ảnh chuẩn bằng `--luu-chuan`. | Giao diện |
-| 61 | Thanh thêm việc iPhone đã đổi thành thanh nổi bo tròn (23/11/2026). Chưa thử trên iPhone và Safari thật, vuốt và Hoàn tác trên WebKit chưa kiểm; chưa lưu ảnh chuẩn. | Lưu ý | Bác sĩ duyệt ảnh và thử trên iPhone (thanh nổi, bàn phím, Hoàn tác trên thanh); ổn thì lưu ảnh chuẩn bằng `--luu-chuan`, vướng thì giao phiếu chỉnh. | Giao diện |
+| 61 | Thanh thêm việc iPhone đã đổi thành thanh nổi bo tròn (23/11/2026). Chưa thử trên iPhone và Safari thật, vuốt và Hoàn tác trên WebKit chưa kiểm. Bác sĩ duyệt ảnh 23/11/2026, đã lưu ảnh chuẩn. | Lưu ý | Bác sĩ thử trên iPhone (thanh nổi, bàn phím, Hoàn tác trên thanh); vướng thì giao phiếu chỉnh. | Giao diện |
 
-## 23/11/2026 — Thanh thêm việc nổi bo tròn (chờ duyệt ảnh)
+## 23/11/2026 — Thanh thêm việc nổi bo tròn (đã duyệt ảnh)
 
-Phiếu: `doi-agent/phieu-viec/2026-11-23-thanh-them-viec-noi.json`. Bác sĩ yêu cầu 23/11/2026, kèm ảnh mẫu thanh nổi kiểu iOS. Chưa lưu ảnh chuẩn, chưa commit, chưa đẩy lên `main`. Chờ bác sĩ duyệt ảnh.
+Phiếu: `doi-agent/phieu-viec/2026-11-23-thanh-them-viec-noi.json`. Bác sĩ yêu cầu 23/11/2026, kèm ảnh mẫu thanh nổi kiểu iOS. Bác sĩ duyệt ảnh 23/11/2026; đã lưu ảnh chuẩn; `npm test` 304/304. Đã commit trên máy; đẩy lên `main` khi bác sĩ nói "đẩy".
 
 - **Bác sĩ thấy gì đổi:**
   - Trên iPhone, thanh "Ghi việc cần làm…" và nút "+" ở đáy tab Việc thành thanh nổi: cách mép trái, phải và đáy, hai đầu bo tròn, viền mảnh, bóng nhẹ.
