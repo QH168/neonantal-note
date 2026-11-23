@@ -1,6 +1,6 @@
 // Mọi thao tác ghi dữ liệu của app. Luôn đi qua addRow/updateRow/softDelete để có updatedAt.
 import { phongXoaDuoc, lapKeHoachChepPhong } from './phong.js';
-import { chuanHoaTags, chuanTenViec } from './viec.js';
+import { chuanHoaTags, chuanTenViec, phanDoiNgayViec, phanHoanTacDoiNgay } from './viec.js';
 import { sapBe, orderTiepTheo } from './thu-tu.js';
 import { chuanKey, BO_MAU } from './viet-tat.js';
 import { KHOA_MOC_NGAY_LAM_VIEC, chuanHoaMoc } from './cai-dat.js';
@@ -88,6 +88,9 @@ export async function setTaskText(id, text) {
   return true;
 }
 export const setTaskZone = (id, zone) => updateRow('tasks', id, { zone });
+// "Đã nhập máy" của việc (23/11): boolean daNhapMay trên dòng việc, ghi qua updateRow nên có updatedAt (gộp sao lưu theo updatedAt như mọi trường khác).
+// Chỉ BẬT/TẮT theo giá trị truyền vào (cú chạm 1 lần chỉ bật). Dời sang ngày sau thì bỏ dấu (xem doiViecSangHomNay).
+export const setViecDaNhapMay = (taskId, giaTri) => updateRow('tasks', taskId, { daNhapMay: !!giaTri });
 export const toggleTask = (t) => updateRow('tasks', t.id, phanDoiXong(!t.done));
 // Chạm vào số để đổi mức: 1→2→3→4→5 (NV)→1
 export const cycleUrgency = (t) => updateRow('tasks', t.id, { urgency: (t.urgency % 5) + 1 });
@@ -292,16 +295,17 @@ export async function hoanTacChepPhong(ids) {
 // ---------- Dời việc sang hôm nay (v9.6) ----------
 /**
  * "Dời sang hôm nay" / "Dời hết sang hôm nay": đổi `date` của các việc (bảng tasks) sang ngày làm việc nay, bằng updateRow
- * (có updatedAt). Chỉ dời việc còn sống, chưa xong, date là ngày trước homNay. Việc đã xong/đã xoá/đã ở hôm nay: bỏ qua.
- * @returns [{ id, dateCu }] các việc ĐÃ dời → đưa cho hoanTacDoiViec khi Hoàn tác (6 giây).
+ * (có updatedAt). Việc đang "đã nhập máy" thì bỏ dấu khi dời (23/11; Hoàn tác trả lại dấu). Chỉ dời việc còn sống, chưa xong, date là ngày trước homNay. Việc đã xong/đã xoá/đã ở hôm nay: bỏ qua.
+ * @returns [{ id, dateCu, daNhapMayCu? }] các việc ĐÃ dời → đưa cho hoanTacDoiViec khi Hoàn tác (6 giây).
  */
 export async function doiViecSangHomNay(ids, homNay) {
   const daDoi = [];
   await ghiMotLuot([db.tasks], async () => {
     const rows = (await db.tasks.bulkGet([...new Set(ids || [])])).filter(Boolean);
     for (const k of lapKeHoachDoiViec(rows, ids, homNay)) {
-      await updateRow('tasks', k.id, { date: homNay });
-      daDoi.push(k);
+      const cu = rows.find((r) => r.id === k.id);
+      await updateRow('tasks', k.id, phanDoiNgayViec(cu, homNay));
+      daDoi.push(cu && cu.daNhapMay ? { ...k, daNhapMayCu: true } : k);
     }
   });
   return daDoi;
@@ -312,10 +316,11 @@ export async function hoanTacDoiViec(daDoi) {
   const out = [];
   await ghiMotLuot([db.tasks], async () => {
     const keHoach = keHoachHoanTacDoi(daDoi);
+    const cuaId = new Map((daDoi || []).map((x) => [x.id, x]));
     const con = await db.tasks.bulkGet(keHoach.map((k) => k.id)); // một lần đọc; việc không còn thì bỏ qua
     for (const [i, k] of keHoach.entries()) {
       if (!con[i]) continue;
-      await updateRow('tasks', k.id, { date: k.date });
+      await updateRow('tasks', k.id, phanHoanTacDoiNgay(cuaId.get(k.id)));
       out.push(k.id);
     }
   });

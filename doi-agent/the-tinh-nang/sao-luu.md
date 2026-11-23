@@ -34,7 +34,8 @@
 ## Đã nhập máy của bé (22/11/2026)
 - Trường `daNhapMay` (true/false) của bé trong `exam_patients`, ghi qua `updateRow` nên có `updatedAt`. Là trường thường: KHÔNG đổi `db.version(1)`, không đổi `BACKUP_VERSION` (vẫn 1), không đổi `merge.js`, `backup.js`, không đổi định dạng file.
 - Gộp theo `updatedAt` như các trường khác. File cũ không có `daNhapMay` vẫn nhập được; bé đó coi như chưa nhập.
-- Dấu không mang sang ngày sau: `copyPatientsFrom`, `chepMotBe`, `chepPhongSangHomNay` tự dựng danh sách trường nên không chép `daNhapMay`.
+- Từ 23/11/2026 (đợt 2) việc trong `tasks` cũng có `daNhapMay` (chỉ việc có nhãn MT dùng), ghi qua `setViecDaNhapMay` (`src/lib/actions.js`) nên có `updatedAt`, gộp theo `updatedAt`; file cũ không có thì coi như chưa nhập. Vẫn không đổi `db.version(1)`, `BACKUP_VERSION`, `merge.js`, `backup.js`.
+- Dấu không mang sang ngày sau: `copyPatientsFrom`, `chepMotBe`, `chepPhongSangHomNay` tự dựng danh sách trường nên không chép `daNhapMay`. Dời việc sang ngày sau (`doiViecSangHomNay`, 23/11/2026) bỏ `daNhapMay` của việc qua `phanDoiNgayViec`; Hoàn tác (`hoanTacDoiViec`) khôi phục qua `phanHoanTacDoiNgay` (`src/lib/viec.js`).
 
 ## Điểm dễ hỏng
 - iOS chỉ cho mở bảng Chia sẻ ngay trong lần bấm nút (`NotAllowedError` → hiện nút "Chia sẻ file").

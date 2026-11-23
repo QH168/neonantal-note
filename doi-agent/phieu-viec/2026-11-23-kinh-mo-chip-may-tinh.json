@@ -1,0 +1,51 @@
+{
+  "ten": "Đợt 23/11 (2): thanh thêm việc kính mờ đè lên danh sách, hàng khu nhỏ lại, chip tràn mép, chip máy tính trên dòng việc + chạm 2 lần để tắt (cả tab Khám)",
+  "ngay": "2026-11-23",
+  "khuVuc": "Việc (thanh thêm việc iPhone, dòng việc, chi tiết việc), Khám (nút máy tính, chi tiết bé)",
+  "loai": "lon",
+  "canBacSiDuyet": true,
+  "trangThai": "Bác sĩ duyệt cả kế hoạch 23/11/2026; bác sĩ duyệt ảnh 23/11/2026, đã lưu ảnh chuẩn",
+  "bacSiDaQuyet": [
+    "1. Thanh thêm việc iPhone kiểu kính mờ (phương án 1): nằm đè lên danh sách việc; danh sách cuộn ngầm phía sau và hiện mờ qua thanh (nền bán trong suốt + backdrop-filter blur). Danh sách có khoảng trống cuối để việc cuối cuộn lên trên thanh. Thanh Hoàn tác vẫn ngay trên thanh. Bàn phím mở: bảng nhập cũng kính mờ, bo 4 góc. Không hỗ trợ blur thì dùng nền đặc --surface.",
+    "2. Hàng khu (NICU, CT, KAN…) nhỏ lại bằng hàng nhãn: cùng chiều cao, cùng cỡ chữ; vùng chạm vẫn ≥44px.",
+    "3. Hai hàng chip trong khung tràn sát mép bo tròn của khung khi vuốt (trái và phải), không bị cắt ở đường thẳng hàng với ô nhập; lúc chưa vuốt chip đầu thẳng hàng với ô nhập.",
+    "4. Việc có nhãn MT: chip máy tính trên dòng việc bấm được độc lập. Chạm 1 lần: bật 'đã nhập máy' (xanh dương nhạt như nút máy tính tab Khám). Đã bật: chạm 1 lần không làm gì. Chạm 2 lần nhanh vào chip: mở bảng chỉnh sửa (chi tiết việc) có công tắc 'Đã nhập máy' để tắt. Chạm phần còn lại của dòng việc như cũ. Dữ liệu: trường mới daNhapMay (true/false) trên việc + updatedAt; không đổi db.version(1). Chép/chuyển việc sang ngày sau: KHÔNG giữ dấu.",
+    "5. Nút máy tính tab Khám (1 ngày và 2 ngày) cùng cơ chế: chạm 1 lần bật; đã bật chạm 1 lần không làm gì; chạm 2 lần nhanh mở chi tiết bé có công tắc 'Đã nhập máy' để tắt."
+  ],
+  "giaoDienDuLieu": {
+    "actions": "src/lib/actions.js: setViecDaNhapMay(taskId, bool) ghi daNhapMay + updatedAt cho việc (db.tasks). setDaNhapMay(patientId, bool) đã có cho bé. Giao diện gọi trực tiếp các hàm này; không dùng batTat cho cú chạm 1 lần (chỉ bật).",
+    "chamHaiLan": "Một hàm/hook dùng chung (vd. src/hooks.js useChamHaiLan hoặc src/lib) phân biệt chạm 1 lần và 2 lần trong ~350ms; cú chạm thứ hai ngay sau khi vừa bật thì không mở bảng (tránh bật rồi mở luôn); có test thuần (tests/cham-hai-lan.test.js) nếu tách được logic."
+  },
+  "fileDuocSua": [
+    "src/App.css",
+    "src/App.jsx",
+    "src/hooks.js",
+    "src/components/ui.jsx",
+    "src/components/Tasks.jsx",
+    "src/components/Exam.jsx",
+    "src/components/KhamHaiNgay.jsx",
+    "src/lib/actions.js",
+    "src/lib/viec.js",
+    "src/lib/merge.js",
+    "src/lib/cham-hai-lan.js",
+    "tests/viec.test.js",
+    "tests/merge.test.js",
+    "tests/luat.test.js",
+    "tests/cham-hai-lan.test.js",
+    "package.json",
+    "scripts/chup-giao-dien.mjs",
+    "doi-agent/BAN_DO.md"
+  ],
+  "khongLam": [
+    "Không đổi db.version(1); không thêm thư viện npm.",
+    "Không --luu-chuan khi chưa duyệt ảnh; chỉ đẩy khi bác sĩ nói 'đẩy' và cho bật credential helper.",
+    "Chỉ mã/số giường trong dữ liệu mẫu và ảnh.",
+    "Không sửa bản PC ngoài phần tối thiểu để chip máy tính dòng việc hoạt động giống iPhone."
+  ],
+  "tieuChiDat": [
+    "npm test đạt; Kiểm thử độc lập ĐẠT; script chụp giao diện ĐẠT",
+    "Ảnh iPhone sáng + tối: thanh kính mờ có chữ việc phía sau hiện mờ, bung, bàn phím giả; 320px không tràn ngang; vùng chạm 44px",
+    "Chạm 1 lần bật, chạm 1 lần khi đã bật không đổi, chạm 2 lần mở bảng và tắt được (cả việc và bé)",
+    "Sao lưu/gộp giữ daNhapMay theo updatedAt; chép việc sang ngày sau không giữ dấu"
+  ]
+}

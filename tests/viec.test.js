@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ZONES, LEGACY_ZONES } from '../src/db.js';
-import { TAGS, TAG_COLOR, TAG_BIEU_TUONG,laViecMoi, chuanHoaTags, batTatNhan, soSanhViec, sapViec, khuHienThi, boDemCham, themCham, chuanTenViec, khuDeChon, khuMacDinh, khiRoiOThemViec } from '../src/lib/viec.js';
+import { TAGS, TAG_COLOR, TAG_BIEU_TUONG,laViecMoi, chuanHoaTags, batTatNhan, soSanhViec, sapViec, khuHienThi, boDemCham, themCham, chuanTenViec, khuDeChon, khuMacDinh, khiRoiOThemViec, phanDoiNgayViec, phanHoanTacDoiNgay } from '../src/lib/viec.js';
 
 test('TAGS và màu', () => {
   // 5 nhãn cũ giữ nguyên thứ tự và màu; 22/11 thêm VIP, G, ST, MT (biểu tượng máy tính) ở cuối
@@ -297,4 +297,11 @@ test('vuot: không truyền duocTrai thì vuốt trái như cũ', () => {
   assert.equal(ketQuaKhiTha(-100, 300, { daXong: true }), 'xoa');
   assert.equal(ketQuaKhiTha(-100, 300, { duocTrai: true }), 'xoa');
   assert.equal(duocVuot(-50, { duocPhai: false }), true);
+});
+test('daNhapMay việc: dời ngày bỏ dấu, hoàn tác trả lại', () => {
+  assert.deepEqual(phanDoiNgayViec({ id: 'a', daNhapMay: true }, '2026-11-24'), { date: '2026-11-24', daNhapMay: false });
+  assert.deepEqual(phanDoiNgayViec({ id: 'b', daNhapMay: false }, '2026-11-24'), { date: '2026-11-24' });
+  assert.deepEqual(phanDoiNgayViec({ id: 'c' }, '2026-11-24'), { date: '2026-11-24' });
+  assert.deepEqual(phanHoanTacDoiNgay({ id: 'a', dateCu: '2026-11-23', daNhapMayCu: true }), { date: '2026-11-23', daNhapMay: true });
+  assert.deepEqual(phanHoanTacDoiNgay({ id: 'b', dateCu: '2026-11-23' }), { date: '2026-11-23' });
 });

@@ -131,3 +131,11 @@ Chỗ cũ bị thay (không xoá lịch sử ở trên): định dạng tổng h
 
 ## Đợt 23/11/2026 — thanh thêm việc nổi trên iPhone (bác sĩ yêu cầu 23/11/2026)
 - Thanh "Ghi việc cần làm…" và nút "+" ở đáy tab Việc trên iPhone là thanh nổi bo tròn theo ảnh mẫu của bác sĩ: cách mép, viền mảnh, bóng nhẹ. Khi bàn phím mở hoặc bảng nhập bung ra, bảng bo tròn bốn góc. Chức năng không đổi. Chờ bác sĩ duyệt ảnh trước khi lưu ảnh chuẩn.
+
+## Đợt 23/11/2026 (2) — thanh kính mờ, chip máy tính chạm 2 lần (bác sĩ duyệt kế hoạch 23/11/2026)
+Phiếu: `doi-agent/phieu-viec/2026-11-23-kinh-mo-chip-may-tinh.json`. Bác sĩ quyết 5 điểm:
+1. Thanh thêm việc iPhone kiểu kính mờ (phương án 1): thanh nằm đè lên danh sách việc; danh sách cuộn phía sau và hiện mờ qua thanh; cuối danh sách có khoảng trống để việc cuối cuộn lên trên thanh. Thanh Hoàn tác vẫn ngay trên thanh. Khi bàn phím mở, bảng nhập cũng kính mờ, bo 4 góc. Máy không hỗ trợ blur thì dùng nền đặc `--surface`. Đây là ngoại lệ, chỉ cho thanh này, của mục Cấm "hiệu ứng kính mờ" trong `doi-agent/THIET_KE.md`.
+2. Hàng khu (NICU, CT, KAN…) nhỏ lại bằng hàng nhãn: cùng chiều cao, cùng cỡ chữ; vùng chạm vẫn ≥44px.
+3. Hai hàng chip trong khung tràn sát mép bo tròn khi vuốt (trái và phải); lúc chưa vuốt, chip đầu thẳng hàng với ô nhập.
+4. Việc có nhãn MT: nút máy tính trên dòng việc bấm được độc lập. Chạm 1 lần bật "đã nhập máy" (xanh dương nhạt như nút máy tính tab Khám). Đã bật thì chạm 1 lần không làm gì. Chạm 2 lần nhanh vào nút mở chi tiết việc có công tắc "Đã nhập máy" để tắt. Chạm phần còn lại của dòng như cũ. Chép hoặc chuyển việc sang ngày sau KHÔNG giữ dấu.
+5. Nút máy tính tab Khám (1 ngày và 2 ngày) cùng cơ chế: chạm 1 lần bật; đã bật chạm 1 lần không làm gì; chạm 2 lần nhanh mở chi tiết bé có công tắc "Đã nhập máy" để tắt.

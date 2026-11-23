@@ -281,3 +281,12 @@ test('daNhapMay: bé chép sang ngày khác là dòng mới (id khác, không tr
   assert.equal(r.added, 1);
   assert.equal(r.toPut[0].daNhapMay, undefined);
 });
+test('daNhapMay của việc: gộp theo updatedAt như mọi trường khác', () => {
+  const may = [{ id: 'v1', text: 'Việc', date: '2026-11-23', updatedAt: 100 }];
+  const r = mergeRows(may, [{ id: 'v1', text: 'Việc', date: '2026-11-23', daNhapMay: true, updatedAt: 300 }]);
+  assert.equal(r.updated, 1);
+  assert.equal(r.toPut[0].daNhapMay, true);
+  // máy mới hơn đã tắt dấu → file cũ hơn không bật lại
+  const r2 = mergeRows([{ id: 'v1', daNhapMay: false, updatedAt: 500 }], [{ id: 'v1', daNhapMay: true, updatedAt: 300 }]);
+  assert.equal(r2.toPut.length, 0);
+});

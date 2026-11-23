@@ -101,7 +101,7 @@ const measure = (page) => page.evaluate((sels) => {
   }
   const khac = [];
   for (const e of document.querySelectorAll('button, label.btn')) {
-    if (!vis(e) || sels.some((s) => e.matches(s))) continue;
+    if (!vis(e) || sels.some((s) => e.matches(s)) || e.matches('.tag-may')) continue; // .tag-may: chip 26px nhưng vùng chạm 44px bằng ::after (đã kiểm riêng bằng elementFromPoint)
     const r = e.getBoundingClientRect();
     if (r.height < 43.5 || r.width < 43.5) khac.push(`${e.className || e.tagName} "${name(e)}" ${Math.round(r.width)}×${Math.round(r.height)}`);
   }
@@ -2468,7 +2468,7 @@ for (const [rong, dark] of [[393, false], [393, true], [320, false], [320, true]
   await page.getByLabel('Nội dung công việc').fill('Thử nhãn máy tính');
   await page.getByRole('button', { name: 'Thêm việc', exact: true }).tap();
   await page.waitForTimeout(500);
-  T.dongViec = await page.evaluate(() => { const r = [...document.querySelectorAll('.swipe')].find((e) => /Thử nhãn máy tính/.test(e.textContent)); return r ? { mt: !!r.querySelector('.tag-dot[aria-label="Máy tính"] svg'), chuVip: [...r.querySelectorAll('.tag-dot')].map((x) => x.textContent.trim() || x.getAttribute('aria-label')) } : null; });
+  T.dongViec = await page.evaluate(() => { const r = [...document.querySelectorAll('.swipe')].find((e) => /Thử nhãn máy tính/.test(e.textContent)); return r ? { mt: !!r.querySelector('.tag-dot[aria-label="Máy tính"] svg, .tag-may svg'), chuVip: [...r.querySelectorAll('.tag-dot')].map((x) => x.textContent.trim() || x.getAttribute('aria-label')) } : null; });
   if (!T.dongViec || !T.dongViec.mt) E22('dòng việc không hiện biểu tượng máy tính: ' + JSON.stringify(T.dongViec));
   if (dark === false && rong === 393) {
     // chi tiết việc: 9 nhãn xuống dòng gọn, không tràn
@@ -2518,12 +2518,32 @@ for (const dark of [false, true]) {
   const mauTat = await dong('G06').locator('.pat-may').evaluate((b) => ({ nen: getComputedStyle(b).backgroundColor, chu: getComputedStyle(b).color }));
   if (mauTat.nen !== 'rgba(0, 0, 0, 0)' || mauTat.chu !== (await mauBien(page, '--muted'))) E22('màu nút tắt phải là nét --muted, không nền: ' + JSON.stringify(mauTat));
   await chup(page, 'iphone-kham-may-tinh' + sfx, true);
-  // chạm lần nữa thì tắt; vuốt phải (đã khám) vẫn riêng
+  // 23/11: đã bật thì chạm 1 lần KHÔNG đổi gì; chạm 2 lần nhanh mở chi tiết bé, có công tắc "Đã nhập máy" để tắt
+  await page.waitForTimeout(500);
   await nutG05.tap();
-  await page.waitForTimeout(300);
-  if ((await nutG05.getAttribute('aria-pressed')) !== 'false') E22('chạm lần hai không tắt');
-  await nutG05.tap();
-  await page.waitForTimeout(300);
+  await page.waitForTimeout(500);
+  if ((await nutG05.getAttribute('aria-pressed')) !== 'true' || (await page.locator('.sheet-be').count())) E22('đã bật, chạm 1 lần phải không làm gì');
+  {
+    const c = await tamDiem(nutG05);
+    await page.touchscreen.tap(c.x, c.y);
+    await page.waitForTimeout(80);
+    await page.touchscreen.tap(c.x, c.y);
+  }
+  await page.waitForTimeout(700);
+  if ((await page.locator('.sheet-be').count()) !== 1) E22('chạm 2 lần nhanh phải mở chi tiết bé');
+  else {
+    const ct = page.locator('.sheet-be').getByRole('switch', { name: 'Đã nhập máy', exact: true });
+    T.congTac = { thay: await ct.count(), batDau: await ct.getAttribute('aria-checked'), cao: Math.round((await ct.boundingBox()).height) };
+    if (T.congTac.thay !== 1 || T.congTac.batDau !== 'true' || T.congTac.cao < 44) E22('công tắc "Đã nhập máy" trong chi tiết bé: ' + JSON.stringify(T.congTac));
+    await chup(page, 'iphone-chi-tiet-be-nhap-may' + sfx, true);
+    await ct.tap();
+    await page.waitForTimeout(400);
+    const beTat = (await docBang(page, 'exam_patients')).find((p) => p.code === 'G05' && !p.deleted);
+    if (beTat?.daNhapMay !== false || (await ct.getAttribute('aria-checked')) !== 'false') E22('công tắc không tắt được: ' + beTat?.daNhapMay);
+    await page.getByRole('button', { name: 'Đóng chi tiết', exact: true }).tap();
+    await page.waitForTimeout(700);
+    if ((await nutG05.getAttribute('aria-pressed')) !== 'false') E22('sau khi tắt ở chi tiết, nút máy tính phải tắt');
+  }
   await ctx.close();
 }
 
@@ -4538,6 +4558,155 @@ for (const dark of [false, true]) {
   if (hQua?.daNhapMay) E23('không được ghi vào dòng của hôm qua');
   await chup(page, 'iphone-kham-hai-ngay-may-tinh' + sfx, true);
   await g.ctx.close();
+}
+// ---------- 23/11 (2): thanh thêm việc kính mờ đè lên danh sách; 2 hàng chip tràn sát mép bo; chip máy tính trên dòng việc ----------
+for (const [rong, dark] of [[393, false], [393, true], [320, false], [320, true]]) {
+  const sfx = (dark ? '-toi' : '-sang') + (rong === 320 ? '-320' : '');
+  const { ctx, page } = await moApp({ ...(rong === 320 ? OPTS320 : IPHONE_OPTS), colorScheme: dark ? 'dark' : 'light' });
+  const T = ketQua.thuChucNang['kinhMo' + sfx] = {};
+  const E = (m) => ketQua.loi.push('kính mờ' + sfx + ': ' + m);
+  // thêm 2 việc có nhãn MT (nhãn đặt sau XN để chip máy tính nằm cuối cụm): một chưa nhập, một đã nhập máy; rồi nạp lại trang
+  await page.evaluate(async () => {
+    const db = await new Promise((res, rej) => { const r = indexedDB.open('ghichu-sosinh'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+    const t0 = Date.now();
+    const tx = db.transaction('tasks', 'readwrite');
+    [['mt-1', 'Nhập y lệnh vào máy giường 5', false], ['mt-2', 'Nhập kết quả xét nghiệm giường 9', true]].forEach(([id, text, may], i) =>
+      tx.objectStore('tasks').put({ id, deleted: false, createdAt: t0 + i, updatedAt: t0 + i, deviceId: 'mau', date: '2026-10-21', zone: 'NICU', tags: ['XN', 'MT'], text, done: false, ...(may ? { daNhapMay: true } : {}) }));
+    await new Promise((r) => { tx.oncomplete = r; });
+    db.close();
+  });
+  await page.reload();
+  await page.waitForSelector('.phone-app');
+  await page.waitForTimeout(500);
+  const form = page.locator('.task-form-ph');
+  const cuonMain = (conLai) => page.evaluate((d) => { const m = document.querySelector('.ph-main'); m.scrollTop = m.scrollHeight - m.clientHeight - d; }, conLai);
+  // --- A. kính mờ: nằm đè lên danh sách, nền bán trong suốt + blur, việc cuối cuộn được lên trên thanh, việc ở giữa lọt dưới thanh ---
+  await cuonMain(0);
+  await page.waitForTimeout(200);
+  T.thuGon = await form.evaluate((f) => {
+    const cs = getComputedStyle(f), m = document.querySelector('.ph-main'), fr = f.getBoundingClientRect();
+    const rows = [...m.querySelectorAll('.task-row')], cuoi = rows[rows.length - 1].getBoundingClientRect();
+    const alpha = (cs.backgroundColor.match(/rgba?\(([^)]+)\)/)?.[1].split(',').map(Number) || [0, 0, 0, 1])[3] ?? 1;
+    return { viTri: cs.position, blur: cs.backdropFilter || cs.webkitBackdropFilter, alpha, daySoVoiMan: Math.round(innerHeight - fr.bottom), padDuoiList: Math.round(parseFloat(getComputedStyle(m).paddingBottom)), viecCuoiDay: Math.round(cuoi.bottom), dinhThanh: Math.round(fr.top), listDay: Math.round(m.getBoundingClientRect().bottom), ngang: document.documentElement.scrollWidth <= innerWidth + 1 };
+  });
+  const g = T.thuGon;
+  if (g.viTri !== 'absolute') E('thanh thêm việc phải nằm đè lên danh sách (position absolute): ' + JSON.stringify(g));
+  if (!/blur/.test(g.blur || '') || !(g.alpha > 0 && g.alpha < 1)) E('thanh thiếu backdrop-filter blur hoặc nền bán trong suốt: ' + JSON.stringify(g));
+  if (g.viecCuoiDay > g.dinhThanh + 1) E('cuộn hết cỡ mà việc cuối vẫn nằm dưới thanh: ' + JSON.stringify(g));
+  if (g.listDay < g.dinhThanh + 20) E('danh sách phải kéo dài xuống sau thanh (đè lên): ' + JSON.stringify(g));
+  if (!g.ngang) E('trang cuộn ngang');
+  await cuonMain(130);
+  await page.waitForTimeout(250);
+  T.chuaDuoiThanh = await form.evaluate((f) => { const fr = f.getBoundingClientRect(); return [...document.querySelectorAll('.ph-main .task-text')].filter((e) => { const r = e.getBoundingClientRect(); return r.bottom > fr.top + 8 && r.top < fr.bottom - 8; }).length; });
+  if (!T.chuaDuoiThanh) E('không có chữ việc nào lọt dưới thanh để thấy mờ qua kính');
+  await chup(page, 'iphone-kinh-mo-thu-gon' + sfx, true);
+  // --- B. bung: 2 hàng chip cùng cỡ, tràn sát mép bo, chip đầu thẳng hàng với ô nhập lúc chưa vuốt ---
+  await chamO(page, page.getByLabel('Nội dung công việc'));
+  await page.waitForTimeout(400);
+  await cuonMain(200);
+  T.bung = await form.evaluate((f) => {
+    const r = (e) => e.getBoundingClientRect(), fr = r(f), inp = f.querySelector('input'), kz = f.querySelector('.tf-zones'), tg = f.querySelector('.tag-hang');
+    const z0 = kz.querySelector('.chip'), t0 = tg.querySelector('button');
+    return {
+      cao: [Math.round(r(z0).height), Math.round(r(t0).height)], chu: [getComputedStyle(z0).fontSize, getComputedStyle(t0).fontSize], bo: parseFloat(getComputedStyle(z0).borderTopLeftRadius),
+      lechTrai: [Math.round(r(z0).left - r(inp).left), Math.round(r(t0).left - r(inp).left)],
+      hangTrai: [Math.round(r(kz).left - fr.left), Math.round(r(tg).left - fr.left)], hangPhai: [Math.round(fr.right - r(kz).right), Math.round(fr.right - r(tg).right)],
+      ngang: document.documentElement.scrollWidth <= innerWidth + 1 && f.scrollWidth <= f.clientWidth + 1
+    };
+  });
+  const b = T.bung;
+  if (b.cao.join() !== '44,44' || b.chu[0] !== b.chu[1] || b.chu[0] !== '13px' || b.bo < 22) E('chip khu phải cùng cỡ (cao 44, chữ 13px, tròn) với hàng nhãn: ' + JSON.stringify(b));
+  if (b.lechTrai.some((x) => Math.abs(x) > 1)) E('lúc chưa vuốt, chip đầu mỗi hàng phải thẳng hàng với ô nhập: ' + JSON.stringify(b));
+  if (b.hangTrai.some((x) => x > 2) || b.hangPhai.some((x) => x > 2)) E('hai hàng chip phải chạy sát mép bo (trái và phải): ' + JSON.stringify(b));
+  if (!b.ngang) E('thanh bung làm trang/thanh cuộn ngang: ' + JSON.stringify(b));
+  T.vuot = await form.evaluate(async (f) => {
+    const r = (e) => e.getBoundingClientRect(), fr = r(f), inp = f.querySelector('input');
+    const out = {};
+    for (const [ten, sel] of [['khu', '.tf-zones'], ['nhan', '.tag-hang']]) {
+      const h = f.querySelector(sel), c0 = h.querySelector('button');
+      h.scrollLeft = 40;
+      await new Promise((x) => setTimeout(x, 80));
+      out[ten] = { dauTrai: Math.round(r(c0).left - r(inp).left), conThay: r(c0).right > fr.left + 2, scrollLeft: Math.round(h.scrollLeft) };
+      h.scrollLeft = h.scrollWidth;
+      await new Promise((x) => setTimeout(x, 80));
+      const cuoi = h.querySelector('button:last-child');
+      out[ten].cuoiCachMep = Math.round(fr.right - r(cuoi).right);
+      h.scrollLeft = 40;
+    }
+    return out;
+  });
+  for (const k of ['khu', 'nhan']) {
+    const v = T.vuot[k];
+    if (v.dauTrai >= -5 || !v.conThay || v.scrollLeft < 30) E('hàng ' + k + ' khi vuốt: chip phải trượt xuống dưới mép bo bên trái (không bị cắt ở đường thẳng hàng ô nhập): ' + JSON.stringify(v));
+    if (v.cuoiCachMep > 16) E('hàng ' + k + ' vuốt hết: chip cuối phải sát mép phải khung (còn ' + v.cuoiCachMep + 'px): ' + JSON.stringify(v));
+  }
+  await page.waitForTimeout(150);
+  await chup(page, 'iphone-kinh-mo-bung' + sfx, true);
+  for (const x of await doCoChu(page)) ketQua.loi.push('iPhone thanh kính mờ bung' + sfx + ': cỡ chữ ngoài thang — ' + x);
+  if (rong === 393) {
+    // --- C. chip máy tính trên dòng việc: bấm được độc lập, vùng chạm 44px, bật xanh nhạt, chạm 2 lần mở chi tiết có công tắc ---
+    await page.touchscreen.tap(60, 45); // thu thanh lại
+    await page.waitForTimeout(400);
+    const hang = page.locator('.swipe', { hasText: 'Nhập y lệnh vào máy giường 5' });
+    await hang.evaluate((e) => e.scrollIntoView({ block: 'center' }));
+    await page.waitForTimeout(300);
+    const chip = hang.locator('.tag-may');
+    const E2 = (m) => ketQua.loi.push('chip máy tính' + sfx + ': ' + m);
+    const thongTin = () => chip.evaluate((x) => ({ tag: x.tagName, pressed: x.getAttribute('aria-pressed'), nhan: x.getAttribute('aria-label') }));
+    const bang = async () => (await docBang(page, 'tasks')).find((t) => t.id === 'mt-1');
+    T.chip = await thongTin();
+    if (T.chip.tag !== 'BUTTON' || T.chip.pressed !== 'false' || T.chip.nhan !== 'Chưa nhập máy tính') E2('chip ban đầu: ' + JSON.stringify(T.chip));
+    let c = await tamDiem(chip);
+    T.vungCham = await page.evaluate(({ x, y }) => [[x + 20, y], [x, y + 20], [x, y - 20]].map(([a, bb]) => !!document.elementFromPoint(a, bb)?.closest('.tag-may')), c);
+    if (c.b.width < 24 || T.vungCham.some((v) => !v)) E2('vùng chạm phải rộng 44px (chạm cách tâm 20px vẫn trúng chip): ' + JSON.stringify(T.vungCham));
+    const chamMot = async () => { c = await tamDiem(chip); await page.touchscreen.tap(c.x, c.y); await page.waitForTimeout(500); };
+    await chamMot();
+    let dbv = await bang();
+    T.sauMot = { ...(await thongTin()), daNhapMay: dbv?.daNhapMay, xong: dbv?.done, bang: await page.locator('.sheet-half').count() };
+    if (T.sauMot.pressed !== 'true' || T.sauMot.nhan !== 'Đã nhập máy tính' || dbv?.daNhapMay !== true || dbv?.done || T.sauMot.bang) E2('chạm 1 lần phải bật, không xong việc, không mở bảng: ' + JSON.stringify(T.sauMot));
+    const mau = await chip.evaluate((x) => ({ nen: getComputedStyle(x).backgroundColor, chu: getComputedStyle(x).color }));
+    if (mau.nen !== (await mauBien(page, '--tint')) || mau.chu !== (await mauBien(page, '--tintInk'))) E2('chip bật phải nền --tint, chữ --tintInk: ' + JSON.stringify(mau));
+    await chup(page, 'iphone-viec-may-tinh-bat' + sfx, true);
+    await chamMot(); // đã bật: chạm 1 lần không làm gì
+    if ((await thongTin()).pressed !== 'true' || (await page.locator('.sheet-half').count()) || (await bang())?.daNhapMay !== true) E2('đã bật, chạm 1 lần phải không đổi gì');
+    c = await tamDiem(chip); // chạm 2 lần nhanh: mở chi tiết việc
+    await page.touchscreen.tap(c.x, c.y);
+    await page.waitForTimeout(80);
+    await page.touchscreen.tap(c.x, c.y);
+    await page.waitForTimeout(700);
+    if ((await page.locator('.sheet-half').count()) !== 1) E2('chạm 2 lần nhanh phải mở chi tiết việc');
+    else {
+      const ct = page.locator('.sheet-half').getByRole('switch', { name: 'Đã nhập máy', exact: true });
+      T.congTac = { thay: await ct.count(), bat: await ct.getAttribute('aria-checked'), cao: Math.round((await ct.boundingBox()).height) };
+      if (T.congTac.thay !== 1 || T.congTac.bat !== 'true' || T.congTac.cao < 44) E2('công tắc trong chi tiết việc: ' + JSON.stringify(T.congTac));
+      await chup(page, 'iphone-chi-tiet-viec-nhap-may' + sfx, true);
+      await ct.tap();
+      await page.waitForTimeout(400);
+      if ((await bang())?.daNhapMay !== false || (await ct.getAttribute('aria-checked')) !== 'false') E2('công tắc không tắt được');
+      await page.locator('.sheet-half').getByRole('button', { name: 'Đóng', exact: true }).first().tap();
+      await page.waitForTimeout(700);
+      if ((await thongTin()).pressed !== 'false') E2('sau khi tắt ở chi tiết, chip phải tắt');
+    }
+    // việc không có nhãn MT: chi tiết không có công tắc
+    await page.locator('.swipe', { hasText: 'Hội chẩn dinh dưỡng giường 7' }).locator('.task-main').first().evaluate((e) => e.scrollIntoView({ block: 'center' }));
+    await page.waitForTimeout(200);
+    const tm = page.locator('.swipe', { hasText: 'Hội chẩn dinh dưỡng giường 7' }).locator('.task-main').first();
+    c = await tamDiem(tm);
+    await page.touchscreen.tap(c.x, c.y);
+    await page.waitForTimeout(80);
+    await page.touchscreen.tap(c.x, c.y);
+    await page.waitForTimeout(700);
+    if ((await page.locator('.sheet-half').count()) !== 1) E2('chạm 2 lần vào thân dòng vẫn phải mở chi tiết như cũ');
+    else if (await page.locator('.sheet-half').getByRole('switch').count()) E2('việc không có nhãn MT không được có công tắc nhập máy');
+    await page.locator('.sheet-half').getByRole('button', { name: 'Đóng', exact: true }).first().tap().catch(() => {});
+    await page.waitForTimeout(700);
+    // bật lại cho ảnh cuối: hai dòng (một vừa bật, một đã bật sẵn)
+    await hang.evaluate((e) => e.scrollIntoView({ block: 'center' }));
+    await page.waitForTimeout(300);
+    await chamMot();
+    await chup(page, 'iphone-viec-may-tinh-bat-2' + sfx, false);
+  }
+  await ctx.close();
 }
 await browser.close();
 server.close();

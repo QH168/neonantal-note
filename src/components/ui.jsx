@@ -66,6 +66,18 @@ export function TrangThaiXong({ xong, gio, onDanhDau, onBo, chuaChu = 'Chưa xon
   );
 }
 
+/** Dòng công tắc nhập máy trong chi tiết việc (nhãn MT) và chi tiết bé: bật hoặc tắt trực tiếp. Công tắc cao 44px. */
+export function CongTacMay({ bat, onDoi, id = 'cong-tac-may' }) {
+  return (
+    <div className="may-hang">
+      <span className="trang-thai-chu" id={id + '-nhan'}>Đã nhập máy</span>
+      <button type="button" role="switch" id={id} className="cong-tac" aria-checked={!!bat} aria-labelledby={id + '-nhan'} onClick={() => onDoi(!bat)}>
+        <span className="cong-tac-ray" aria-hidden="true"><span className="cong-tac-nut" /></span>
+      </button>
+    </div>
+  );
+}
+
 /**
  * Nút gạt "Hôm nay / 2 ngày" (v9.6, bảng 17a, 17c). Mỗi nút cao 44px (canvas vẽ 38px: nâng lên để vùng chạm đủ 44px).
  * `ghiChu`: chữ nhỏ bên phải (ở tab Khám: "Ghép theo phòng và mã").

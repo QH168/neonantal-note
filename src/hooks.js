@@ -8,6 +8,7 @@ import { phongChoXem } from './lib/tong-hop.js';
 import { phongHomNay } from './lib/phong.js';
 import { tachHaiNgay } from './lib/hai-ngay.js';
 import { boDemCham, themCham } from './lib/viec.js';
+import { taoChamHaiLan } from './lib/cham-hai-lan.js';
 import { alive, viecTheoBe } from './lib/chung.js';
 
 /** Bé còn sống của các ngày trong [tu, den] (đã sapBe) và việc còn sống của các bé đó, đã chia theo bé. Đọc theo chỉ mục. */
@@ -102,6 +103,21 @@ export function useChamHaiLan(khiDu) {
   return () => {
     mocs.current = themCham(mocs.current, Date.now());
     if (boDemCham(mocs.current, 2)) { mocs.current = []; khiDu(); }
+  };
+}
+
+/**
+ * Nút "đã nhập máy" (23/11): chạm 1 lần khi đang tắt = bật; đang bật chạm 1 lần = không làm gì; chạm 2 lần nhanh khi đã bật = mở chi tiết để tắt.
+ * Luật nằm ở taoChamHaiLan (src/lib/cham-hai-lan.js). Mỗi nút một bản (useRef). Trả hàm gắn vào onClick; không để cú chạm lan ra dòng chứa nó.
+ */
+export function useChamMay(dangBat, khiBat, khiMo) {
+  const cham = useRef(null);
+  if (!cham.current) cham.current = taoChamHaiLan();
+  return (e) => {
+    e?.stopPropagation?.();
+    const kq = cham.current.cham(Date.now(), !!dangBat);
+    if (kq === 'bat') khiBat();
+    else if (kq === 'mo') khiMo();
   };
 }
 

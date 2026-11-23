@@ -80,3 +80,10 @@ export const khiRoiOThemViec = ({ chu, khuLoc, khuHienTai, nhanHienTai }, zones)
 // để ô chọn khu không làm mất khu hiện tại.
 export const khuDeChon = (zones, khuHienTai) =>
   khuHienTai && !zones.includes(khuHienTai) ? [...zones, khuHienTai] : [...zones];
+
+// "Đã nhập máy" của việc (23/11): trường boolean `daNhapMay`, không đánh chỉ mục. Chưa từng đặt = chưa nhập.
+// Phần thay đổi khi DỜI việc (cùng dòng, đổi ngày) sang ngày sau: đổi `date` và BỎ dấu nếu đang bật (ngày mới bắt đầu lại từ chưa nhập).
+// Việc chưa bật thì chỉ đổi date (không ghi thêm trường).
+export const phanDoiNgayViec = (viec, homNay) => (viec && viec.daNhapMay ? { date: homNay, daNhapMay: false } : { date: homNay });
+// Phần thay đổi khi Hoàn tác dời: trả date cũ, và trả lại dấu nếu lúc dời đang bật (daNhapMayCu = true).
+export const phanHoanTacDoiNgay = (daDoi) => (daDoi && daDoi.daNhapMayCu ? { date: daDoi.dateCu, daNhapMay: true } : { date: daDoi.dateCu });

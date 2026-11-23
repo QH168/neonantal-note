@@ -17,6 +17,9 @@
 /* v9 đợt 9.5 — ngày tương lai trên lịch Khám (chữ nhạt, không chọn được). Sáng: theo bảng 16c/16e; tối: đo 3,3:1 trên bề mặt */
 .th{--lichXa:#9FB1C1}
 .th.dark{--lichXa:#5F7385}
+/* 23/11 — thanh thêm việc kính mờ: --glass = --surface bán trong suốt; --glassIn = nền ô nhập (đặc hơn, chữ gõ vẫn dễ đọc) */
+.th{--glass:rgba(255,255,255,.72);--glassIn:rgba(234,241,247,.9)}
+.th.dark{--glass:rgba(23,33,43,.72);--glassIn:rgba(31,44,56,.9)}
 .th{--undoBg:#12202B;--undoInk:#FFFFFF;--undoAct:#9AD3F5;--undoLine:#12202B}
 .th.dark{--undoBg:#1F2C38;--undoInk:#E8EFF5;--undoAct:#5BB8EE;--undoLine:#3B4E60}
 
@@ -128,9 +131,13 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 /* form thêm việc */
 .task-form-pc{display:flex;flex-direction:column;gap:4px}
 .task-form-bar{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding-top:8px;border-top:1px solid var(--line)}
-.task-form-ph{flex:none;position:relative;z-index:40;display:flex;flex-direction:column;gap:10px;box-sizing:border-box;margin:0 12px calc(8px + env(safe-area-inset-bottom));padding:8px;overflow:hidden;background:var(--surface);border:1px solid var(--line);border-radius:30px;box-shadow:0 6px 20px rgba(0,0,0,.10)} /* thanh nổi kiểu viên thuốc, tách khỏi mép màn hình */
+.task-form-ph{position:absolute;left:0;right:0;bottom:0;z-index:40;display:flex;flex-direction:column;gap:10px;box-sizing:border-box;margin:0 12px calc(8px + env(safe-area-inset-bottom));padding:8px;overflow:hidden;background:var(--glass);-webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%);border:1px solid var(--line);border-radius:30px;box-shadow:0 6px 20px rgba(0,0,0,.10)} /* kính mờ nổi trên danh sách (danh sách cuộn ngầm phía sau, chừa chỗ cuối bằng --tf-cao) */
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.task-form-ph{background:var(--surface)}}
+html.co-form-viec .ph-main{padding-bottom:calc(var(--tf-cao,0px) + 12px)} /* việc cuối cuộn được lên trên thanh */
+.task-form-ph .tf-in{background:var(--glassIn)}
+.task-form-ph .tf-in:focus{background:var(--surface)}
 .th.dark .task-form-ph{box-shadow:0 6px 20px rgba(0,0,0,.45)}
-.task-form-ph.mo{padding:10px 12px;border-radius:24px}
+.task-form-ph.mo{padding:10px 12px;border-radius:24px;background-image:linear-gradient(var(--glass),var(--glass))} /* bung: chồng thêm một lớp kính cho đặc hơn (~0.92), chip khu/nhãn dễ đọc, chữ phía sau chỉ còn mờ */
 .task-form-ph.kb{margin:0 8px 8px;border-radius:24px} /* bàn phím mở: thanh được đẩy lên (Tasks.jsx, theo visualViewport), cách bàn phím 8px, cách mép 8px */
 @media (prefers-reduced-motion:no-preference){.task-form-ph{transition:border-radius .18s ease,padding .18s ease}}
 .tf-row{display:flex;align-items:center;gap:8px}
@@ -189,7 +196,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .pc-detail{flex:1 1 340px;max-width:420px;padding:16px;display:flex;flex-direction:column;gap:14px;position:sticky;top:16px;max-height:calc(100vh - 32px);overflow-y:auto}
 
 /* ===== iPhone ===== */
-.phone-app{height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden;overflow:clip}
+.phone-app{position:relative;height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden;overflow:clip}
 /* Đầu trang iPhone (phiếu 2026-11-09, mức 2, bản vẽ bảng 20 và 21): hàng đầu = ngày · tiến độ + tiêu đề, Lịch, "…"; hàng hai = Việc/Khám + "2 ngày".
    Đỉnh danh sách ở khoảng 132px (padding trên 14 + hàng đầu 44 + khe 10 + hàng hai 52 + 12). Không còn thanh tiến độ, hàng .ph-gat, nút /a và đám mây ở đầu trang. */
 .ph-head{position:relative;z-index:20;flex:none;padding:calc(14px + env(safe-area-inset-top)) 16px 0;display:flex;flex-direction:column;gap:10px}
@@ -294,7 +301,21 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .tag-btn.co-bt{display:flex;align-items:center;justify-content:center}.tag-btn .tag-ic{width:22px;height:22px}
 .pri-pick.tag-hang{flex-wrap:wrap}.pri-pick.tag-hang .pri-btn{flex:none}
 .task-form-ph .pri-pick.tag-hang,.sheet-ph .pri-pick.tag-hang{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;margin-right:-16px;padding:2px 16px 2px 0;-webkit-overflow-scrolling:touch} /* 9 nÃºt nhÃ£n: má»™t hÃ ng vuá»‘t ngang Ä‘Æ°á»£c, khÃ´ng trÃ n trang */
-.task-form-ph .chips-sheet,.task-form-ph .pri-pick.tag-hang{margin-right:-12px;padding-right:12px} /* hàng vuốt ngang chạy tới mép trong khung bo, phần thừa bị cắt theo góc bo */
+.task-form-ph .chips-sheet,.task-form-ph .pri-pick.tag-hang{margin-left:-12px;margin-right:-12px;padding-left:12px;padding-right:12px;scroll-padding-inline:12px} /* 2 hàng chip tràn sát mép bo của khung (trái và phải): -12px = lề ngang của khung; lúc chưa vuốt chip đầu vẫn thẳng hàng với ô nhập */
+.task-form-ph .tf-zones .chip{height:44px;padding:0 16px;font-size:13px;font-weight:600;letter-spacing:-.02em} /* cùng cỡ chữ 13px và cao 44px như hàng nhãn bên dưới (.tag-btn) */
+.tag-may{border:0;padding:0;position:relative;touch-action:manipulation;cursor:pointer}
+.tag-may::after{content:"";position:absolute;inset:-9px} /* vùng chạm 44px quanh chip 26px */
+.tag-may[aria-pressed="true"]{background:var(--tint);color:var(--tintInk);box-shadow:inset 0 0 0 1.5px var(--accent)}
+.tag-may:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.may-hang{flex:none;display:flex;align-items:center;gap:10px;min-height:48px;padding:0 2px 0 12px;border-radius:12px;background:var(--bg)}
+.may-hang .trang-thai-chu{color:var(--ink)}
+.cong-tac{flex:none;width:56px;height:44px;padding:0;border:0;background:transparent;display:flex;align-items:center;justify-content:center;touch-action:manipulation}
+.cong-tac-ray{width:48px;height:28px;border-radius:14px;background:var(--edge);display:block;position:relative}
+.cong-tac-nut{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px var(--shadow)}
+.cong-tac[aria-checked="true"] .cong-tac-ray{background:var(--accent)}
+.cong-tac[aria-checked="true"] .cong-tac-nut{left:23px}
+.cong-tac:focus-visible{outline:2px solid var(--accent);outline-offset:0;border-radius:12px}
+@media (prefers-reduced-motion:no-preference){.cong-tac-ray{transition:background-color .15s ease}.cong-tac-nut{transition:left .15s ease}}
 .pat-may{flex:none;width:44px;height:44px;margin:0 0 0 2px;padding:0;border:0;border-radius:12px;background:transparent;color:var(--muted);display:flex;align-items:center;justify-content:center;touch-action:manipulation}
 .pat-may[aria-pressed="true"]{background:var(--tint);color:var(--tintInk)}
 .pat-may:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}

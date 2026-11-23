@@ -1,16 +1,16 @@
 // Mục Việc: khu vực, danh sách theo khu, form thêm việc, lịch.
 import { useRef, useState, useEffect, useMemo } from 'react';
 import { ZONES, LEGACY_ZONES } from '../db.js';
-import { addTask, toggleTask, cycleUrgency, removeTask, khoiPhucTask, setTaskTags, setTaskNote, setTaskText, setTaskZone, doiViecSangHomNay, hoanTacDoiViec } from '../lib/actions.js';
+import { addTask, toggleTask, cycleUrgency, removeTask, khoiPhucTask, setTaskTags, setTaskNote, setTaskText, setTaskZone, doiViecSangHomNay, hoanTacDoiViec, setViecDaNhapMay } from '../lib/actions.js';
 import { parseIso, fmtDM } from '../lib/dates.js';
 import { demViecChuaXong, ngaySotGanNhat } from '../lib/lich.js';
 import { TAGS, laViecMoi, batTatNhan, sapViec, khuHienThi, khuDeChon, gioXong, chuanTenViec, khiRoiOThemViec } from '../lib/viec.js';
 import { nhomTheo } from '../lib/chung.js';
-import { useBanPhim, useChamHaiLan, useTuLuu } from '../hooks.js';
+import { useBanPhim, useChamHaiLan, useChamMay, useTuLuu } from '../hooks.js';
 import { useVietTat } from './VietTat.jsx';
 import { KhungLich } from './Lich.jsx';
 import { useHoanTac } from './HoanTac.jsx';
-import { PriDot, PRI_NAME, Chevron, SwipeRow, TagDot, TickOk, TrangThaiXong, mauNhan, hinhNhan, TEN_BIEU_TUONG, Sheet, PlusIcon, DongBtn, DauChiTietViec, ChanChiTietViec, giuConTro, useDongSheet } from './ui.jsx';
+import { PriDot, PRI_NAME, Chevron, SwipeRow, TagDot, TickOk, TrangThaiXong, mauNhan, hinhNhan, TEN_BIEU_TUONG, Sheet, PlusIcon, DongBtn, DauChiTietViec, ChanChiTietViec, giuConTro, useDongSheet, MayTinhIcon, CongTacMay } from './ui.jsx';
 
 /** Thanh khu vực: dạng cột (PC) hoặc chip vuốt ngang (iPhone). */
 export function ZoneNav({ dayTasks, active, onPick, chips }) {
@@ -85,6 +85,8 @@ function TaskDetail({ t, wide, onClose, onDoi = null }) {
         <span className="sheet-nhan">Nhãn, chạm để bật hoặc tắt</span>
         <TagBtns tags={tags} label="Nhãn của việc" onToggle={(tag) => setTaskTags(t, batTatNhan(t.tags, tag))} />
       </div>
+      {/* công tắc chỉ có ở việc gắn nhãn MT (chỉ những việc đó có chip máy tính để bật) */}
+      {tags.includes('MT') && <CongTacMay id="cong-tac-may-viec" bat={!!t.daNhapMay} onDoi={(v) => setViecDaNhapMay(t.id, v)} />}
       <label htmlFor="ghichu-viec" className="sheet-nhan">Ghi chú</label>
       <textarea id="ghichu-viec" className="sheet-note" placeholder="Ghi chú… (gõ / để viết tắt)" {...vtNote.props} />
       {vtNote.strip}
@@ -93,6 +95,23 @@ function TaskDetail({ t, wide, onClose, onDoi = null }) {
       {onDoi && <DongBtn className="btn doi-hom-nay" onClose={async () => { await onDoi(t); onClose(); }}>Dời sang hôm nay</DongBtn>}
       <ChanChiTietViec onXoa={xoaViec} onClose={onClose} />
     </Sheet>
+  );
+}
+
+/**
+ * Chip máy tính (nhãn MT) trên dòng việc: nút bấm riêng (vùng chạm 44px bằng ::after trong CSS).
+ * Chạm 1 lần khi tắt = bật "đã nhập máy"; đã bật chạm 1 lần = không làm gì; chạm 2 lần nhanh = mở chi tiết việc để tắt.
+ * Cú chạm không lan ra dòng (không tính chạm thân dòng, không bắt đầu vuốt).
+ */
+function ChipMayViec({ t, onMo }) {
+  const bat = !!t.daNhapMay;
+  const cham = useChamMay(bat, () => setViecDaNhapMay(t.id, true), () => onMo(t.id));
+  return (
+    <button type="button" className="tag-dot tag-may" style={{ ...mauNhan('MT'), opacity: t.done ? 0.5 : 1 }}
+      aria-pressed={bat} aria-label={bat ? 'Đã nhập máy tính' : 'Chưa nhập máy tính'}
+      onPointerDown={(e) => e.stopPropagation()} onClick={cham}>
+      <MayTinhIcon />
+    </button>
   );
 }
 
@@ -128,7 +147,7 @@ function TaskRow({ t, chips, onOpen }) {
       {moi ? (
         tags.length > 0 && (
           <div className="tag-zone" onClick={tapBody}>
-            {tags.map((x) => <TagDot key={x} tag={x} faded={t.done} />)}
+            {tags.map((x) => (x === 'MT' ? <ChipMayViec key={x} t={t} onMo={onOpen} /> : <TagDot key={x} tag={x} faded={t.done} />))}
           </div>
         )
       ) : (

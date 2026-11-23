@@ -2,17 +2,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   addRoom, renameRoom, removeRoom, khoiPhucRoom, addPatient, updatePatient, setPatientDone, removePatient,
-  addTodo, toggleTodo, removeTodo, khoiPhucTodo, setTodoText, copyPatientsFrom, batTatDaNhapMay
+  addTodo, toggleTodo, removeTodo, khoiPhucTodo, setTodoText, copyPatientsFrom, setDaNhapMay
 } from '../lib/actions.js';
 import { calcAge, gaFmt, copyText } from '../lib/clinical.js';
 import { addDays, fmtDM } from '../lib/dates.js';
 import { gioXong, chuanTenViec } from '../lib/viec.js';
 import { nhomTheo } from '../lib/chung.js';
-import { useBaoTam, useChamHaiLan, useTuLuu } from '../hooks.js';
+import { useBaoTam, useChamHaiLan, useChamMay, useTuLuu } from '../hooks.js';
 import { useVietTat } from './VietTat.jsx';
 import { useHoanTac } from './HoanTac.jsx';
 import { mucTangGiamCan } from '../lib/hai-ngay.js';
-import { Chevron, XIcon, SheetHead, SwipeRow, Sheet, DongBtn, TickOk, TrangThaiXong, TrashIcon, PlusIcon, MayTinhIcon, DauChiTietViec, ChanChiTietViec, giuConTro } from './ui.jsx';
+import { Chevron, XIcon, SheetHead, SwipeRow, Sheet, DongBtn, TickOk, TrangThaiXong, TrashIcon, PlusIcon, MayTinhIcon, DauChiTietViec, ChanChiTietViec, giuConTro, CongTacMay } from './ui.jsx';
 
 const chuanChuViec = (s) => String(s ?? '').normalize('NFC').trim().replace(/\s+/g, ' ').toLowerCase();
 
@@ -128,6 +128,19 @@ export function RoomManager({ rooms, roomUse, roomUsePast = {}, homNay, onClose 
  * Bé đã khám vuốt phải chỉ nhúc nhích. Chạm 1 lần (hoặc Tab + Enter) mở chi tiết; SwipeRow chặn cú click ngay sau khi vuốt.
  * Đã khám: chữ nhạt (--muted), không gạch ngang, tích xanh cuối dòng; "Còn n việc" vẫn hiện để không sót việc.
  */
+/**
+ * Nút máy tính "đã nhập máy" của bé (tab Khám, 1 ngày và 2 ngày): chạm 1 lần khi tắt = bật; đã bật chạm 1 lần = không làm gì;
+ * chạm 2 lần nhanh = `onMo` (mở chi tiết bé, có công tắc để tắt). Không lan ra dòng chứa nó.
+ */
+export function NutMayBe({ p, onMo }) {
+  const bat = !!p.daNhapMay;
+  const cham = useChamMay(bat, () => setDaNhapMay(p.id, true), onMo);
+  return (
+    <button type="button" className="pat-may" aria-pressed={bat} aria-label={bat ? 'Đã nhập máy tính' : 'Chưa nhập máy tính'}
+      onPointerDown={(e) => e.stopPropagation()} onClick={cham}><MayTinhIcon size={22} className="" /></button>
+  );
+}
+
 function PatientRow({ p, todos, selected, onOpen }) {
   const left = todos.filter((t) => !t.done).length;
   const sub = [gaFmt(p.ga), p.wt ? p.wt + ' g' : ''].filter(Boolean).join(', ') || 'Chưa có thông tin';
@@ -147,8 +160,7 @@ function PatientRow({ p, todos, selected, onOpen }) {
         </span>
       </button>
       {/* "Đã nhập máy tính" (22/11): nút riêng, ngay bên trái nhãn "Còn n việc"; độc lập với vuốt phải (đã khám) và với mở chi tiết */}
-      <button type="button" className="pat-may" aria-pressed={!!p.daNhapMay} aria-label={p.daNhapMay ? 'Đã nhập máy tính' : 'Chưa nhập máy tính'}
-        onClick={(e) => { e.stopPropagation(); batTatDaNhapMay(p); }}><MayTinhIcon size={22} className="" /></button>
+      <NutMayBe p={p} onMo={onOpen} />
       {left > 0 && <span className="left-badge" onClick={onOpen}>Còn {left} việc</span>}
       {p.done && <TickOk nhan="Đã khám" />}
     </SwipeRow>
@@ -375,6 +387,8 @@ export function PatientDetail({ p, todos, onClose, wide = false, phong = '', dem
       <label htmlFor="ghichu-be" className="sheet-nhan">{dem ? 'Ghi chú hôm nay' : 'Ghi chú'}</label>
       {vtNote.strip}
       <textarea id="ghichu-be" rows={3} className="be-note" placeholder="Ghi chú… (gõ / để viết tắt)" {...vtNote.props} />
+
+      <CongTacMay id="cong-tac-may-be" bat={!!p.daNhapMay} onDoi={(v) => setDaNhapMay(p.id, v)} />
 
       <TrangThaiXong xong={!!p.done} gio={gioXong(p.doneAt)} chuaChu="Chưa khám" xongChu="Đã khám"
         nutDanhDau="Hoàn tất khám" nutBo="Bỏ đánh dấu đã khám"

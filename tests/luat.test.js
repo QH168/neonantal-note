@@ -437,7 +437,7 @@ test('v9.6: Khám 2 ngày chỉ ghi qua chepMotBe và PatientDetail của dòng 
   const s = boChuThich(read('src/components/KhamHaiNgay.jsx'));
   const nhap = [...s.matchAll(/import\s*\{([^}]*)\}\s*from\s*'([^']+)'/g)];
   const tuActions = nhap.filter((m) => /actions\.js$/.test(m[2])).flatMap((m) => m[1].split(',').map((x) => x.trim()).filter(Boolean));
-  assert.deepEqual(tuActions, ['chepMotBe', 'batTatDaNhapMay'], '23/11: thêm nút "đã nhập máy tính" cho dòng HÔM NAY (batTatDaNhapMay)');
+  assert.deepEqual(tuActions, ['chepMotBe'], '23/11: nút máy tính dùng NutMayBe của Exam.jsx, KhamHaiNgay không tự ghi');
   assert.doesNotMatch(s, /\bdb\./);
   assert.match(s, /ph\.examDate === homNay/);
   assert.match(s, /<BeChiXem /);
@@ -580,7 +580,8 @@ test('22/11 B: nhãn MT hiện bằng biểu tượng máy tính (không chữ "
   assert.match(ui, /TEN_BIEU_TUONG = \{ MT: 'Máy tính' \}/);
   assert.match(ui, /hinh \|\| tag/, 'TagDot vẽ hình thay chữ');
   assert.match(read('src/components/Tasks.jsx'), /hinh \|\| tag/, 'nút chọn nhãn vẽ hình thay chữ');
-  for (const f of SRC.filter((x) => /\.jsx$/.test(x))) assert.doesNotMatch(read(f), /Đã nhập máy(?!\s*tính)/, f + ': không ghi chữ "Đã nhập máy" trên nhãn');
+  // (23/11: chữ "Đã nhập máy" chỉ được ghi ở dòng công tắc CongTacMay trong bảng chi tiết, không trên nhãn/chip)
+  for (const f of SRC.filter((x) => /\.jsx$/.test(x))) assert.doesNotMatch(read(f).replace(/export function CongTacMay[\s\S]*?\r?\n}\r?\n/, ''), /Đã nhập máy(?!\s*tính)/, f + ': không ghi chữ "Đã nhập máy" trên nhãn');
   const V = bienMau();
   for (const che of ['sang', 'toi']) for (const k of ['VIP', 'G', 'ST', 'MT']) {
     assert.ok(V[che]['--t' + k] && V[che]['--t' + k + 'i'], `${che} thiếu --t${k}`);
@@ -590,10 +591,11 @@ test('22/11 B: nhãn MT hiện bằng biểu tượng máy tính (không chữ "
 
 test('22/11 C: nút "đã nhập máy tính" trên dòng bé: aria-pressed, aria-label, gọi batTatDaNhapMay, nằm trước nhãn "Còn n việc", chỉ ở danh sách hôm nay', () => {
   const ex = read('src/components/Exam.jsx');
-  assert.match(ex, /className="pat-may" aria-pressed=\{!!p\.daNhapMay\}/);
+  assert.match(ex, /className="pat-may" aria-pressed=\{bat\}/);
   assert.match(ex, /'Đã nhập máy tính' : 'Chưa nhập máy tính'/);
-  assert.match(ex, /batTatDaNhapMay\(p\)/);
-  assert.ok(ex.indexOf('className="pat-may"') < ex.indexOf('className="left-badge"'), 'nút máy tính bên trái nhãn Còn n việc');
+  assert.match(ex, /setDaNhapMay\(p\.id, true\)/, '23/11: chạm 1 lần chỉ bật');
+  assert.match(ex, /useChamMay\(/, '23/11: chạm 2 lần mở chi tiết (cơ chế chung)');
+  assert.ok(ex.indexOf('<NutMayBe p={p}') < ex.indexOf('className="left-badge"'), 'nút máy tính bên trái nhãn Còn n việc');
   assert.doesNotMatch(read('src/components/KhamNgayTruoc.jsx'), /pat-may|batTatDaNhapMay|setDaNhapMay/, 'ngày trước chỉ xem');
   const css = read('src/App.css');
   assert.match(css, /\.pat-may\{[^}]*width:44px;height:44px/);
@@ -630,10 +632,9 @@ test('22/11: không thêm màu cứng mới ngoài khai báo biến ở nhãn/n�
 // ===== 23/11: nút máy tính ở chế độ 2 ngày; tổng hợp nhiều ngày bỏ dòng "Tuổi thai ghi là…" =====
 test('23/11: chế độ 2 ngày có nút "đã nhập máy tính" trên thẻ có dòng HÔM NAY (không có ở thẻ chỉ hôm qua), cùng kiểu PatientRow', () => {
   const hn = read('src/components/KhamHaiNgay.jsx');
-  assert.match(hn, /\{t\.homNay && \(\s*<button type="button" className="pat-may" aria-pressed=\{!!t\.homNay\.daNhapMay\}/);
-  assert.match(hn, /'Đã nhập máy tính' : 'Chưa nhập máy tính'/);
-  assert.match(hn, /batTatDaNhapMay\(t\.homNay\)/, 'ghi vào dòng HÔM NAY, không bao giờ vào dòng hôm qua');
-  assert.doesNotMatch(hn, /batTatDaNhapMay\(t\.homQua\)/);
+  assert.match(hn, /\{t\.homNay && \(\s*<NutMayBe p=\{t\.homNay\}/, 'chỉ thẻ có dòng HÔM NAY');
+  assert.doesNotMatch(hn, /NutMayBe p=\{t\.homQua\}/, 'không bao giờ ghi vào dòng hôm qua');
+  assert.match(read('src/components/Exam.jsx'), /'Đã nhập máy tính' : 'Chưa nhập máy tính'/);
   assert.match(read('src/App.css'), /\.hn-the \.pat-may\{/);
 });
 

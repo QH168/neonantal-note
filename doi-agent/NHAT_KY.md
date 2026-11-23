@@ -57,6 +57,31 @@
 | 59 | Chưa thử trên iPhone thật. Bảng trượt bàn phím (22/11) mới kiểm bằng giả lập WebKit (mô phỏng, `scripts/gia-lap-iphone.mjs`); cú kéo bằng ngón tay chưa giả lập được. | Lưu ý | Bác sĩ thử trên iPhone: gõ trong chi tiết bé, chi tiết việc, tổng hợp; xem bảng có sát đáy và ô gõ có hiện không. | Giao diện |
 | 60 | Ảnh chuẩn đợt 22/11 chưa lưu. | Đã xong | Bác sĩ duyệt ảnh 23/11/2026; đã lưu ảnh chuẩn bằng `--luu-chuan`. | Giao diện |
 | 61 | Thanh thêm việc iPhone đã đổi thành thanh nổi bo tròn (23/11/2026). Chưa thử trên iPhone và Safari thật, vuốt và Hoàn tác trên WebKit chưa kiểm. Bác sĩ duyệt ảnh 23/11/2026, đã lưu ảnh chuẩn. | Lưu ý | Bác sĩ thử trên iPhone (thanh nổi, bàn phím, Hoàn tác trên thanh); vướng thì giao phiếu chỉnh. | Giao diện |
+| 62 | Thanh kính mờ và chạm 2 lần chip máy tính (đợt 23/11 (2)) chưa thử trên iPhone và Safari thật: độ mờ (blur) của thanh, chạm 2 lần bằng ngón tay, và nhánh dự phòng khi máy không hỗ trợ blur. | Lưu ý | Bác sĩ thử trên iPhone: thanh có làm mờ phần danh sách phía sau không, chạm 2 lần chip máy tính có mở chi tiết không; vướng thì giao phiếu chỉnh. | Giao diện |
+| 63 | Bàn phím ngoài: chạm 2 lần chip máy tính bằng Enter cần hai lần Enter nhanh mới mở chi tiết việc. Vẫn mở được bằng cách chạm dòng việc. | Lưu ý | Chấp nhận; nếu bác sĩ dùng bàn phím ngoài thì hỏi lại có muốn một lần Enter không. | Giao diện |
+| 64 | Bỏ nhãn MT khi việc đang bật "đã nhập máy": cờ `daNhapMay` vẫn nằm trong dữ liệu nhưng không hiện nữa. | Lưu ý | Hỏi bác sĩ: khi bỏ nhãn MT thì cờ có cần tắt theo không. | Thuật toán |
+| 65 | `batTatDaNhapMay` trong `src/lib/actions.js` không còn ai gọi (mã thừa sau đợt 23/11 (2)). | Lưu ý | Đề xuất xoá hàm này; chờ bác sĩ đồng ý rồi mới làm. | Thuật toán |
+
+## 23/11/2026 — Đợt 23/11 (2): thanh kính mờ, chip máy tính chạm 2 lần (đã duyệt ảnh)
+
+Phiếu: `doi-agent/phieu-viec/2026-11-23-kinh-mo-chip-may-tinh.json`. Bác sĩ duyệt cả kế hoạch 23/11/2026 (5 điểm, xem `doi-agent/QUYET_DINH_DA_CHOT.md` mục cuối). Bác sĩ duyệt ảnh 23/11/2026; đã lưu ảnh chuẩn; `npm test` 316/316. Đã commit trên máy; đẩy lên `main` khi bác sĩ nói "đẩy".
+
+- **Bác sĩ thấy gì đổi:**
+  - Trên iPhone, thanh "Ghi việc cần làm…" thành thanh kính mờ đè lên danh sách việc: danh sách cuộn phía sau và hiện mờ qua thanh. Cuối danh sách có khoảng trống để việc cuối cuộn lên trên thanh. Khi bung ra, lớp kính thứ hai làm bảng đặc hơn để chip và nhãn đọc rõ. Thanh Hoàn tác vẫn nằm ngay trên thanh.
+  - Hai hàng chip (khu và nhãn) trong thanh tràn sát mép bo tròn khi vuốt. Lúc chưa vuốt, chip đầu thẳng hàng với ô nhập. Chip khu trong thanh cao 44px, chữ 13px, dạng viên, cùng cỡ với chip nhãn.
+  - Việc có nhãn MT có nút máy tính bấm được ngay trên dòng việc. Chạm 1 lần: bật "đã nhập máy" (xanh dương nhạt, viền xanh). Đã bật thì chạm 1 lần không làm gì. Chạm 2 lần nhanh: mở chi tiết việc có công tắc "Đã nhập máy" để tắt. Chạm phần còn lại của dòng như cũ.
+  - Tab Khám: nút máy tính ở dòng bé (cả chế độ 1 ngày và 2 ngày) làm đúng như trên; chạm 2 lần mở chi tiết bé có công tắc "Đã nhập máy".
+  - Dời việc sang hôm nay: dấu không đi theo việc. Hoàn tác thì trả lại dấu cũ.
+- **Kỹ thuật:**
+  - `src/App.css` `.task-form-ph`: nền `--glass` (token mới, sáng và tối đều bán trong suốt), blur 18px, bão hoà 160%; máy không hỗ trợ thì `@supports` về nền `--surface`. `.mo` thêm một lớp kính (~0,92) cho bảng bung ra. Ô nhập dùng `--glassIn`. Danh sách có đệm dưới bằng `--tf-cao` + 12px (`src/components/Tasks.jsx`).
+  - Dữ liệu: trường mới `daNhapMay` (true/false) trên việc, ghi qua `setViecDaNhapMay` (`src/lib/actions.js`) có `updatedAt`. Không đổi `db.version(1)`, không đổi định dạng sao lưu; gộp theo `updatedAt`.
+  - Dời việc sang hôm nay (`doiViecSangHomNay`) bỏ dấu qua `phanDoiNgayViec`; Hoàn tác (`hoanTacDoiViec`) trả dấu qua `phanHoanTacDoiNgay` (`src/lib/viec.js`).
+  - Chạm 1 / 2 lần: hàm thuần `taoChamHaiLan` trong `src/lib/cham-hai-lan.js` (cửa sổ 350ms), hook `useChamMay` trong `src/hooks.js`. Nút: `ChipMayViec` (`src/components/Tasks.jsx`) và `NutMayBe` (`src/components/Exam.jsx`, dùng cả ở `src/components/KhamHaiNgay.jsx`). Công tắc `CongTacMay` (`src/components/ui.jsx`) trong chi tiết việc (chỉ việc có MT) và chi tiết bé.
+  - `batTatDaNhapMay` (`src/lib/actions.js`) không còn ai gọi.
+- **Kết quả kiểm:** `npm test` 316/316. Script chụp giao diện ĐẠT. Giả lập WebKit (`scripts/gia-lap-iphone.mjs`) ĐẠT. Kiểm thử độc lập ĐẠT.
+- **Ghi chú nhỏ từ kiểm thử (mức thấp):** phím Enter trên bàn phím ngoài cần hai lần nhanh để mở chi tiết việc (#63); cờ `daNhapMay` còn trong dữ liệu khi bỏ nhãn MT (#64); `batTatDaNhapMay` thừa (#65). Chưa đưa vào bảng: vuốt bắt đầu đúng trên chip không vuốt được dòng; trình đọc màn hình đọc trạng thái hai lần (aria-label và aria-pressed).
+- **Chưa kiểm:** iPhone và Safari thật: độ mờ của thanh, chạm 2 lần bằng ngón tay (cửa sổ 350ms), nhánh dự phòng khi máy không hỗ trợ blur.
+- **Chưa làm:** ảnh chuẩn chưa lưu, chờ bác sĩ duyệt ảnh rồi mới chạy `--luu-chuan`. Bộ ảnh đã lưu của đợt thanh nổi (23/11, đợt 1) không còn khớp thanh kính mờ.
 
 ## 23/11/2026 — Thanh thêm việc nổi bo tròn (đã duyệt ảnh)
 
