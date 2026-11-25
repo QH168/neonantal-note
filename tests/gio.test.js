@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { coGio, docGio, chuGio, thuTu, khoangHopLe, trongKhoang, loiGio, phanBoGio, gopPhut, dauCuoi, khoangTrong, maKhacHopLe, chuanBacSi } from '../src/lib/gio.js';
+import { coGio, docGio, chuGio, thuTu, khoangHopLe, trongKhoang, loiGio, phanBoGio, gopPhut, dauCuoi, khoangTrong, maKhacHopLe, chuanBacSi, thanhGio, beTheoPhong } from '../src/lib/gio.js';
 
 const G = (h, m = 0) => h * 60 + m;
 const be = (n) => 'B' + n;
@@ -353,4 +353,95 @@ test('ngẫu nhiên 3000 lượt: không trùng, không vào khoảng, trong [tu
     // bo nằm trong 0..1439
     for (const x of kq.bo) assert.ok(coGio(x), ctx);
   }
+});
+
+// ---------- thanhGio (thanh giờ của màn hình tab Giờ) ----------
+const gần = (a, b) => Math.abs(a - b) < 1e-9;
+
+test('thanhGio: chưa có giờ nào', () => {
+  assert.equal(thanhGio([], [], 420).coGio, false);
+  assert.equal(thanhGio([{ id: 'a', gio: null }], [{ id: 'k', tu: 500, den: 450 }], 420).coGio, false); // khoảng sai bị bỏ
+  assert.equal(thanhGio(undefined, undefined, 420).coGio, false);
+});
+
+test('thanhGio: một giờ duy nhất phủ kín thanh, chỉ có nhãn đầu', () => {
+  const t = thanhGio([{ id: 'a', gio: G(8, 1) }], [], 420);
+  assert.equal(t.coGio, true);
+  assert.equal(t.tong, 1);
+  assert.equal(t.vach.length, 1);
+  assert.ok(gần(t.vach[0].left, 0) && gần(t.vach[0].rong, 100));
+  assert.deepEqual(t.moc, [{ gio: G(8, 1), left: 0, cho: 'dau' }]);
+});
+
+test('thanhGio: khối tính cả phút cuối, hai mép khít, nhãn khối theo độ rộng', () => {
+  const dong = [1, 2, 3, 4, 5, 6, 7, 8].map((i) => ({ id: 'B' + i, gio: G(8, i) }));
+  const khoang = [{ id: 'k1', tu: G(7, 30), den: G(7, 45), bs: 'BS A' }, { id: 'k2', tu: G(8, 20), den: G(8, 35), bs: '' }, { id: 'k3', tu: G(8, 10), den: G(8, 10), bs: 'BS C' }];
+  const t = thanhGio(dong, khoang, 420);
+  assert.equal(t.dau, G(7, 30));
+  assert.equal(t.cuoi, G(8, 35));
+  assert.equal(t.tong, 66); // 07h30..08h35 gồm cả phút 08h35
+  const k1 = t.khoi.find((k) => k.id === 'k1');
+  const k2 = t.khoi.find((k) => k.id === 'k2');
+  const k3 = t.khoi.find((k) => k.id === 'k3');
+  assert.ok(gần(k1.left, 0));
+  assert.ok(gần(k1.rong, (16 / 66) * 100)); // 07h30..07h45 = 16 phút
+  assert.ok(gần(k2.left + k2.rong, 100)); // khối cuối chạm mép phải
+  assert.equal(k1.nhan, 'BS A');
+  assert.equal(k2.nhan, 'Khác'); // đủ rộng nhưng để trống bác sĩ
+  assert.equal(k3.nhan, ''); // một phút: quá hẹp để ghi chữ
+  assert.ok(t.vach.every((v) => v.left >= 0 && v.left + v.rong <= 100 + 1e-9));
+});
+
+test('thanhGio: nhãn giữa nằm trong 24–76% và không đè hai đầu', () => {
+  const t = thanhGio([{ id: 'a', gio: G(7, 30) }, { id: 'b', gio: G(8, 35) }], [], 420);
+  assert.deepEqual(t.moc.map((m) => [m.cho, chuGio(m.gio)]), [['dau', '07h30'], ['giua', '08h00'], ['cuoi', '08h35']]);
+  for (const m of t.moc.filter((x) => x.cho === 'giua')) assert.ok(m.left > 24 && m.left < 76);
+  // thanh dài cả buổi: bước lớn hơn, vẫn tối đa 3 nhãn giữa
+  const dai = thanhGio([{ id: 'a', gio: G(7) }, { id: 'b', gio: G(19) }], [], 420);
+  assert.ok(dai.moc.filter((x) => x.cho === 'giua').length <= 3);
+  assert.equal(dai.moc[dai.moc.length - 1].cho, 'cuoi');
+});
+
+test('thanhGio: qua nửa đêm theo mốc ngày làm việc', () => {
+  const t = thanhGio([{ id: 'a', gio: G(23, 50) }, { id: 'b', gio: G(0, 10) }], [], 420);
+  assert.equal(t.dau, G(23, 50));
+  assert.equal(t.cuoi, G(0, 10));
+  assert.equal(t.tong, 21);
+  assert.ok(gần(t.vach.find((v) => v.id === 'b').left, (20 / 21) * 100));
+  // đổi mốc về 0: 00h10 là đầu ngày
+  const t0 = thanhGio([{ id: 'a', gio: G(23, 50) }, { id: 'b', gio: G(0, 10) }], [], 0);
+  assert.equal(t0.dau, G(0, 10));
+  assert.equal(t0.cuoi, G(23, 50));
+});
+
+test('thanhGio: vạch xem trước chỉ khi nằm trong thanh', () => {
+  const dong = [{ id: 'a', gio: G(8, 1) }, { id: 'b', gio: G(8, 9) }];
+  const t = thanhGio(dong, [], 420, new Map([['c', G(8, 5)], ['d', G(7, 0)], ['e', G(9, 0)], ['f', null]]));
+  assert.deepEqual(t.tam.map((x) => x.id), ['c']);
+  assert.ok(gần(t.tam[0].left, (4 / 9) * 100) && gần(t.tam[0].rong, (1 / 9) * 100));
+  assert.deepEqual(thanhGio(dong, [], 420, { c: G(8, 5) }).tam.map((x) => x.id), ['c']); // nhận cả object
+  assert.deepEqual(thanhGio([], [], 420, new Map([['c', G(8, 5)]])).tam, []); // chưa có giờ nào: không vẽ
+});
+
+test('thanhGio: đánh dấu giờ trùng bé khác hoặc trùng khoảng', () => {
+  const dong = [{ id: 'a', gio: G(8, 1) }, { id: 'b', gio: G(8, 1) }, { id: 'c', gio: G(8, 3) }, { id: 'd', gio: G(8, 30) }];
+  const khoang = [{ id: 'k', tu: G(8, 28), den: G(8, 40), bs: 'BS A' }];
+  const t = thanhGio(dong, khoang, 420);
+  const trung = t.vach.filter((v) => v.trung).map((v) => v.id).sort();
+  assert.deepEqual(trung, ['a', 'b', 'd']);
+});
+
+test('beTheoPhong: thứ tự phòng rồi thứ tự bé, bé lạc vào nhóm cuối', () => {
+  const rooms = [{ id: 'r1', name: 'Phòng 1' }, { id: 'r2', name: 'Phòng 2' }, { id: 'r3', name: 'Phòng trống' }, { id: 'r4', name: 'Phòng 4', daXoa: true }];
+  const be = [
+    { id: 'p1', code: 'G05', roomId: 'r2' }, { id: 'p2', code: 'G01', roomId: 'r1' }, { id: 'p3', code: 'G02', roomId: 'r1' },
+    { id: 'p4', code: '', roomId: undefined }, { id: 'p5', code: 'G09', roomId: 'r4' }, { id: 'p6', code: 'G77', roomId: 'khong-co' }, { id: 'px', code: 'X', roomId: 'r1', deleted: true }
+  ];
+  const k = beTheoPhong(rooms, be);
+  assert.deepEqual(k.nhom.map((g) => g.ten), ['Phòng 1', 'Phòng 2', 'Phòng 4 (đã xoá)', 'Chưa có phòng']);
+  assert.deepEqual(k.ds.map((p) => p.id), ['p2', 'p3', 'p1', 'p5', 'p4', 'p6']);
+  assert.equal(k.tenPhong.get('p4'), 'Chưa có phòng');
+  assert.equal(k.tenPhong.get('p2'), 'Phòng 1');
+  assert.deepEqual(beTheoPhong([], []).ds, []);
+  assert.deepEqual(beTheoPhong(undefined, undefined).nhom, []);
 });

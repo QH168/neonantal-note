@@ -374,6 +374,15 @@ export function useViecNgay(iso) {
   return { ready: !!ds, tasks: ds || [] };
 }
 
+/**
+ * CHỈ ĐỌC (tab Giờ): dòng bảng gio_may còn sống của MỘT ngày (khoảng người khác dùng và mã khác), theo chỉ mục `date`.
+ * ngay rỗng → rỗng. Chưa đọc xong cũng trả rỗng (cùng một mảng RONG, không tạo mảng mới mỗi lần vẽ).
+ */
+export function useGioMayNgay(ngay) {
+  const ds = useLiveQuery(() => (ngay ? db.gio_may.where('date').equals(ngay).filter(alive).toArray() : RONG), [ngay]);
+  return ds || RONG;
+}
+
 /** CHỈ ĐỌC: bé và việc của MỘT ngày (xem ngày trước). Cùng giá trị trả về với useBeKhoang. */
 export function useBeNgay(iso) {
   return useBeKhoang(iso, iso);

@@ -627,7 +627,7 @@ async function thuThuVien(page, T, tien, cdp) {
     const H = T.hinhDau;
     if (H.lich.w !== 44 || H.lich.h !== 44 || H.ba.w !== 44 || H.ba.h !== 44) ketQua.loi.push('Nút Lịch và "…" phải tròn 44px: ' + JSON.stringify([H.lich, H.ba]));
     if (H.ba.x + H.ba.w !== 393 - 16 || H.lich.x + H.lich.w + 8 !== H.ba.x) ketQua.loi.push('Hàng đầu: "…" sát lề phải 16px, Lịch bên trái cách 8px: ' + JSON.stringify([H.lich, H.ba]));
-    if (H.seg.w !== 168 || H.hai.h !== 52 || H.hai.x + H.hai.w !== 393 - 16 || H.haiPressed !== 'false') ketQua.loi.push('Hàng hai: nút gạt Việc/Khám rộng 168px, nút "2 ngày" cao 52px sát lề phải, mặc định tắt: ' + JSON.stringify([H.seg, H.hai, H.haiPressed]));
+    if (H.seg.w !== 216 || H.hai.h !== 52 || H.hai.x + H.hai.w !== 393 - 16 || H.haiPressed !== 'false') ketQua.loi.push('Hàng hai: nút gạt Việc/Khám/Giờ rộng 216px (26/11: thêm tab Giờ, trước đó 168px), nút "2 ngày" cao 52px sát lề phải, mặc định tắt: ' + JSON.stringify([H.seg, H.hai, H.haiPressed]));
     if (H.h1 !== '20px') ketQua.loi.push('Tiêu đề iPhone phải 20px: ' + H.h1);
     T.dinhDanhSach = await page.locator('.chips .chip').first().evaluate((e) => Math.round(e.getBoundingClientRect().top * 10) / 10);
     if (Math.abs(T.dinhDanhSach - 132) > 2) ketQua.loi.push('Đỉnh hàng chip khu tab Việc ' + T.dinhDanhSach + 'px (mục tiêu 132px)');
@@ -4707,6 +4707,113 @@ for (const [rong, dark] of [[393, false], [393, true], [320, false], [320, true]
     await chup(page, 'iphone-viec-may-tinh-bat-2' + sfx, false);
   }
   await ctx.close();
+}
+// ---------- Tab Giờ (26/11/2026, đợt 2): ảnh iPhone sáng/tối, 320, PC và vài phép kiểm ----------
+// Dữ liệu mẫu: G01… và BS A; không tên người. Ngày làm việc là 21/10/2026 (đồng hồ giả 08:00, mốc 07:00).
+const GIO_NGAY = '2026-10-21';
+const hangKhoang = (id, tu, den, bs) => ({ id, date: GIO_NGAY, loai: 'khoang', tu, den, bs, deleted: false, createdAt: Date.now(), updatedAt: Date.now(), deviceId: 'mau' });
+async function moGio(opts, pc = false, dark = false) {
+  const { ctx, page } = await moApp({ ...opts, colorScheme: dark ? 'dark' : 'light' });
+  const phong = (await docBang(page, 'rooms')).sort((a, b) => a.order - b.order);
+  const ma = [['G01', 0], ['G02', 0], ['G03', 0], ['G05', 1], ['G07', 1], ['G09', 2], ['G11', 2], ['G12', 2]];
+  await chenDb(page, 'exam_patients', ma.map(([code, p], i) => hangBeMoi('gio-' + code, phong[p].id, code, GIO_NGAY, { order: i + 1 })));
+  await chenDb(page, 'gio_may', [hangKhoang('gio-k1', 450, 465, 'BS A'), hangKhoang('gio-k2', 500, 515, 'BS B')]);
+  await page.reload();
+  await page.waitForSelector(pc ? '.pc' : '.phone-app');
+  await page.waitForTimeout(500);
+  await page.locator(pc ? '.pc-top .seg button' : '.ph-seg button', { hasText: /^Giờ$/ }).first().click();
+  await page.waitForTimeout(500);
+  return { ctx, page };
+}
+async function luongGio(dark) {
+  const sfx = dark ? '-toi' : '-sang';
+  const E = (s) => ketQua.loi.push(`tab Giờ${dark ? ' tối' : ''}: ${s}`);
+  const T = (ketQua.thuChucNang['gio' + (dark ? 'Toi' : 'Sang')] = {});
+  const { ctx, page } = await moGio(IPHONE_OPTS, false, dark);
+  const dau = doiMau(await page.locator('.ph-head').innerText());
+  if (!/Giờ nhập máy/.test(dau) || !/Đã có giờ 0\/8/.test(dau)) E('tiêu đề hoặc tiến độ sai: ' + dau);
+  if (await page.locator('.ph-2ngay, [aria-label="Mở lịch"], [aria-label="Lịch khám"]').count()) E('tab Giờ không được có nút "2 ngày" hay nút lịch');
+  await chup(page, 'iphone-gio' + sfx, true);
+  if (!dark) {
+    await page.fill('#g-tu', '0801');
+    await page.keyboard.press('Enter');
+    T.ketQua = doiMau(await page.locator('.g-kq').first().innerText());
+    if (!/8 bé, từ 08h01 đến 08h08, không trùng/.test(T.ketQua)) E('câu kết quả: ' + T.ketQua);
+    await page.dblclick('#g-dien');
+    await page.waitForTimeout(700);
+    const be = (await docBang(page, 'exam_patients')).filter((b) => b.examDate === GIO_NGAY);
+    T.gio = be.map((b) => b.gioNhap).sort((a, b) => a - b).join(',');
+    if (T.gio !== [481, 482, 483, 484, 485, 486, 487, 488].join(',')) E('điền 8 giờ (bấm đúp chỉ được ghi một lần): ' + T.gio);
+    T.thanh = doiMau(await page.locator('.hoantac-chu').first().innerText().catch(() => ''));
+    if (T.thanh !== 'Đã điền 8 giờ vào tab Khám') E('chữ thanh Hoàn tác: "' + T.thanh + '"');
+    if (await page.locator('#g-dien').count()) E('điền đủ thì bảng chọn giờ nhanh phải tự thu gọn');
+    await chup(page, 'iphone-gio-da-dien' + sfx, true);
+    await page.getByRole('button', { name: 'Hoàn tác', exact: true }).click();
+    await page.waitForTimeout(600);
+    const sau = (await docBang(page, 'exam_patients')).filter((b) => b.examDate === GIO_NGAY && Number.isInteger(b.gioNhap));
+    if (sau.length) E('Hoàn tác điền nhanh phải trả giờ về trống, còn ' + sau.length + ' bé có giờ');
+    await choHoanTacTat(page);
+    await page.click('#g-dien'); // điền lại để các dòng "Trong ngày" có giờ cho ảnh sau
+    await page.waitForTimeout(700);
+    await choHoanTacTat(page);
+  } else {
+    await page.click('#g-dien');
+    await page.waitForTimeout(700);
+    await chup(page, 'iphone-gio-da-dien' + sfx, true);
+    await choHoanTacTat(page);
+  }
+  // bảng giờ người khác dùng (nhập 09h05–09h20, BS C)
+  await page.click('[aria-label="Thêm khoảng giờ người khác dùng"]');
+  await page.waitForTimeout(500);
+  await page.fill('#g-b-tu', '0905');
+  await page.fill('#g-b-den', '0920');
+  await page.fill('#g-b-bs', 'BS C');
+  await chup(page, 'iphone-gio-khoang' + sfx, true);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(700);
+  if (!dark) {
+    await page.locator('.g-dong').filter({ has: page.locator('b', { hasText: /^G02$/ }) }).click();
+    await page.waitForTimeout(600);
+    await chup(page, 'iphone-gio-be-sang', true);
+  }
+  await ctx.close();
+  if (dark) return;
+  // trùng giờ: ba bé cùng 08h01, một bé nằm trong khoảng BS B
+  {
+    const g = await moGio(IPHONE_OPTS);
+    await g.page.evaluate(async () => {
+      const db = await new Promise((res) => { const r = indexedDB.open('ghichu-sosinh'); r.onsuccess = () => res(r.result); });
+      const tx = db.transaction('exam_patients', 'readwrite');
+      const st = tx.objectStore('exam_patients');
+      const gio = { 'gio-G01': 481, 'gio-G02': 481, 'gio-G03': 481, 'gio-G05': 510 };
+      for (const [id, v] of Object.entries(gio)) { const r = await new Promise((res) => { const q = st.get(id); q.onsuccess = () => res(q.result); }); st.put({ ...r, gioNhap: v }); }
+      await new Promise((r) => { tx.oncomplete = r; }); db.close();
+    });
+    await g.page.reload();
+    await g.page.waitForSelector('.phone-app');
+    await g.page.locator('.ph-seg button', { hasText: /^Giờ$/ }).first().click();
+    await g.page.waitForTimeout(700);
+    const bao = doiMau(await g.page.locator('.g-bao').innerText().catch(() => ''));
+    if (!/4 bé đang trùng giờ/.test(bao)) E('dải đỏ trùng giờ: "' + bao + '"');
+    await chup(g.page, 'iphone-gio-trung-sang', true);
+    await g.ctx.close();
+  }
+  // 320
+  {
+    const g = await moGio(OPTS320);
+    await chup(g.page, 'iphone-gio-320', true);
+    const hang = await g.page.evaluate(() => [...document.querySelectorAll('.ph-r2 button')].map((b) => { const r = b.getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height)]; }));
+    if (hang.some(([w, h]) => w < 44 || h < 44)) E('hàng tab ở 320 có nút nhỏ hơn 44px: ' + JSON.stringify(hang));
+    if (await g.page.evaluate(() => document.documentElement.scrollWidth > innerWidth)) E('320 bị tràn ngang');
+    await g.ctx.close();
+  }
+}
+for (const toi of [false, true]) { try { await luongGio(toi); } catch (e) { console.error('TAB GIỜ ' + (toi ? 'tối' : 'sáng') + ' dừng: ' + String(e.stack).split('\n').slice(0, 6).join(' | ')); throw e; } }
+for (const toi of [false, true]) {
+  const g = await moGio({ viewport: { width: 1280, height: 860 } }, true, toi);
+  if (!/Đã có giờ/.test(await g.page.locator('.pc-side').innerText())) ketQua.loi.push('tab Giờ PC: thiếu tiến độ ở cột trái');
+  await chup(g.page, 'pc-gio' + (toi ? '-toi' : '-sang'), true);
+  await g.ctx.close();
 }
 await browser.close();
 server.close();

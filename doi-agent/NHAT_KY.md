@@ -62,6 +62,16 @@
 | 64 | Bỏ nhãn MT khi việc đang bật "đã nhập máy": cờ `daNhapMay` vẫn nằm trong dữ liệu nhưng không hiện nữa. | Lưu ý | Hỏi bác sĩ: khi bỏ nhãn MT thì cờ có cần tắt theo không. | Thuật toán |
 | 65 | `batTatDaNhapMay` trong `src/lib/actions.js` không còn ai gọi (mã thừa sau đợt 23/11 (2)). | Lưu ý | Đề xuất xoá hàm này; chờ bác sĩ đồng ý rồi mới làm. | Thuật toán |
 
+## 26/11/2026 — Tab Giờ đợt 2: màn hình tab Giờ (ảnh chờ bác sĩ duyệt, chưa đẩy)
+
+Phiếu: `doi-agent/phieu-viec/2026-11-26-tab-gio-dot2-man-hinh.json`. `npm test` 358/358, dựng đạt, phạm vi đạt, bộ chụp giao diện đạt (chưa lưu ảnh chuẩn), Kiểm thử độc lập ĐẠT.
+
+- **Bác sĩ thấy gì đổi:** tab thứ ba "Giờ": thanh giờ, Chọn giờ nhanh, danh sách Trong ngày, bảng giờ người khác dùng, bảng giờ của một bé. Tab Việc và Khám chỉ khác hàng tab (thêm nút Giờ; ở 320 nút "Về hôm nay" dịch 7px).
+- **Khác bản thử lần 6:** chữ bác sĩ trên thanh giờ nằm trên vạch; mã khác chưa có giờ có dòng ở cuối "Trong ngày" để điền hoặc xoá; điền không được thì báo ở thanh dưới.
+- **Tương phản đo thật:** mọi chữ ≥4,5:1 (thấp nhất 4,73), sáng và tối, 393 / 320 / PC.
+- **Chưa kiểm:** iPhone và Safari thật (bàn phím số), PWA; so ảnh chuẩn (không có sharp).
+- **Biết trước:** "Điền n giờ vào tab Khám" đã ghi vào bé nhưng tab Khám chưa hiện giờ (đợt 3). Bàn phím số iPhone gõ 815, không gõ được 8h15. Tên bác sĩ dài bị cắt "…" ở dòng Trong ngày, xem đủ khi chạm.
+
 ## 26/11/2026 — Tab Giờ đợt 1: dữ liệu và luật giờ nhập máy (chưa có màn hình, chưa đẩy)
 
 Phiếu: `doi-agent/phieu-viec/2026-11-25-tab-gio-dot1-du-lieu.json` (bác sĩ duyệt 25/11/2026). `npm test` 350/350, dựng đạt, Kiểm thử ĐẠT.

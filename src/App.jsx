@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useAppData, useMocNgayLamViec, useNgayLamViec, useViecNgay, useWide, useGiaoDien, useLanMoApp, useGioMay, useBaoTam } from './hooks.js';
-import { ensureSeed, clearDone, khoiPhucNhieu } from './lib/actions.js';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useAppData, useMocNgayLamViec, useNgayLamViec, useViecNgay, useWide, useGiaoDien, useLanMoApp, useGioMay, useBaoTam, useGioMayNgay } from './hooks.js';
+import { ensureSeed, clearDone, khoiPhucNhieu, dongGio } from './lib/actions.js';
+import { beTheoPhong, coGio } from './lib/gio.js';
 import { buildSummary } from './lib/clinical.js';
 import { ZONES } from './db.js';
 import { fmtLong, fmtDM, parseIso } from './lib/dates.js';
@@ -10,6 +11,7 @@ import { ExamActions, RoomManager, RoomList, PatientDetail, SummaryPanel, thongT
 import MenuThem from './components/MenuThem.jsx';
 import KhamNgayTruoc from './components/KhamNgayTruoc.jsx';
 import KhamHaiNgay from './components/KhamHaiNgay.jsx';
+import TabGio, { gioQMacDinh } from './components/Gio.jsx';
 import { LichKham } from './components/Lich.jsx';
 import ThuVien from './components/ThuVien.jsx';
 import { VietTatProvider } from './components/VietTat.jsx';
@@ -39,14 +41,16 @@ function AppNgoai() {
   return <AppChinh mocPhut={mocPhut} homNay={ngay.homNay} homQua={ngay.homQua} ngayLich={ngay.ngayLich} cheDo={giaoDien.cheDo} setCheDo={giaoDien.setCheDo} />;
 }
 
-/** Tiêu đề và dòng ngày ở đầu trang (hàm thuần). `hai` = đang xem 2 ngày ở tab hiện tại. */
-function chuDauTrang({ isTask, isToday, xemTruoc, hai, viewDate, ngayTruoc, homNay, homQua }) {
-  const heading = isTask
-    ? (isToday ? 'Việc hôm nay' : 'Việc ngày ' + fmtDM(viewDate))
-    : (xemTruoc ? 'Khám ngày ' + fmtDM(ngayTruoc) : 'Khám bệnh hôm nay');
+/** Tiêu đề và dòng ngày ở đầu trang (hàm thuần). `hai` = đang xem 2 ngày ở tab hiện tại. Tab Giờ luôn là ngày làm việc hôm nay. */
+function chuDauTrang({ isTask, isGio, isToday, xemTruoc, hai, viewDate, ngayTruoc, homNay, homQua }) {
+  const heading = isGio
+    ? 'Giờ nhập máy'
+    : isTask
+      ? (isToday ? 'Việc hôm nay' : 'Việc ngày ' + fmtDM(viewDate))
+      : (xemTruoc ? 'Khám ngày ' + fmtDM(ngayTruoc) : 'Khám bệnh hôm nay');
   const dateText = hai
     ? `Hôm qua ${fmtDM(homQua)} và hôm nay ${fmtDM(homNay)}`
-    : fmtLong(parseIso(isTask ? viewDate : (ngayTruoc || homNay)));
+    : fmtLong(parseIso(isGio ? homNay : isTask ? viewDate : (ngayTruoc || homNay)));
   // iPhone ghi "Thứ Hai, 09/11", không năm (dòng 2 ngày giữ nguyên)
   return { heading, dateText, dateTextPh: hai ? dateText : dateText.replace(/\/\d{4}$/, '') };
 }
@@ -97,6 +101,9 @@ function AppChinh({ mocPhut, homNay, homQua, ngayLich, cheDo, setCheDo }) {
   const [sumOpen, setSumOpen] = useState(false);
   const [ngayTruoc, setNgayTruoc] = useState(null);  // v9.5: đang xem lại một ngày trước ở tab Khám (chỉ xem); null = hôm nay
   const [lichKham, setLichKham] = useState(false);
+  // tab Giờ: lựa chọn chọn-giờ-nhanh giữ ở đây để đổi tab không mất; qua ngày làm việc mới thì đặt lại hết
+  const [gioQ, setGioQ] = useState(gioQMacDinh);
+  const datGioQ = useCallback((p) => setGioQ((c) => ({ ...c, ...p })), []);
   // bảng dùng chung
   const [backupOpen, setBackupOpen] = useState(false);
   const [vtOpen, setVtOpen] = useState(false);
@@ -107,9 +114,23 @@ function AppChinh({ mocPhut, homNay, homQua, ngayLich, cheDo, setCheDo }) {
 
   // Qua ngày làm việc mới (qua mốc, hoặc mở lại app): đưa mục Việc và Khám về hôm nay
   useEffect(() => { setViewDate(homNay); setCalMonth(monthOf(homNay)); setNgayTruoc(null); }, [homNay]);
+  // tab Giờ: qua ngày làm việc mới thì đặt lại hết (lần vẽ đầu giữ nguyên Từ = giờ máy)
+  const ngayGioTruoc = useRef(homNay);
+  useEffect(() => {
+    if (ngayGioTruoc.current === homNay) return;
+    ngayGioTruoc.current = homNay;
+    setGioQ(gioQMacDinh());
+  }, [homNay]);
 
   // ----- Dữ liệu và số đếm (mỗi số một lượt duyệt, chỉ tính lại khi dữ liệu đổi) -----
   const { tasks, rooms, roomsHomNay, patients, todosByPid, prev, roomUse, roomUsePast, lastExport } = data;
+  // Giờ nhập máy của ngày làm việc: bé theo phòng rồi thứ tự trong phòng, sau đó mã khác (dòng 'le') và khoảng người khác dùng
+  const gioRows = useGioMayNgay(homNay);
+  const gioDl = useMemo(() => {
+    const ph = beTheoPhong(roomsHomNay, patients);
+    return { ...ph, ...dongGio(ph.ds, gioRows) };
+  }, [roomsHomNay, patients, gioRows]);
+  const daCoGio = useMemo(() => gioDl.dong.reduce((n, d) => n + (coGio(d.gio) ? 1 : 0), 0), [gioDl]);
   const dayTasks = useMemo(() => tasks.filter((t) => t.date === viewDate), [tasks, viewDate]);
   const overdue = useMemo(() => tasks.reduce((n, t) => n + (t.date < homNay && !t.done ? 1 : 0), 0), [tasks, homNay]);
   const examLeft = useMemo(
@@ -117,10 +138,13 @@ function AppChinh({ mocPhut, homNay, homQua, ngayLich, cheDo, setCheDo }) {
     [patients, todosByPid]
   );
   const isTask = tab === 'task';
+  const isExam = tab === 'exam';
+  const isGio = tab === 'gio';
   const [done, total] = useMemo(() => {
+    if (isGio) return [daCoGio, gioDl.dong.length];
     const ds = isTask ? dayTasks : patients;
     return [ds.reduce((n, x) => n + (x.done ? 1 : 0), 0), ds.length];
-  }, [isTask, dayTasks, patients]);
+  }, [isTask, isGio, dayTasks, patients, daCoGio, gioDl]);
   const pct = total ? Math.round((done / total) * 100) : 0;
   const isToday = viewDate === homNay;
   const sel = selPid ? patients.find((p) => p.id === selPid) : undefined;
@@ -128,14 +152,15 @@ function AppChinh({ mocPhut, homNay, homQua, ngayLich, cheDo, setCheDo }) {
   const backupDue = !lastExport || Date.now() - lastExport.at > MOT_NGAY_MS;
 
   // ----- Đang xem gì -----
-  const xemTruoc = !isTask && !!ngayTruoc;   // tab Khám đang xem ngày trước
-  // 2 ngày: nút gạt ẩn khi đang xem một ngày khác (lịch Việc, ngày trước của Khám)
-  const coGat = isTask ? isToday : !xemTruoc;
+  const xemTruoc = isExam && !!ngayTruoc;   // tab Khám đang xem ngày trước
+  // 2 ngày: nút gạt ẩn khi đang xem một ngày khác (lịch Việc, ngày trước của Khám); tab Giờ không có
+  const coGat = isGio ? false : isTask ? isToday : !xemTruoc;
   const dang2Viec = isTask && isToday && haiNgay;
-  const dang2Kham = !isTask && !xemTruoc && haiNgay;
-  const dsKham = !isTask && !xemTruoc && !dang2Kham;   // Khám ở chế độ Hôm nay: có "Lấy danh sách", "Quản lý phòng"
-  const { heading, dateText, dateTextPh } = chuDauTrang({ isTask, isToday, xemTruoc, hai: dang2Viec || dang2Kham, viewDate, ngayTruoc, homNay, homQua });
-  const tienDo = xemTruoc ? '' : `${isTask ? 'Đã xong' : 'Đã khám'} ${done}/${total}`;
+  const dang2Kham = isExam && !xemTruoc && haiNgay;
+  const dsKham = isExam && !xemTruoc && !dang2Kham;   // Khám ở chế độ Hôm nay: có "Lấy danh sách", "Quản lý phòng"
+  const { heading, dateText, dateTextPh } = chuDauTrang({ isTask, isGio, isToday, xemTruoc, hai: dang2Viec || dang2Kham, viewDate, ngayTruoc, homNay, homQua });
+  const nhanTienDo = isGio ? 'Đã có giờ' : isTask ? 'Đã xong' : 'Đã khám';
+  const tienDo = xemTruoc ? '' : `${nhanTienDo} ${done}/${total}`;
   // đang TRƯỚC mốc (vd. 02:30 ngày 05/11, mốc 07:00): "hôm nay" của app là ngày làm việc 04/11, ghi rõ để khỏi nhầm
   const truocMoc = homNay !== ngayLich;
 
@@ -156,6 +181,8 @@ function AppChinh({ mocPhut, homNay, homQua, ngayLich, cheDo, setCheDo }) {
   const veHomNayKham = () => setNgayTruoc(null);
   // đổi Hôm nay / 2 ngày: đóng bé và bảng tổng hợp đang mở của chế độ kia, khỏi lẫn dòng hai ngày
   const doiPhamVi = (v) => { setSelPid(null); setSumOpen(false); setHaiNgay(v); };
+  // Từ tab Giờ: "Xem ở tab Khám" = sang tab Khám chế độ Hôm nay (tắt 2 ngày và ngày trước) và mở chi tiết bé đó
+  const xemOKham = (id) => { setTab('exam'); setHaiNgay(false); setNgayTruoc(null); setSumOpen(false); setSelPid(id); };
   const summary = () => buildSummary({ rooms: roomsHomNay, patients, todosByPid });
   // Xoá việc đã xong: một lần Hoàn tác trả lại tất cả việc vừa xoá
   const xoaDaXong = async () => {
@@ -170,10 +197,11 @@ function AppChinh({ mocPhut, homNay, homQua, ngayLich, cheDo, setCheDo }) {
   const tabs = (
     <div className={'seg' + (wide ? '' : ' full')}>
       <button type="button" aria-pressed={isTask} onClick={() => setTab('task')}>Việc</button>
-      <button type="button" aria-pressed={!isTask} onClick={() => setTab('exam')}>Khám</button>
+      <button type="button" aria-pressed={isExam} onClick={() => setTab('exam')}>Khám</button>
+      <button type="button" aria-pressed={isGio} onClick={() => setTab('gio')}>Giờ</button>
     </div>
   );
-  const daiMoc = truocMoc && coGat && (
+  const daiMoc = truocMoc && (coGat || isGio) && (
     <div role="status" className="dai-moc">Ngày làm việc {fmtDM(homNay)} (đang là {gio}, {fmtDM(ngayLich)})</div>
   );
   const examHint = isTask && isToday && examLeft > 0 && (
@@ -189,7 +217,7 @@ function AppChinh({ mocPhut, homNay, homQua, ngayLich, cheDo, setCheDo }) {
           <BackupPanel onClose={() => setBackupOpen(false)} cheDo={cheDo} onDoiCheDo={setCheDo} />
         </Sheet>
       )}
-      {lichKham && !isTask && (
+      {lichKham && isExam && (
         <Sheet label="Lịch khám" className="sheet-lich" wide={wide} onClose={() => setLichKham(false)}>
           <LichKham today={homNay} dangXem={ngayTruoc} wide={wide} onXemNgay={xemNgayTruoc} onVeHomNay={veHomNayKham} onClose={() => setLichKham(false)} />
         </Sheet>
@@ -224,13 +252,13 @@ function AppChinh({ mocPhut, homNay, homQua, ngayLich, cheDo, setCheDo }) {
           {daiMoc}
           {!xemTruoc && (
             <div className="stack8">
-              <div className="row-between muted small"><span>{isTask ? 'Đã hoàn thành' : 'Đã khám'}</span><span>{done}/{total}</span></div>
+              <div className="row-between muted small"><span>{isGio ? 'Đã có giờ' : isTask ? 'Đã hoàn thành' : 'Đã khám'}</span><span>{done}/{total}</span></div>
               <div className="bar"><div style={{ width: pct + '%' }} /></div>
             </div>
           )}
           {gat}
 
-          {!isTask && (
+          {isExam && (
             <button type="button" className={'btn cal-toggle' + (xemTruoc ? ' on' : '')} onClick={() => setLichKham(true)}>
               <CalIcon /><span className="grow left-text">Lịch khám</span>
             </button>
@@ -261,6 +289,9 @@ function AppChinh({ mocPhut, homNay, homQua, ngayLich, cheDo, setCheDo }) {
             {dang2Viec && <ConTuHomQua muc={conHomQua} homNay={homNay} />}
             <TaskGroups dayTasks={dayTasks} active={active} collapsed={collapsed} onToggle={toggleIn(setCollapsed)} />
           </main>
+        ) : isGio ? (
+          <TabGio wide homNay={homNay} mocPhut={mocPhut} gioMay={gio} dong={gioDl.dong} khoang={gioDl.khoang} nhom={gioDl.nhom}
+            tenPhong={gioDl.tenPhong} q={gioQ} datQ={datGioQ} onXemKham={xemOKham} />
         ) : xemTruoc ? (
           <KhamNgayTruoc key={ngayTruoc} wide iso={ngayTruoc} today={homNay} onVeHomNay={veHomNayKham} />
         ) : dang2Kham ? (
@@ -307,11 +338,11 @@ function AppChinh({ mocPhut, homNay, homQua, ngayLich, cheDo, setCheDo }) {
             <button type="button" className="round-btn rel" onClick={() => setCalSheet(true)} aria-label="Mở lịch">
               <CalIcon />{overdue > 0 && <span className="badge">{overdue}</span>}
             </button>
-          ) : (
+          ) : isExam ? (
             <button type="button" className={'round-btn rel' + (xemTruoc ? ' on' : '')} onClick={() => setLichKham(true)} aria-label="Lịch khám">
               <CalIcon />
             </button>
-          )}
+          ) : null}
           <MenuThem key={tab + (dsKham ? 'k' : '')} nhan={menu.nhan} canhBao={backupDue} nhom={menu.nhom} />
         </div>
         {daiMoc}
@@ -335,6 +366,9 @@ function AppChinh({ mocPhut, homNay, homQua, ngayLich, cheDo, setCheDo }) {
           </main>
           <TaskForm variant="ph" date={viewDate} zone={newZone} setZone={setNewZone} tags={newTags} setTags={setNewTags} khuLoc={active} />
         </>
+      ) : isGio ? (
+        <TabGio homNay={homNay} mocPhut={mocPhut} gioMay={gio} dong={gioDl.dong} khoang={gioDl.khoang} nhom={gioDl.nhom}
+          tenPhong={gioDl.tenPhong} q={gioQ} datQ={datGioQ} onXemKham={xemOKham} />
       ) : xemTruoc ? (
         <KhamNgayTruoc key={ngayTruoc} iso={ngayTruoc} today={homNay} onVeHomNay={veHomNayKham} />
       ) : dang2Kham ? (
@@ -354,12 +388,12 @@ function AppChinh({ mocPhut, homNay, homQua, ngayLich, cheDo, setCheDo }) {
             onPick={setViewDate} onClose={() => setCalSheet(false)} />
         </Sheet>
       )}
-      {sel && !isTask && !dang2Kham && (
+      {sel && isExam && !dang2Kham && (
         <Sheet label="Chi tiết bệnh nhân" className="sheet-be" onClose={() => setSelPid(null)}>
           <PatientDetail key={sel.id} p={sel} phong={tenPhong(sel)} todos={todosByPid[sel.id] || []} onClose={() => setSelPid(null)} />
         </Sheet>
       )}
-      {sumOpen && !isTask && !dang2Kham && (
+      {sumOpen && isExam && !dang2Kham && (
         <Sheet label="Tổng hợp y lệnh" onClose={() => setSumOpen(false)}>
           <SummaryPanel build={summary} onClose={() => setSumOpen(false)} />
         </Sheet>

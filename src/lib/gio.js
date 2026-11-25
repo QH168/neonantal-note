@@ -202,3 +202,91 @@ export function chuanBacSi(s) {
   if (typeof s !== 'string') return '';
   return s.trim().replace(/\s+/g, ' ').slice(0, 20);
 }
+
+// ---------- Cho màn hình tab Giờ (đợt 2) ----------
+
+// Khối bác sĩ chỉ hiện chữ khi rộng từ 16% thanh trở lên.
+const RONG_KHOI_CO_CHU = 0.16;
+// Bước nhãn giữa thanh (phút): chọn bước nhỏ nhất để có không quá 4 khoảng.
+const BUOC_NHAN = [5, 10, 15, 30, 60, 120, 180, 360];
+
+/**
+ * Phần tính của thanh giờ (hàm thuần; vị trí là % chiều rộng thanh, 0–100).
+ * Thanh chạy từ giờ đầu đến hết PHÚT của giờ cuối (tong = cuoi + 1 − dau) nên hai mép khít.
+ * dong = [{ id, ma, gio }], khoang = [{ id, tu, den, bs }], duKien = Map hoặc object id → phút (giờ đang xem trước, không bắt buộc).
+ * Trả { coGio:false } khi chưa có giờ nào; ngược lại
+ *  { coGio:true, dau, cuoi (giờ đồng hồ), tong (phút),
+ *    khoi:[{ id, tu, den, bs, left, rong, nhan }]  — khoảng người khác dùng; nhan = chữ hiện trong khối ('' khi hẹp, 'Khác' khi không có bs),
+ *    vach:[{ id, gio, left, rong, trung }]          — giờ của mình,
+ *    tam:[{ id, gio, left, rong }]                  — giờ xem trước, CHỈ giờ nằm trong thanh,
+ *    moc:[{ gio, left, cho:'dau'|'giua'|'cuoi' }]   — nhãn dưới thanh; nhãn giữa chỉ nằm trong 24–76% để không đè hai đầu }.
+ */
+export function thanhGio(dong, khoang, moc, duKien) {
+  const m = mocDung(moc);
+  const xs = cacMoc(dong, khoang, m);
+  if (!xs.length) return { coGio: false, khoi: [], vach: [], tam: [], moc: [] };
+  const dau = Math.min(...xs);
+  const cuoi = Math.max(...xs);
+  const tong = cuoi + 1 - dau;
+  const x = (v) => ((v - dau) / tong) * 100;
+  const rong = (a, z) => ((z + 1 - a) / tong) * 100;
+  const khoi = [];
+  for (const k of khoang || []) {
+    if (!khoangHopLe(k, m)) continue;
+    const a = thuTu(k.tu, m);
+    const z = thuTu(k.den, m);
+    const r = rong(a, z);
+    khoi.push({ id: k.id, tu: k.tu, den: k.den, bs: k.bs || '', left: x(a), rong: r, nhan: r / 100 >= RONG_KHOI_CO_CHU ? k.bs || 'Khác' : '' });
+  }
+  const vach = [];
+  for (const d of dong || []) {
+    if (!d || !coGio(d.gio)) continue;
+    const v = thuTu(d.gio, m);
+    vach.push({ id: d.id, gio: d.gio, left: x(v), rong: rong(v, v), trung: loiGio({ id: d.id, gio: d.gio }, dong, khoang, m).length > 0 });
+  }
+  const tam = [];
+  const cap = duKien instanceof Map ? [...duKien] : duKien && typeof duKien === 'object' ? Object.entries(duKien) : [];
+  for (const [id, g] of cap) {
+    if (!coGio(g)) continue;
+    const v = thuTu(g, m);
+    if (v >= dau && v <= cuoi) tam.push({ id, gio: g, left: x(v), rong: rong(v, v) });
+  }
+  const nhan = [{ gio: dau % NGAY, left: 0, cho: 'dau' }];
+  const buoc = BUOC_NHAN.find((p) => tong / p <= 4) || 360;
+  for (let v = Math.ceil((dau + 1) / buoc) * buoc; v < cuoi; v += buoc) {
+    if (x(v) > 24 && x(v) < 76) nhan.push({ gio: v % NGAY, left: x(v), cho: 'giua' });
+  }
+  if (cuoi > dau) nhan.push({ gio: cuoi % NGAY, left: 100, cho: 'cuoi' });
+  return { coGio: true, dau: dau % NGAY, cuoi: cuoi % NGAY, tong, khoi, vach, tam, moc: nhan };
+}
+
+/**
+ * Chia bé hôm nay theo phòng để vẽ và để chia giờ: thứ tự phòng (rooms đã sắp, vd. roomsHomNay), rồi thứ tự bé trong phòng
+ * (patients giữ nguyên thứ tự đã sắp). Phòng không có bé thì bỏ. Bé không thuộc phòng nào trong rooms (hoặc không có phòng)
+ * vào nhóm cuối "Chưa có phòng". Trả { nhom: [{ id, ten, ds }], ds: [bé theo thứ tự chia], tenPhong: Map idBe → tên phòng }.
+ */
+export function beTheoPhong(rooms, patients) {
+  const theo = new Map();
+  for (const p of patients || []) {
+    if (!p || p.deleted) continue;
+    const k = p.roomId ?? '';
+    if (!theo.has(k)) theo.set(k, []);
+    theo.get(k).push(p);
+  }
+  const nhom = [];
+  const dung = new Set();
+  for (const r of rooms || []) {
+    if (!r || dung.has(r.id)) continue;
+    const ds = theo.get(r.id);
+    if (!ds || !ds.length) continue;
+    dung.add(r.id);
+    const ten = String(r.name ?? '');
+    nhom.push({ id: r.id, ten: r.daXoa && !/đã xoá/.test(ten) ? ten + ' (đã xoá)' : ten, ds });
+  }
+  const lac = [];
+  for (const [k, ds] of theo) if (!dung.has(k)) lac.push(...ds);
+  if (lac.length) nhom.push({ id: '__khong-phong', ten: 'Chưa có phòng', ds: lac });
+  const tenPhong = new Map();
+  for (const g of nhom) for (const p of g.ds) tenPhong.set(p.id, g.ten);
+  return { nhom, ds: nhom.flatMap((g) => g.ds), tenPhong };
+}
