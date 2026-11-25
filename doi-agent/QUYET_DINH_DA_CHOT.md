@@ -139,3 +139,6 @@ Phiếu: `doi-agent/phieu-viec/2026-11-23-kinh-mo-chip-may-tinh.json`. Bác sĩ 
 3. Hai hàng chip trong khung tràn sát mép bo tròn khi vuốt (trái và phải); lúc chưa vuốt, chip đầu thẳng hàng với ô nhập.
 4. Việc có nhãn MT: nút máy tính trên dòng việc bấm được độc lập. Chạm 1 lần bật "đã nhập máy" (xanh dương nhạt như nút máy tính tab Khám). Đã bật thì chạm 1 lần không làm gì. Chạm 2 lần nhanh vào nút mở chi tiết việc có công tắc "Đã nhập máy" để tắt. Chạm phần còn lại của dòng như cũ. Chép hoặc chuyển việc sang ngày sau KHÔNG giữ dấu.
 5. Nút máy tính tab Khám (1 ngày và 2 ngày) cùng cơ chế: chạm 1 lần bật; đã bật chạm 1 lần không làm gì; chạm 2 lần nhanh mở chi tiết bé có công tắc "Đã nhập máy" để tắt.
+
+## Đợt 25/11/2026 — thanh kính mờ mức "Trong" (bác sĩ chọn trên iPhone thật, duyệt ảnh 25/11/2026)
+Phiếu: `doi-agent/phieu-viec/2026-11-25-kinh-mo-muc-trong.json`. Thanh thêm việc iPhone lúc thu gọn: độ đặc thanh 35%, ô nhập 20%, nhoè 8px (sáng và tối); chữ gợi ý màu `--muted`. Lúc bung giữ độ đặc khoảng 92% và nhoè 18px như đợt 23/11 (2); ô đang gõ nền đặc `--surface`.

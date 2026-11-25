@@ -1,0 +1,32 @@
+{
+  "ten": "Đợt 25/11: thanh thêm việc iPhone trong hơn (mức \"Trong\" bác sĩ chọn trên iPhone thật)",
+  "ngay": "2026-11-25",
+  "khuVuc": "Việc (thanh thêm việc iPhone lúc thu gọn)",
+  "loai": "nho",
+  "canBacSiDuyet": true,
+  "trangThai": "Bác sĩ chọn mức Trong và duyệt ảnh 25/11/2026; đã lưu ảnh chuẩn",
+  "bacSiDaQuyet": [
+    "1. Mở trang thử trên iPhone thật, thấy nhoè; chọn mức Trong: độ đặc thanh 35%, độ đặc ô nhập 20%, nhoè 8px.",
+    "2. Không đổi cách vẽ: nhoè đặt trên chính thanh như app đang làm (Cách A, mặc định của trang thử)."
+  ],
+  "dieuPhoiTuQuyet": [
+    "Lúc bung (đang gõ, có hàng khu và nhãn): giữ độ đặc khoảng 92% và nhoè 18px như bác sĩ đã duyệt 23/11, vì trang thử chỉ thử thanh thu gọn."
+  ],
+  "fileDuocSua": [
+    "src/App.css",
+    "doi-agent/NHAT_KY.md",
+    "doi-agent/QUYET_DINH_DA_CHOT.md"
+  ],
+  "khongLam": [
+    "Không đổi dữ liệu, không đổi db.version(1), không thêm thư viện npm.",
+    "Không --luu-chuan khi chưa duyệt ảnh; chỉ đẩy khi bác sĩ nói 'đẩy' và cho bật credential helper.",
+    "Không đổi bố cục, kích thước, vùng chạm của thanh."
+  ],
+  "tieuChiDat": [
+    "Thu gọn: nền thanh 0.35, nền ô nhập 0.2, blur 8px (sáng và tối)",
+    "Bung: tổng độ đặc khoảng 0.92, blur 18px như cũ; đang gõ ô nhập nền đặc --surface",
+    "Máy không hỗ trợ blur: nền đặc --surface như cũ",
+    "Chữ gợi ý 'Ghi việc cần làm…' đọc được khi có chữ việc phía sau (đo tương phản, báo số thật)",
+    "npm test đạt; script chụp giao diện đạt"
+  ]
+}
