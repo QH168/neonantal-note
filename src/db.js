@@ -20,7 +20,13 @@ db.version(2).stores({
   abbrevs: 'id, key, updatedAt'                                // thư viện viết tắt: key (chữ thường, không có '/'), text
 });
 
-export const DATA_TABLES = ['tasks', 'rooms', 'exam_patients', 'patient_todos', 'abbrevs'];
+// Bác sĩ duyệt 25/11/2026 (tab Giờ đợt 1): bảng gio_may = khoảng giờ người khác dùng ('khoang') và bé ngoài tab Khám ('le').
+// Chỉ khai báo bảng mới, KHÔNG .upgrade(): không chuyển đổi, không sửa, không xoá dòng cũ nào. gioNhap/gioKham của bé là trường thường, không đánh chỉ mục.
+db.version(3).stores({
+  gio_may: 'id, date, updatedAt'                               // date = ngày làm việc YYYY-MM-DD; loai: 'khoang' | 'le'
+});
+
+export const DATA_TABLES = ['tasks', 'rooms', 'exam_patients', 'patient_todos', 'abbrevs', 'gio_may'];
 export const ZONES = ['NICU', 'CT', 'KAN', 'PS', 'PM', 'Ngoại Trú', 'DV', 'HP', 'HS'];
 // Khu cũ: chỉ hiện (chip + nhóm) khi còn việc chưa xoá mang khu này; không có trong ô chọn khu khi thêm việc.
 export const LEGACY_ZONES = ['BM', 'PS-PM'];

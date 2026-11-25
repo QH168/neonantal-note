@@ -290,3 +290,98 @@ test('daNhapMay của việc: gộp theo updatedAt như mọi trường khác', 
   const r2 = mergeRows([{ id: 'v1', daNhapMay: false, updatedAt: 500 }], [{ id: 'v1', daNhapMay: true, updatedAt: 300 }]);
   assert.equal(r2.toPut.length, 0);
 });
+
+// ---- 25/11: bảng gio_may (tab Giờ đợt 1; BACKUP_VERSION vẫn 1) ----
+const BANG6 = [...BANG, 'gio_may'];
+const GIO_KHOANG = { id: 'k1', date: '2026-11-25', loai: 'khoang', tu: 480, den: 490, bs: 'BS A', deleted: false, updatedAt: 100 };
+const GIO_LE = { id: 'l1', date: '2026-11-25', loai: 'le', ma: 'G01', gioNhap: 495, gioKham: null, deleted: false, updatedAt: 100 };
+
+test('gio_may: file sao lưu cũ (không có bảng này) vẫn hợp lệ; nhập không đụng gio_may trên máy', () => {
+  const cu = { format: BACKUP_FORMAT, version: 1, tables: { tasks: [], rooms: [], exam_patients: [], patient_todos: [], abbrevs: [] } };
+  assert.equal(validateBackup(cu, BANG6), null);
+  assert.deepEqual(mergeRows([GIO_LE], cu.tables.gio_may || []), { toPut: [], added: 0, updated: 0, skipped: 0 });
+});
+
+test('gio_may: file mới có gio_may hợp lệ; không phải mảng thì báo lỗi', () => {
+  assert.equal(validateBackup({ format: BACKUP_FORMAT, version: 1, tables: { gio_may: [GIO_KHOANG, GIO_LE] } }, BANG6), null);
+  for (const xau of [{}, 'x', 5, null]) assert.ok(validateBackup({ format: BACKUP_FORMAT, version: 1, tables: { gio_may: xau } }, BANG6), String(xau));
+});
+
+test('gio_may: bản sửa sau cùng thắng (khoảng và dòng mã khác); bản cũ hơn hoặc bằng không đè', () => {
+  const moi = { ...GIO_KHOANG, den: 495, bs: 'BS B', updatedAt: 300 };
+  let r = mergeRows([GIO_KHOANG], [moi]);
+  assert.deepEqual([r.updated, r.toPut[0].den, r.toPut[0].bs], [1, 495, 'BS B']);
+  assert.equal(mergeRows([moi], [GIO_KHOANG]).toPut.length, 0);
+  assert.equal(mergeRows([GIO_LE], [{ ...GIO_LE, gioNhap: 500 }]).toPut.length, 0); // bằng thời gian: giữ bản máy
+  r = mergeRows([GIO_LE], [{ ...GIO_LE, gioNhap: 500, updatedAt: 200 }]);
+  assert.equal(r.toPut[0].gioNhap, 500);
+});
+
+test('gio_may: dòng đã xoá không sống lại bởi bản cũ hơn; bản xoá mới hơn thắng; khôi phục mới hơn thắng', () => {
+  const daXoa = { ...GIO_LE, deleted: true, updatedAt: 200 };
+  assert.equal(mergeRows([daXoa], [GIO_LE]).toPut.length, 0);
+  assert.equal(mergeRows([GIO_LE], [daXoa]).toPut[0].deleted, true);
+  const khoiPhuc = { ...daXoa, deleted: false, updatedAt: 300 };
+  assert.equal(mergeRows([daXoa], [khoiPhuc]).toPut[0].deleted, false);
+  assert.equal(mergeRows([khoiPhuc], [daXoa]).toPut.length, 0);
+});
+
+test('gio_may: nhập hai lần không nhân đôi dòng', () => {
+  const file = [GIO_KHOANG, GIO_LE, { ...GIO_LE, id: 'l2', ma: 'G02', deleted: true }];
+  const lan1 = mergeRows([undefined, undefined, undefined], file);
+  assert.deepEqual([lan1.added, lan1.toPut.length], [3, 3]);
+  const lan2 = mergeRows(lan1.toPut, file); // máy giờ đã có đúng các dòng đó
+  assert.deepEqual([lan2.added, lan2.updated, lan2.skipped, lan2.toPut.length], [0, 0, 3, 0]);
+});
+
+test('gio_may: BACKUP_VERSION giữ 1 và backup.js không cần sửa (xuất/nhập theo DATA_TABLES)', async () => {
+  const { BACKUP_VERSION } = await import('../src/lib/merge.js');
+  assert.equal(BACKUP_VERSION, 1);
+  const bk = docMa('../src/lib/backup.js');
+  assert.match(bk, /for \(const t of DATA_TABLES\) tables\[t\] = await db\[t\]\.toArray\(\)/);
+  assert.match(bk, /data\.tables\[t\] \|\| \[\]/);
+});
+
+test('gio_may: giờ của bé (gioNhap/gioKham) gộp theo cả dòng bé; file cũ không có trường vẫn nhập được', () => {
+  const may = [{ id: 'be1', code: 'G01', gioNhap: 495, updatedAt: 100 }];
+  assert.equal(mergeRows(may, [{ id: 'be1', code: 'G01', updatedAt: 50 }]).toPut.length, 0);
+  assert.equal(mergeRows(may, [{ id: 'be1', code: 'G01', gioNhap: null, updatedAt: 200 }]).toPut[0].gioNhap, null);
+  const r = mergeRows([], [{ id: 'be2', code: 'G02', updatedAt: 1 }]);
+  assert.equal('gioNhap' in r.toPut[0], false);
+});
+
+test('actions.js: dongGio (hàm thuần) chỉ lấy dòng sống, giờ sai thành null, khoảng tách riêng', async () => {
+  const { dongGio } = await import('../src/lib/actions.js');
+  const be = [
+    { id: 'b1', code: 'G01', roomId: 'r1', gioNhap: 495, gioKham: 600 },
+    { id: 'b2', code: 'G02', roomId: 'r1' },
+    { id: 'b3', code: 'G03', roomId: 'r2', gioNhap: 500, deleted: true },
+    { id: 'b4', code: 'G04', roomId: 'r2', gioNhap: 'x', gioKham: 1440 }
+  ];
+  const gm = [
+    { id: 'l2', loai: 'le', ma: 'G09', gioNhap: 510, createdAt: 20 },
+    { id: 'l1', loai: 'le', ma: 'G08', createdAt: 10 },
+    { id: 'l3', loai: 'le', ma: 'G07', deleted: true, createdAt: 5 },
+    { id: 'k1', loai: 'khoang', tu: 480, den: 490, bs: 'BS A' },
+    { id: 'k2', loai: 'khoang', tu: 1, den: 2, deleted: true }
+  ];
+  const kq = dongGio(be, gm);
+  assert.deepEqual(kq.dong.map((d) => d.id), ['b1', 'b2', 'b4', 'l1', 'l2']);
+  assert.deepEqual(kq.dong[0], { id: 'b1', ma: 'G01', gio: 495, gioKham: 600, bang: 'exam_patients', roomId: 'r1' });
+  assert.deepEqual([kq.dong[1].gio, kq.dong[2].gio, kq.dong[2].gioKham], [null, null, null]);
+  assert.deepEqual(kq.dong[4], { id: 'l2', ma: 'G09', gio: 510, gioKham: null, bang: 'gio_may' });
+  assert.equal('roomId' in kq.dong[3], false);
+  assert.deepEqual(kq.khoang, [{ id: 'k1', tu: 480, den: 490, bs: 'BS A' }]);
+  assert.deepEqual(dongGio(undefined, undefined), { dong: [], khoang: [] });
+});
+
+test('actions.js (đọc mã): mục Giờ nhập máy chỉ ghi qua addRow/updateRow/softDelete', async () => {
+  const src = docMa('../src/lib/actions.js');
+  const muc = src.slice(src.indexOf('// ---------- Giờ nhập máy'));
+  assert.ok(muc.length > 500);
+  assert.doesNotMatch(muc, /\.(add|put|bulkPut|bulkAdd|delete|bulkDelete|clear|update)\(/, 'không ghi thẳng vào bảng');
+  for (const ham of ['datGioBe', 'hoanTacGioBe', 'dienGioNhanh', 'hoanTacDienGio', 'themKhoang', 'suaKhoang', 'xoaKhoang', 'khoiPhucGioMay', 'themMaKhac', 'xoaMaKhac', 'datGioMaKhac', 'dongGio']) {
+    assert.match(muc, new RegExp('export (async function|const|function) ' + ham + '\\b'), ham);
+  }
+});
+

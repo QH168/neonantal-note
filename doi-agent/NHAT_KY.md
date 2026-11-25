@@ -62,6 +62,16 @@
 | 64 | Bỏ nhãn MT khi việc đang bật "đã nhập máy": cờ `daNhapMay` vẫn nằm trong dữ liệu nhưng không hiện nữa. | Lưu ý | Hỏi bác sĩ: khi bỏ nhãn MT thì cờ có cần tắt theo không. | Thuật toán |
 | 65 | `batTatDaNhapMay` trong `src/lib/actions.js` không còn ai gọi (mã thừa sau đợt 23/11 (2)). | Lưu ý | Đề xuất xoá hàm này; chờ bác sĩ đồng ý rồi mới làm. | Thuật toán |
 
+## 26/11/2026 — Tab Giờ đợt 1: dữ liệu và luật giờ nhập máy (chưa có màn hình, chưa đẩy)
+
+Phiếu: `doi-agent/phieu-viec/2026-11-25-tab-gio-dot1-du-lieu.json` (bác sĩ duyệt 25/11/2026). `npm test` 350/350, dựng đạt, Kiểm thử ĐẠT.
+
+- **Bác sĩ thấy gì đổi:** chưa có gì trên màn hình; so điểm ảnh 5 màn hình giữa bản cũ và bản mới, 0 điểm lệch.
+- **Dữ liệu:** thêm `db.version(3)` với bảng `gio_may` (khoảng giờ người khác dùng, mã giường ngoài tab Khám), không `.upgrade()`; bé có thêm trường thường `gioNhap`, `gioKham`. Phiên bản 1 và 2 nguyên chữ; `BACKUP_VERSION` vẫn 1.
+- **Luật:** `src/lib/gio.js` (hàm thuần), đối chiếu 20.000 ca ngẫu nhiên với bản viết độc lập, 0 lệch. Thao tác ghi ở mục "Giờ nhập máy" của `src/lib/actions.js`.
+- **Đã thử bằng hai bản dựng thật (Chromium, WebKit):** nâng cấp giữ nguyên từng dòng; lùi về bản cũ vẫn mở và ghi được, mở lại bản mới còn đủ giờ; sao lưu cũ sang mới và mới sang cũ đều nhập được, bản cũ bỏ qua bảng `gio_may`.
+- **Chưa kiểm:** iPhone thật, PWA có service worker, hai máy thật cùng sửa một bé, thư mục OneDrive trên PC.
+- **Nhớ cho đợt 2:** `loiGio`, `phanBoGio` ném lỗi nếu truyền null; `dongGio` ném lỗi nếu truyền thứ không phải mảng.
 ## 25/11/2026 — Đợt 25/11: thanh kính mờ mức "Trong" (đã duyệt ảnh)
 
 Phiếu: `doi-agent/phieu-viec/2026-11-25-kinh-mo-muc-trong.json`. Bác sĩ chọn mức trên trang thử mở bằng iPhone thật (thấy nhoè), duyệt ảnh 25/11/2026; `npm test` 316/316, bộ chụp giao diện đạt, Kiểm thử ĐẠT.

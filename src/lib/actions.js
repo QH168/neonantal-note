@@ -6,6 +6,7 @@ import { chuanKey, BO_MAU } from './viet-tat.js';
 import { KHOA_MOC_NGAY_LAM_VIEC, chuanHoaMoc } from './cai-dat.js';
 import { lapKeHoachDoiViec, keHoachHoanTacDoi, chonChepMotBe } from './hai-ngay.js';
 import { alive, nhomTheo } from './chung.js';
+import { coGio, khoangHopLe, chuanBacSi, maKhacHopLe, phanBoGio } from './gio.js';
 import { db, addRow, updateRow, softDelete, getDeviceId, getMeta, setMeta } from '../db.js';
 
 /**
@@ -378,4 +379,210 @@ export async function khoiPhucAbbrev(id) {
   if (muc && muc.id !== id) return { trung: true, muc };
   await updateRow('abbrevs', id, phanKhoiPhuc());
   return { ok: true };
+}
+
+// ---------- Giờ nhập máy (tab Giờ, đợt 1, bác sĩ duyệt 25/11/2026) ----------
+// Giờ lưu là số phút 0–1439 (hoặc null = chưa có giờ). Luật nằm ở src/lib/gio.js. KHÔNG chặn giờ trùng: trùng chỉ để giao diện báo đỏ.
+// Bảng gio_may: loai 'khoang' (tu, den, bs) = khoảng giờ người khác dùng; loai 'le' (ma, gioNhap, gioKham) = bé ngoài tab Khám.
+const DANG_NGAY_GIO = /^\d{4}-\d{2}-\d{2}$/;
+const TRUONG_GIO = ['gioNhap', 'gioKham'];
+const coGioHoacNull = (v) => v === null || coGio(v);
+
+// Lọc phần thay đổi giờ: chỉ gioNhap/gioKham, mỗi giá trị là giờ hợp lệ hoặc null. Sai → null.
+function phanDoiGio(thayDoi) {
+  if (!thayDoi || typeof thayDoi !== 'object') return null;
+  const khoa = Object.keys(thayDoi);
+  if (!khoa.length || khoa.some((k) => !TRUONG_GIO.includes(k))) return null;
+  const c = {};
+  for (const k of khoa) {
+    if (!coGioHoacNull(thayDoi[k])) return null;
+    c[k] = thayDoi[k];
+  }
+  return c;
+}
+
+// Đặt giờ cho một dòng (bé hoặc mã khác) trong một giao dịch; trả giá trị cũ của các trường vừa đổi (vắng → null).
+async function datGioDong(bang, id, thayDoi, laDongHopLe) {
+  const c = phanDoiGio(thayDoi);
+  if (!c) return { ok: false, ly: 'gio-sai' };
+  let kq = { ok: false, ly: 'khong-thay' };
+  await ghiMotLuot([db[bang]], async () => {
+    const row = await db[bang].get(id);
+    if (!row || row.deleted || !laDongHopLe(row)) return;
+    const cu = {};
+    for (const k of Object.keys(c)) cu[k] = coGio(row[k]) ? row[k] : null;
+    await updateRow(bang, id, c);
+    kq = { ok: true, cu };
+  });
+  return kq;
+}
+
+/** Đặt giờ nhập máy và/hoặc giờ khám của một bé. thayDoi chỉ có gioNhap, gioKham (giờ hợp lệ hoặc null). Trả { ok:true, cu } | { ok:false, ly:'gio-sai' | 'khong-thay' }. */
+export const datGioBe = (id, thayDoi) => datGioDong('exam_patients', id, thayDoi, () => true);
+/** Hoàn tác datGioBe: ghi lại giá trị cũ (cu của lần đặt). Cùng kết quả như datGioBe. */
+export const hoanTacGioBe = (id, cu) => datGioBe(id, cu);
+
+const laDongLe = (r) => r.loai === 'le';
+const laDongKhoang = (r) => r.loai === 'khoang';
+const tenBangGio = new Set(['exam_patients', 'gio_may']);
+
+/** Đặt giờ của một dòng "Mã khác" (cùng luật datGioBe). Hoàn tác: datGioMaKhac(id, cu). */
+export const datGioMaKhac = (id, thayDoi) => datGioDong('gio_may', id, thayDoi, laDongLe);
+
+// Giờ dự kiến (Map hoặc object id → phút) → Map. Không phải Map/object → null.
+function chuanDuKien(duKien) {
+  if (duKien instanceof Map) return new Map(duKien);
+  if (duKien && typeof duKien === 'object') return new Map(Object.entries(duKien));
+  return null;
+}
+
+// Hai bảng giờ giống hệt nhau (cùng id, cùng phút)?
+function giongGio(a, b) {
+  if (a.size !== b.size) return false;
+  for (const [id, g] of a) if (b.get(id) !== g) return false;
+  return true;
+}
+
+// Dòng giờ SỐNG của một ngày, theo dạng gio.js dùng: bé (exam_patients) + dòng 'le' (gio_may) + khoảng. Gọi trong giao dịch.
+async function docGioNgay(ngay) {
+  const be = await db.exam_patients.where('examDate').equals(ngay).filter(alive).toArray();
+  const gm = await db.gio_may.where('date').equals(ngay).filter(alive).toArray();
+  return { be, le: gm.filter(laDongLe), khoang: gm.filter(laDongKhoang) };
+}
+
+/**
+ * Chọn giờ nhanh (chia giờ) cho các bé/dòng 'le' của một ngày, ghi trong MỘT giao dịch.
+ * yeuCau = { tu, den, buoc, chon }: chon = id bé (exam_patients) và id dòng 'le' (gio_may) theo thứ tự chia.
+ * duKien (Map hoặc object id → phút): đúng những giờ màn hình đang hiện; khác kết quả tính lại từ dữ liệu hiện có → không ghi gì, { ok:false, ly:'da-doi', gio }.
+ * Trả { ok:true, so, thieu, cuoi, cu:[{ bang, id, gioNhap }] } (cu để hoanTacDienGio)
+ *   hoặc { ok:false, ly:'da-doi' | 'khoang-sai' | 'khong-con-cho', ... }; 'khong-con-cho' kèm thieu.
+ */
+export async function dienGioNhanh(ngay, { tu, den, buoc, chon } = {}, duKien, moc) {
+  let kq = { ok: false, ly: 'khoang-sai' };
+  if (typeof ngay !== 'string' || !DANG_NGAY_GIO.test(ngay) || !Array.isArray(chon)) return kq;
+  await ghiMotLuot([db.exam_patients, db.gio_may], async () => {
+    const { be, le, khoang } = await docGioNgay(ngay);
+    const bang = new Map();
+    for (const r of be) bang.set(r.id, 'exam_patients');
+    for (const r of le) bang.set(r.id, 'gio_may');
+    const hang = new Map([...be, ...le].map((r) => [r.id, r]));
+    if (chon.some((id) => !bang.has(id))) { kq = { ok: false, ly: 'da-doi' }; return; }
+    const dong = [...hang.values()].map((r) => ({ id: r.id, gio: coGio(r.gioNhap) ? r.gioNhap : null }));
+    const pb = phanBoGio({ tu, den, buoc, chon }, dong, khoang, moc);
+    if (!pb.hopLe) { kq = { ok: false, ly: 'khoang-sai' }; return; }
+    const mong = chuanDuKien(duKien);
+    if (mong && !giongGio(mong, pb.gio)) { kq = { ok: false, ly: 'da-doi', gio: pb.gio }; return; }
+    if (!pb.gio.size) { kq = { ok: false, ly: 'khong-con-cho', thieu: pb.thieu }; return; }
+    const cu = [];
+    for (const [id, gio] of pb.gio) {
+      cu.push({ bang: bang.get(id), id, gioNhap: coGio(hang.get(id).gioNhap) ? hang.get(id).gioNhap : null });
+      await updateRow(bang.get(id), id, { gioNhap: gio });
+    }
+    kq = { ok: true, so: pb.gio.size, thieu: pb.thieu, cuoi: pb.cuoi, cu };
+  });
+  return kq;
+}
+
+/** Hoàn tác dienGioNhanh: trả gioNhap cũ của từng dòng trong MỘT giao dịch; dòng không còn / đã xoá thì bỏ qua. Trả số dòng đã trả lại. */
+export async function hoanTacDienGio(cu) {
+  let n = 0;
+  await ghiMotLuot([db.exam_patients, db.gio_may], async () => {
+    for (const x of Array.isArray(cu) ? cu : []) {
+      if (!x || !tenBangGio.has(x.bang)) continue;
+      const row = await db[x.bang].get(x.id);
+      if (!row || row.deleted) continue;
+      await updateRow(x.bang, x.id, { gioNhap: coGio(x.gioNhap) ? x.gioNhap : null });
+      n++;
+    }
+  });
+  return n;
+}
+
+// ---------- Giờ người khác dùng (khoảng) ----------
+/** Thêm khoảng giờ người khác dùng. bs không bắt buộc (cắt 20 ký tự). Sai → { ok:false, ly:'khoang-sai' | 'ngay-sai' }. Trả { ok:true, id, row }. */
+export async function themKhoang(ngay, { tu, den, bs } = {}, moc) {
+  if (typeof ngay !== 'string' || !DANG_NGAY_GIO.test(ngay)) return { ok: false, ly: 'ngay-sai' };
+  if (!khoangHopLe({ tu, den }, moc)) return { ok: false, ly: 'khoang-sai' };
+  const row = await addRow('gio_may', { date: ngay, loai: 'khoang', tu, den, bs: chuanBacSi(bs) });
+  return { ok: true, id: row.id, row };
+}
+
+/** Sửa khoảng (tu, den, bs; trường vắng giữ nguyên). Trả { ok:true, cu:{ tu, den, bs } } (Hoàn tác: suaKhoang(id, cu, moc)) | { ok:false, ly:'khoang-sai' | 'khong-thay' }. */
+export async function suaKhoang(id, thayDoi = {}, moc) {
+  let kq = { ok: false, ly: 'khong-thay' };
+  await ghiMotLuot([db.gio_may], async () => {
+    const row = await db.gio_may.get(id);
+    if (!row || row.deleted || !laDongKhoang(row)) return;
+    const moi = { tu: 'tu' in thayDoi ? thayDoi.tu : row.tu, den: 'den' in thayDoi ? thayDoi.den : row.den, bs: 'bs' in thayDoi ? chuanBacSi(thayDoi.bs) : row.bs ?? '' };
+    if (!khoangHopLe(moi, moc)) { kq = { ok: false, ly: 'khoang-sai' }; return; }
+    await updateRow('gio_may', id, moi);
+    kq = { ok: true, cu: { tu: row.tu, den: row.den, bs: row.bs ?? '' } };
+  });
+  return kq;
+}
+
+// Xoá mềm / khôi phục một dòng gio_may (khoảng hoặc mã khác).
+async function xoaDongGio(id, laDong) {
+  let kq = { ok: false, ly: 'khong-thay' };
+  await ghiMotLuot([db.gio_may], async () => {
+    const row = await db.gio_may.get(id);
+    if (!row || row.deleted || !laDong(row)) return;
+    await softDelete('gio_may', id);
+    kq = { ok: true };
+  });
+  return kq;
+}
+export const xoaKhoang = (id) => xoaDongGio(id, laDongKhoang);
+export const xoaMaKhac = (id) => xoaDongGio(id, laDongLe);
+
+/** Hoàn tác xoá khoảng / mã khác (chỉ đổi deleted). Mã khác mà trong lúc chờ đã có mã sống trùng cùng ngày → không khôi phục, { ok:false, ly:'trung', id }. */
+export async function khoiPhucGioMay(id) {
+  let kq = { ok: false, ly: 'khong-thay' };
+  await ghiMotLuot([db.gio_may], async () => {
+    const row = await db.gio_may.get(id);
+    if (!row) return;
+    if (laDongLe(row)) {
+      const trung = await db.gio_may.where('date').equals(row.date).filter((r) => alive(r) && laDongLe(r) && r.ma === row.ma && r.id !== id).first();
+      if (trung) { kq = { ok: false, ly: 'trung', id: trung.id }; return; }
+    }
+    if (row.deleted) await updateRow('gio_may', id, phanKhoiPhuc());
+    kq = { ok: true };
+  });
+  return kq;
+}
+
+// ---------- Mã khác (bé ngoài tab Khám) ----------
+/** Thêm mã giường ngoài tab Khám. Sai → { ok:false, ly:'ma-sai' | 'ngay-sai' }; trùng mã sống cùng ngày → { ok:false, ly:'trung', id }. Trả { ok:true, id, row }. */
+export async function themMaKhac(ngay, ma) {
+  const m = maKhacHopLe(ma);
+  if (!m) return { ok: false, ly: 'ma-sai' };
+  if (typeof ngay !== 'string' || !DANG_NGAY_GIO.test(ngay)) return { ok: false, ly: 'ngay-sai' };
+  let kq = { ok: false, ly: 'ma-sai' };
+  await ghiMotLuot([db.gio_may], async () => {
+    const trung = await db.gio_may.where('date').equals(ngay).filter((r) => alive(r) && laDongLe(r) && r.ma === m).first();
+    if (trung) { kq = { ok: false, ly: 'trung', id: trung.id }; return; }
+    const row = await addRow('gio_may', { date: ngay, loai: 'le', ma: m, gioNhap: null, gioKham: null });
+    kq = { ok: true, id: row.id, row };
+  });
+  return kq;
+}
+
+/**
+ * Hàm thuần cho giao diện (đợt 2): dòng giờ SỐNG của một ngày từ bé của ngày (exam_patients) và gio_may của ngày.
+ * dong = [{ id, ma, gio (gioNhap), gioKham, bang: 'exam_patients' | 'gio_may', roomId? (chỉ bé) }]; khoang = [{ id, tu, den, bs }].
+ * Bé theo đúng thứ tự truyền vào (nơi gọi tự sắp theo phòng); dòng 'le' xếp sau, theo createdAt.
+ */
+export function dongGio(beNgay, gioMayNgay) {
+  const gioHopLe = (t) => (coGio(t) ? t : null);
+  const dong = [];
+  for (const b of beNgay || []) {
+    if (!b || b.deleted) continue;
+    dong.push({ id: b.id, ma: b.code || '', gio: gioHopLe(b.gioNhap), gioKham: gioHopLe(b.gioKham), bang: 'exam_patients', roomId: b.roomId });
+  }
+  const gm = (gioMayNgay || []).filter((r) => r && !r.deleted);
+  for (const r of gm.filter(laDongLe).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0) || String(a.id).localeCompare(String(b.id)))) {
+    dong.push({ id: r.id, ma: r.ma || '', gio: gioHopLe(r.gioNhap), gioKham: gioHopLe(r.gioKham), bang: 'gio_may' });
+  }
+  const khoang = gm.filter(laDongKhoang).map((r) => ({ id: r.id, tu: r.tu, den: r.den, bs: r.bs ?? '' }));
+  return { dong, khoang };
 }

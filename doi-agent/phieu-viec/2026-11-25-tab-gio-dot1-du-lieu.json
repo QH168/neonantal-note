@@ -1,0 +1,87 @@
+{
+  "ten": "Tab Giờ, đợt 1: dữ liệu và luật trùng giờ nhập máy (chưa có màn hình)",
+  "ngay": "2026-11-25",
+  "khuVuc": "Sao lưu, gộp dữ liệu; Khám (dữ liệu); Khung chung (tab mới ở đợt 2)",
+  "loai": "lon",
+  "canBacSiDuyet": true,
+  "trangThai": "Bác sĩ duyệt phiếu 25/11/2026; làm xong và Kiểm thử ĐẠT 26/11/2026; chưa đẩy",
+  "bacSiDaQuyet": [
+    "1. Duyệt bản thử HTML lần 6 (25/11/2026), gồm toàn bộ cách dùng trong bản thử.",
+    "2. Chỉ kiểm trùng giờ nhập máy; hai giờ chỉ cần khác phút.",
+    "3. Đang trùng: báo đỏ / bảng cảnh báo, vẫn cho lưu.",
+    "4. Nút máy tính chỉ đổi màu; vuốt 'đã khám' không ghi giờ.",
+    "5. Giờ người khác dùng: chỉ là khoảng từ … đến …, ô 'Bác Sĩ' không bắt buộc.",
+    "6. Chọn giờ nhanh: chia theo thứ tự phòng ở tab Khám, mỗi bé cách n phút, gặp giờ đã dùng thì nhảy qua phút trống kế tiếp.",
+    "7. Bé ngoài tab Khám: gõ mã giường trong tab Giờ ('Mã khác').",
+    "8. Tab Khám: ô giờ kế tên (trống thì hiện biểu tượng đồng hồ chuông); chế độ 2 ngày chỉ hiện giờ; chi tiết bé có một ô giờ bên trái chip phòng.",
+    "9. Màu: giờ người khác dùng xám than; báo 'Không trùng' trắng viền xanh dương."
+  ],
+  "dieuPhoiTuQuyet": [
+    "Giờ khám: giữ tuỳ chọn khi chạm vào bé ở tab Giờ (mặc định theo đề xuất, bác sĩ chưa trả lời riêng câu này).",
+    "Ô Bác Sĩ tối đa 20 ký tự; khuyên ghi ngắn vì ô này đi theo file sao lưu.",
+    "Mã khác: chỉ chữ không dấu, số và dấu gạch nối, tối đa 8 ký tự, để tránh ghi tên bệnh nhân."
+  ],
+  "duLieu": {
+    "giuNguyen": "Tên CSDL ghichu-sosinh, khối db.version(1) và db.version(2) không đổi một chữ. Không có .upgrade(): không chuyển đổi, không sửa, không xoá dòng cũ nào.",
+    "truongMoiTrenBe": "exam_patients thêm hai trường thường, không đánh chỉ mục: gioNhap, gioKham (số phút 0–1439 tính từ 00:00, hoặc null). Dòng cũ không có trường = chưa có giờ.",
+    "bangMoi": "db.version(3).stores({ gio_may: 'id, date, updatedAt' }). Cột: date (ngày làm việc YYYY-MM-DD), loai ('khoang' hoặc 'le'). 'khoang': tu, den (phút, tính cả hai đầu), bs (chữ, có thể rỗng). 'le': ma, gioNhap, gioKham. Có id, deleted, createdAt, updatedAt, deviceId như mọi bảng.",
+    "saoLuu": "DATA_TABLES thêm 'gio_may' ở cuối; backup.js tự xuất/nhập theo DATA_TABLES nên không phải sửa. BACKUP_VERSION giữ 1. File cũ không có bảng này vẫn nhập được (bảng thiếu coi như rỗng).",
+    "gop": "Như cũ: theo từng dòng, bản sửa sau cùng thắng. Giờ của bé nằm trên dòng bé, nên nếu hai máy cùng sửa một bé trước khi gộp thì cả dòng của máy sửa sau thắng (giống cân nặng, ghi chú hiện nay).",
+    "chepSangNgayMoi": "copyPatientsFrom, chepMotBe, chepPhongSangHomNay tự dựng danh sách trường nên KHÔNG mang gioNhap, gioKham; thêm bài kiểm để giữ luật này."
+  },
+  "luatThuan": {
+    "file": "src/lib/gio.js, hàm thuần, không dùng window và không tự đọc đồng hồ; nhận mốc ngày làm việc làm tham số",
+    "ham": [
+      "docGio(chữ): '815', '0815', '08:15', '08h15' → 495; rỗng → null; sai → NaN",
+      "chuGio(phút): 495 → '08h15'",
+      "thuTu(phút, moc): giờ trước mốc xếp cuối ngày làm việc",
+      "loiGio(muc, phút, danhSach, khoang, moc): các chỗ trùng với bé khác và với khoảng người khác dùng",
+      "phanBoGio({ tu, den, buoc, chon }, danhSach, khoang, moc): chia giờ, nhảy qua phút đã dùng, trả giờ từng bé, bé thiếu giờ, phút đã bỏ qua; không bao giờ cho hai bé cùng phút",
+      "khoangHopLe, maKhacHopLe, dauCuoi (giờ đầu và giờ cuối cho thanh giờ)"
+    ]
+  },
+  "thaoTacGhi": [
+    "datGioBe(id, { gioNhap?, gioKham? }): qua updateRow, trả giá trị cũ để Hoàn tác",
+    "dienGioNhanh(ngay, yeuCau, moc): đọc lại dữ liệu và ghi trong MỘT giao dịch (ghiMotLuot); nếu dữ liệu đã đổi so với lúc xem trước thì không ghi gì và báo lại; trả giá trị cũ từng bé",
+    "hoanTacDienGio(cu)",
+    "themKhoang, suaKhoang, xoaKhoang, themMaKhac, suaMaKhac, xoaMaKhac; xoá là xoá mềm, có khoiPhuc"
+  ],
+  "fileDuocSua": [
+    "src/db.js",
+    "src/lib/gio.js",
+    "src/lib/actions.js",
+    "tests/gio.test.js",
+    "tests/merge.test.js",
+    "tests/luat.test.js",
+    "tests/phong.test.js",
+    "package.json",
+    "doi-agent/**"
+  ],
+  "agent": ["du-lieu", "thuat-toan", "kiem-thu", "ghi-chep"],
+  "khongLam": [
+    "Không sửa giao diện: src/App.jsx, src/App.css, src/components/** không đổi; đợt này bác sĩ chưa thấy gì mới trên màn hình.",
+    "Không sửa db.version(1), db.version(2), BACKUP_FORMAT, BACKUP_VERSION, luật gộp trong merge.js.",
+    "package.json chỉ thêm tests/gio.test.js vào lệnh test; không thêm thư viện.",
+    "Không thêm ô tên bệnh nhân; dữ liệu mẫu trong bài kiểm chỉ dùng mã giường giả và 'BS A'.",
+    "Không gợi ý giờ thay cho giờ đã ghi; chỉ chia giờ khi bác sĩ tự đặt khoảng.",
+    "Không đẩy lên main khi bác sĩ chưa nói 'đẩy' và chưa cho bật credential helper."
+  ],
+  "tieuChiDat": [
+    "npm test đạt, gồm bài mới: đọc giờ, qua nửa đêm, mốc khác 07:00, trùng bé, trùng khoảng (cả hai đầu), chia giờ 8 bé trong 08h01–08h07 chỉ đủ 7, nhảy qua khoảng, cách 1/2/3/5 phút, không bao giờ hai bé cùng phút",
+    "luat.test.js: v1 và v2 nguyên chữ, có v3 với gio_may, DATA_TABLES có gio_may",
+    "Nâng cấp thật trên trình duyệt (Chromium và WebKit): mở bản đang dùng, tạo dữ liệu mẫu ở mọi bảng, mở bản mới trên cùng kho dữ liệu, so từng dòng giống hệt trước và sau",
+    "Sao lưu: file của bản đang dùng nhập vào bản mới được, không mất dòng; file bản mới xuất ra có gio_may; nhập lại hai lần không nhân đôi; dòng đã xoá không sống lại",
+    "File bản mới nhập vào bản đang dùng: ghi rõ kết quả thật trong báo cáo (dự kiến: nhập được, bỏ qua gio_may)",
+    "Quay lại bản app cũ sau khi đã nâng cấp: thử và ghi kết quả thật (để biết có lùi bản được không)",
+    "Chép bé sang ngày mới không mang giờ (cả ba đường chép)",
+    "Phạm vi đạt: node scripts/kiem-pham-vi.mjs doi-agent/phieu-viec/2026-11-25-tab-gio-dot1-du-lieu.json",
+    "Ảnh chụp không đổi so với ảnh chuẩn (đợt này không sửa giao diện)"
+  ],
+  "truocKhiDay": "Bác sĩ sao lưu cả iPhone và PC trước khi cập nhật bản có db.version(3). Nên đẩy cùng đợt 2 để không phải nâng cấp dữ liệu khi chưa có màn hình dùng tới.",
+  "cacDotSau": [
+    "Đợt 2: tab Giờ (phiếu riêng, ảnh trước/sau)",
+    "Đợt 3: ô giờ ở tab Khám, chi tiết bé, chế độ 2 ngày (phiếu riêng); dòng bé phải tách ô giờ ra ngoài nút pat-open, chặn vuốt bắt đầu trên ô giờ; ở chế độ 2 ngày chip 'Vào hh:mm' ở đầu chi tiết bé phải xuống hàng vì hết chỗ",
+    "Đợt 4: xem giờ ngày trước, chép bảng giờ"
+  ],
+  "ghiChu": "Bản thử: tab-gio-ban-thu.html (thư mục V9.1, lần 6). App không nối phần mềm bệnh viện; giờ trong hồ sơ vẫn phải là giờ thật."
+}

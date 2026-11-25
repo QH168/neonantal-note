@@ -142,3 +142,12 @@ Phiếu: `doi-agent/phieu-viec/2026-11-23-kinh-mo-chip-may-tinh.json`. Bác sĩ 
 
 ## Đợt 25/11/2026 — thanh kính mờ mức "Trong" (bác sĩ chọn trên iPhone thật, duyệt ảnh 25/11/2026)
 Phiếu: `doi-agent/phieu-viec/2026-11-25-kinh-mo-muc-trong.json`. Thanh thêm việc iPhone lúc thu gọn: độ đặc thanh 35%, ô nhập 20%, nhoè 8px (sáng và tối); chữ gợi ý màu `--muted`. Lúc bung giữ độ đặc khoảng 92% và nhoè 18px như đợt 23/11 (2); ô đang gõ nền đặc `--surface`.
+
+## Tab Giờ (bác sĩ duyệt bản thử lần 6 và phiếu đợt 1 ngày 25/11/2026)
+Phiếu: `doi-agent/phieu-viec/2026-11-25-tab-gio-dot1-du-lieu.json`.
+1. Chỉ kiểm trùng giờ nhập máy; chỉ cần khác phút. Trùng thì báo đỏ hoặc bảng cảnh báo, vẫn cho lưu.
+2. Giờ người khác dùng chỉ là khoảng từ … đến …; một ô "Bác Sĩ" không bắt buộc.
+3. Chọn giờ nhanh: theo thứ tự phòng ở tab Khám, cách n phút, gặp giờ đã dùng thì nhảy qua; có nút Đóng / Mở. Thanh giờ chỉ từ giờ đầu đến giờ cuối đã có.
+4. Tab Khám: ô giờ kế tên, trống thì hiện đồng hồ chuông; chạm dòng bé vẫn mở chi tiết, nút máy tính chỉ đổi màu, vuốt "đã khám" không ghi giờ. Chi tiết bé: một ô giờ bên trái chip phòng. Chế độ 2 ngày chỉ hiện giờ.
+5. Màu: giờ người khác dùng xám than; báo "Không trùng" trắng viền xanh dương. Không dùng tím và xanh lá ở tab này.
+6. Dữ liệu: `db.version(3)` bảng `gio_may`; `gioNhap`, `gioKham` trên dòng bé; không mang giờ sang ngày mới.

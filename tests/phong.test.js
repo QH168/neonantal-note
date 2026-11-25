@@ -208,5 +208,18 @@ test('daNhapMay: không cần db.version mới (không là chỉ mục)', () => 
   const db = readFileSync(new URL('../src/db.js', import.meta.url), 'utf8');
   assert.doesNotMatch(db, /daNhapMay/);
   assert.match(db, /exam_patients: 'id, examDate, roomId, \[examDate\+roomId\], updatedAt'/);
-  assert.equal((db.match(/^db\.version\(\d+\)/gm) || []).length, 2); // vẫn chỉ version(1) và version(2) (abbrevs)
+  assert.equal((db.match(/^db\.version\(\d+\)/gm) || []).length, 3); // version(1), version(2) (abbrevs), version(3) (gio_may, 25/11/2026); daNhapMay vẫn không cần version riêng
+});
+
+test('chép phòng: KHÔNG mang gioNhap, gioKham của bé nguồn (giờ không đi sang ngày mới)', () => {
+  const k = lapKeHoachChepPhong({
+    rooms: PH, roomId: 'r1', tuNgay: TU, homNay: '2026-11-22', cur: [],
+    beNguon: [bn('a', 'G01', 1, { gioNhap: 495, gioKham: 600 }), bn('b', 'G02', 2, { gioNhap: null, gioKham: 0 })], viecTheoBe: {}
+  });
+  assert.equal(k.ke.length, 2);
+  for (const x of k.ke) {
+    assert.equal('gioNhap' in x.be, false);
+    assert.equal('gioKham' in x.be, false);
+  }
+  assert.deepEqual(Object.keys(k.ke[0].be).sort(), ['code', 'copiedFrom', 'dob', 'done', 'examDate', 'ga', 'note', 'order', 'roomId', 'wt']);
 });

@@ -46,6 +46,34 @@ test('luật 2b: có db.version(2) chứa abbrevs và DATA_TABLES có abbrevs', 
   assert.match(db, /DATA_TABLES = \[[^\]]*'abbrevs'[^\]]*\]/);
 });
 
+test('luật 2c: db.version(2) giữ nguyên chữ (chỉ abbrevs)', () => {
+  const v2 = /db\.version\(2\)\.stores\(\{([\s\S]*?)\}\);/.exec(read('src/db.js'));
+  assert.ok(v2, 'không tìm thấy khối db.version(2)');
+  assert.equal(v2[1].replace(/\/\/.*$/gm, '').replace(/\s+/g, ''), "abbrevs:'id,key,updatedAt'");
+  assert.match(v2[1], /abbrevs: 'id, key, updatedAt'/);
+});
+
+test('luật 2d: db.version(3) thêm gio_may (bác sĩ duyệt 25/11/2026), không .upgrade(), DATA_TABLES đủ 6 bảng gio_may ở cuối', () => {
+  const db = read('src/db.js');
+  const v3 = /db\.version\(3\)\.stores\(\{([\s\S]*?)\}\);/.exec(db);
+  assert.ok(v3, 'không tìm thấy khối db.version(3)');
+  assert.equal(v3[1].replace(/\/\/.*$/gm, '').replace(/\s+/g, ''), "gio_may:'id,date,updatedAt'");
+  assert.deepEqual((db.match(/^db\.version\((\d+)\)/gm) || []).map((s) => s.replace(/\D/g, '')), ['1', '2', '3'], 'đúng ba khối version, theo thứ tự');
+  assert.doesNotMatch(db.replace(/\/\/.*$/gm, ''), /\.upgrade\(/, 'không chuyển đổi dữ liệu cũ');
+  assert.match(db, /Bác sĩ duyệt 25\/11\/2026 \(tab Giờ đợt 1\)/);
+  const bang = /export const DATA_TABLES = \[([^\]]*)\]/.exec(db)[1].split(',').map((s) => s.trim().replace(/'/g, ''));
+  assert.deepEqual(bang, ['tasks', 'rooms', 'exam_patients', 'patient_todos', 'abbrevs', 'gio_may']);
+});
+
+test('luật 2e: ba hàm chép bé sang ngày mới (copyPatientsFrom, chepMotBe, chepPhongSangHomNay) không mang gioNhap/gioKham', () => {
+  const src = read('src/lib/actions.js');
+  for (const ten of ['copyPatientsFrom', 'chepMotBe', 'chepPhongSangHomNay']) {
+    const f = new RegExp('export async function ' + ten + '[\\s\\S]*?\\r?\\n}\\r?\\n').exec(src);
+    assert.ok(f, 'không thấy hàm ' + ten);
+    assert.doesNotMatch(f[0], /gioNhap|gioKham/, ten + ' không được mang giờ sang ngày mới');
+  }
+});
+
 test('luật 3: ô nhập trên iPhone ≥16px (Safari không tự phóng to)', () => {
   const css = read('src/App.css').replace(/\/\*[\s\S]*?\*\//g, '');
   const oNhap = /(^|[\s,>.])(input|select|textarea)\b|\.(input|select|bare-input|textarea|mono)\b/;
