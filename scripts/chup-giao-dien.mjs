@@ -219,7 +219,13 @@ const dongDaCoThanhHoanTac = (page) => page.locator('.hoantac').count();
 // chờ thanh Hoàn tác biến mất (hẹn giờ 6 giây) để nó không che các nút dưới đáy ở bước sau
 const choHoanTacTat = async (page) => { try { await page.locator('.hoantac').waitFor({ state: 'detached', timeout: 8000 }); } catch { /* không có thanh thì thôi */ } };
 // v9.4: chạm thật bằng màn hình cảm ứng, đúng MỘT lần (không .click() chuột). Dùng cho nút quan trọng trên iPhone.
-const chamMot = async (page, loc) => { await loc.scrollIntoViewIfNeeded(); const c = await tamDiem(loc); await page.touchscreen.tap(c.x, c.y); };
+// 26/11: lớp nút mở chi tiết `.pat-open` phủ cả vùng chữ, trong đó ô giờ nằm gần mã (bên trái): chạm vào 3/4 chiều rộng, tránh ô giờ
+const chamMot = async (page, loc) => {
+  await loc.scrollIntoViewIfNeeded();
+  const c = await tamDiem(loc);
+  const lopMo = await loc.evaluate((e) => e.matches('.pat-open')).catch(() => false);
+  await page.touchscreen.tap(lopMo ? c.b.x + c.b.width * 0.75 : c.x, c.y);
+};
 // đệm chạm: chỉ dùng NGAY SAU một lần vuốt CDP (Chromium headless nuốt cú chạm đầu sau lần vuốt bằng ngón tay giả); chạm chỗ không có gì (đầu trang)
 const demChamSauVuot = async (page, trongBang = false) => { // trongBang: đang mở bảng, chạm dòng tiêu đề "Việc cần làm" (chạm nền ngoài sẽ đóng bảng)
   const c = trongBang ? await tamDiem(page.locator('.sheet-be .be-viec-h').first()) : { x: 60, y: 45 };
@@ -2825,7 +2831,7 @@ for (const [pc, toi] of [[false, false], [false, true], [true, false]]) {
     await page.waitForTimeout(300);
     T.xongDongCotPhai = await aside.count();
     if (T.xongDongCotPhai) loi('"Xong" không đóng chi tiết ở cột phải');
-    await page.locator('.pat-open', { hasText: 'G01' }).click();
+    await page.locator('.pat-open[aria-label="Mở chi tiết G01"]').click({ position: { x: 150, y: 6 } }); // 26/11: nút mở chi tiết là lớp trống (ô giờ nằm ngoài nút), tìm bằng aria-label
     await aside.waitFor();
     await chup(page, 'pc-kham-sang', false);
     await aside.getByRole('button', { name: 'Đóng chi tiết', exact: true }).click();
@@ -3515,7 +3521,7 @@ for (const toi of [false, true]) { try { await luongIphoneV95(toi); } catch (e) 
   await page.getByRole('button', { name: 'Khám', exact: true }).click();
   await page.getByRole('button', { name: /^Lấy danh sách/ }).click();
   await page.waitForTimeout(500);
-  await page.locator('.pat-open', { hasText: 'G01' }).first().click();
+  await page.locator('.pat-open[aria-label="Mở chi tiết G01"]').first().click({ position: { x: 150, y: 6 } });
   await page.locator('.pc-detail').waitFor();
   const homNayBe = doiMau(await page.locator('.pc-detail #be-ma').inputValue());
   await page.getByRole('button', { name: 'Lịch khám', exact: true }).click();
@@ -4813,6 +4819,118 @@ for (const toi of [false, true]) {
   const g = await moGio({ viewport: { width: 1280, height: 860 } }, true, toi);
   if (!/Đã có giờ/.test(await g.page.locator('.pc-side').innerText())) ketQua.loi.push('tab Giờ PC: thiếu tiến độ ở cột trái');
   await chup(g.page, 'pc-gio' + (toi ? '-toi' : '-sang'), true);
+  await g.ctx.close();
+}
+// ---------- Tab Khám có ô giờ nhập máy (26/11/2026, tab Giờ đợt 3): dòng có giờ / trống / trùng, chi tiết bé, hộp cảnh báo, 2 ngày ----------
+// Dữ liệu mẫu: G01 08h01, G02 08h02, G03 trống, G05 và G07 cùng 08h05 (trùng), G09 08h09, G11 08h11, G12 08h12; BS A dùng 07h30–07h45.
+async function moKhamGio(opts, dark, haiNgay = false) {
+  const { ctx, page } = await moApp({ ...opts, colorScheme: dark ? 'dark' : 'light' });
+  const phong = (await docBang(page, 'rooms')).sort((a, b) => a.order - b.order);
+  const gio = { G01: 481, G02: 482, G05: 485, G07: 485, G09: 489, G11: 491, G12: 492 };
+  const ma = [['G01', 0], ['G02', 0], ['G03', 0], ['G05', 1], ['G07', 1], ['G09', 2], ['G11', 2], ['G12', 2]];
+  await chenDb(page, 'exam_patients', ma.map(([code, p], i) => hangBeMoi('kg-' + code, phong[p].id, code, GIO_NGAY, { order: i + 1, ...(gio[code] !== undefined ? { gioNhap: gio[code] } : {}), ...(code === 'G01' ? { note: 'Theo dõi vàng da' } : {}) })));
+  await chenDb(page, 'gio_may', [hangKhoang('kg-k1', 450, 465, 'BS A')]);
+  await chenDb(page, 'patient_todos', [{ id: 'kg-t1', patientId: 'kg-G02', text: 'Đo bilirubin', done: false, order: 1, deleted: false, createdAt: Date.now(), updatedAt: Date.now(), deviceId: 'mau' }]);
+  if (haiNgay) await chenDb(page, 'exam_patients', [hangBeMoi('kg-q-G05', phong[1].id, 'G05', '2026-10-20', { createdAt: new Date(2026, 9, 20, 22, 14).getTime(), done: true, note: 'Vào đêm' })]);
+  await page.reload();
+  await page.waitForSelector('.phone-app, .pc');
+  await page.waitForTimeout(500);
+  await page.locator('.ph-seg button, .pc-top .seg button', { hasText: /^Khám$/ }).first().click();
+  await page.waitForTimeout(500);
+  if (haiNgay) { await page.locator('.ph-2ngay').click(); await page.waitForTimeout(700); }
+  return { ctx, page };
+}
+const oGioKham = (page, ma) => page.locator('.swipe', { has: page.locator('.pat-code', { hasText: new RegExp('^' + ma + '$') }) }).locator('.o-gio input');
+async function luongKhamGio(dark) {
+  const sfx = dark ? '-toi' : '-sang';
+  const E = (s) => ketQua.loi.push(`tab Khám có giờ${dark ? ' tối' : ''}: ${s}`);
+  const T = (ketQua.thuChucNang['khamGio' + (dark ? 'Toi' : 'Sang')] = {});
+  const { ctx, page } = await moKhamGio(IPHONE_OPTS, dark);
+  const dbGio = async (code) => (await docBang(page, 'exam_patients')).find((b) => b.code === code && b.examDate === GIO_NGAY)?.gioNhap ?? null;
+  T.o = await page.locator('.pat-row .o-gio input').evaluateAll((a) => a.map((i) => i.value).join(','));
+  if (T.o !== '08h01,08h02,,08h05,08h05,08h09,08h11,08h12') E('giờ trên các dòng: ' + T.o);
+  T.trung = await page.locator('.pat-row .o-gio.trung').count();
+  if (T.trung !== 2) E('phải có 2 ô đỏ (G05 và G07 cùng 08h05), có ' + T.trung);
+  if (await page.locator('.pat-row .o-gio.trong').count() !== 1) E('phải có 1 ô trống (G03)');
+  if (await page.locator('button input, button label').count()) E('ô giờ nằm trong button (HTML không hợp lệ)');
+  await chup(page, 'iphone-kham-gio' + sfx, true);
+  // chạm ô giờ không mở chi tiết; chạm chỗ khác của dòng mở chi tiết
+  await oGioKham(page, 'G03').click();
+  await page.waitForTimeout(400);
+  if (await page.locator('.sheet-be').count()) E('chạm ô giờ không được mở chi tiết');
+  await page.keyboard.type('0815', { delay: 30 }); // đủ 4 số: lưu ngay
+  await page.waitForTimeout(600);
+  T.luu = await dbGio('G03');
+  if (T.luu !== 495) E('gõ 0815 phải lưu 08h15, có ' + T.luu);
+  T.thanh = doiMau(await page.locator('.hoantac-chu').first().innerText().catch(() => ''));
+  if (T.thanh !== 'Đã lưu G03 - 08h15') E('chữ thanh Hoàn tác: "' + T.thanh + '"');
+  await page.getByRole('button', { name: 'Hoàn tác', exact: true }).click();
+  await page.waitForTimeout(500);
+  if ((await dbGio('G03')) !== null) E('Hoàn tác phải trả giờ về trống');
+  await choHoanTacTat(page);
+  // trùng bé khác → hộp cảnh báo, chưa lưu
+  await oGioKham(page, 'G03').click();
+  await page.keyboard.type('0801', { delay: 30 });
+  await page.waitForTimeout(600);
+  const hop = page.locator('[role=alertdialog]');
+  T.hop = doiMau(await hop.innerText().catch(() => ''));
+  if (!/Trùng giờ: G03 - 08h01/.test(T.hop) || !/Trùng giờ nhập với G01, 08h01\./.test(T.hop) || !/Chưa lưu\./.test(T.hop)) E('hộp cảnh báo: ' + T.hop);
+  if ((await hop.locator('button').allInnerTexts()).join('|') !== 'Sửa lại|Bỏ, không ghi giờ|Vẫn lưu 08h01') E('ba nút hộp: ' + (await hop.locator('button').allInnerTexts()).join('|'));
+  if ((await dbGio('G03')) !== null) E('chưa chọn thì chưa lưu');
+  await chup(page, 'iphone-kham-gio-canh-bao' + sfx, true);
+  await page.keyboard.press('Escape'); // Esc = Sửa lại
+  await page.waitForTimeout(300);
+  if (await hop.count() || (await oGioKham(page, 'G03').inputValue()) !== '0801') E('Esc trong hộp phải là "Sửa lại" (hộp đóng, chữ đang gõ còn)');
+  await page.keyboard.press('Escape'); // Esc trong ô: trả giờ cũ
+  await page.waitForTimeout(300);
+  // chi tiết bé: ô giờ bên trái chip phòng
+  const dong = page.locator('.swipe', { has: page.locator('.pat-code', { hasText: /^G01$/ }) });
+  const rb = await dong.locator('.pat-open').boundingBox();
+  await page.mouse.click(rb.x + rb.width * 0.5, rb.y + rb.height - 8);
+  await page.waitForTimeout(800);
+  if (!(await page.locator('.sheet-be .be-head .o-gio.to input').count())) E('chi tiết bé không có ô giờ');
+  else {
+    const g = await page.evaluate(() => { const i = document.querySelector('.be-head .o-gio.to input').getBoundingClientRect(), p = document.querySelector('.be-head .be-phong').getBoundingClientRect(); return { h: Math.round(i.height), trai: i.right <= p.left + 1 || p.top > i.top }; });
+    T.chiTiet = g;
+    if (g.h < 44 || !g.trai) E('ô giờ trong chi tiết phải cao ≥ 44px và nằm bên trái chip phòng: ' + JSON.stringify(g));
+  }
+  await chup(page, 'iphone-kham-gio-chi-tiet' + sfx, true);
+  await ctx.close();
+  if (dark) return;
+  // 320
+  { const g = await moKhamGio(OPTS320, false); await chup(g.page, 'iphone-kham-gio-320', true);
+    if (await g.page.evaluate(() => document.documentElement.scrollWidth > innerWidth)) E('320 bị tràn ngang');
+    await g.ctx.close(); }
+}
+async function luongKhamGioHaiNgay(dark) {
+  const sfx = dark ? '-toi' : '-sang';
+  const E = (s) => ketQua.loi.push(`2 ngày có giờ${dark ? ' tối' : ''}: ${s}`);
+  const { ctx, page } = await moKhamGio(IPHONE_OPTS, dark, true);
+  if (await page.locator('.hn-the input').count()) E('thẻ 2 ngày chỉ hiện giờ, không có ô nhập');
+  const chu = await page.locator('.hn-the .hn-gio').count();
+  if (chu < 6) E('thẻ có giờ phải hiện chữ giờ, có ' + chu);
+  if (await page.locator('.hn-gio.trung').count() !== 2) E('G05 và G07 cùng 08h05: 2 chữ đỏ');
+  await chup(page, 'iphone-kham-gio-hai-ngay' + sfx, true);
+  await page.locator('.hn-the', { has: page.locator('.pat-code', { hasText: /^G05$/ }) }).locator('.hn-mo').click();
+  await page.waitForTimeout(900);
+  if (!/Vào 22:14/.test(await page.locator('.be-head').innerText())) E('đầu chi tiết thiếu chip "Vào 22:14"');
+  if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)) E('chi tiết 2 ngày bị tràn ngang');
+  await chup(page, 'iphone-kham-gio-hai-ngay-chi-tiet' + sfx, true);
+  await ctx.close();
+  if (dark) return;
+  const g = await moKhamGio(OPTS320, false, true);
+  await g.page.locator('.hn-the', { has: g.page.locator('.pat-code', { hasText: /^G05$/ }) }).locator('.hn-mo').click();
+  await g.page.waitForTimeout(900);
+  const nho = await g.page.evaluate(() => { const s = document.querySelector('.sheet').getBoundingClientRect(); return [...document.querySelectorAll('.be-head > *')].filter((e) => { const r = e.getBoundingClientRect(); return r.left < s.left - 0.5 || r.right > s.right + 0.5; }).map((e) => e.className); });
+  if (nho.length) E('320: đầu chi tiết tràn khung: ' + nho.join(','));
+  await chup(g.page, 'iphone-kham-gio-hai-ngay-chi-tiet-320', true);
+  await g.ctx.close();
+}
+for (const toi of [false, true]) { try { await luongKhamGio(toi); await luongKhamGioHaiNgay(toi); } catch (e) { console.error('TAB KHÁM CÓ GIỜ ' + (toi ? 'tối' : 'sáng') + ' dừng: ' + String(e.stack).split('\n').slice(0, 6).join(' | ')); throw e; } }
+{
+  const g = await moKhamGio({ viewport: { width: 1280, height: 860 } }, false);
+  if (!(await g.page.locator('.pat-row .o-gio input').count())) ketQua.loi.push('tab Khám PC: thiếu ô giờ trên dòng bé');
+  await chup(g.page, 'pc-kham-gio-sang', true);
   await g.ctx.close();
 }
 await browser.close();

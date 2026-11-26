@@ -290,3 +290,44 @@ export function beTheoPhong(rooms, patients) {
   for (const g of nhom) for (const p of g.ds) tenPhong.set(p.id, g.ten);
   return { nhom, ds: nhom.flatMap((g) => g.ds), tenPhong };
 }
+
+// ---------- Cho ô giờ ở tab Khám (đợt 3) ----------
+// Chữ lý do trùng giờ dùng chung với tab Giờ (Gio.jsx) và hộp cảnh báo của ô giờ (GioKham.jsx).
+export const CHUA_MA = 'Chưa có mã';
+
+// Khoảng người khác dùng → '07h30–07h45 (BS A)' (không có tên bác sĩ thì bỏ phần trong ngoặc).
+export const tenKhoang = (k) => chuGio(k.tu) + '–' + chuGio(k.den) + (k.bs ? ' (' + k.bs + ')' : '');
+
+// Một chỗ trùng (phần tử của loiGio) → chữ ngắn (trong danh sách) và chữ dài (trong bảng / hộp cảnh báo). dongMa: id → mã.
+export const chuLoiNgan = (e, dongMa) => (e.kieu === 'be' ? 'Trùng giờ với ' + (dongMa(e.id) || CHUA_MA) : 'Giờ ' + (e.bs || 'người khác') + ' đã dùng');
+export const chuLoiDai = (e, t, dongMa) => (e.kieu === 'be'
+  ? 'Trùng giờ nhập với ' + (dongMa(e.id) || CHUA_MA) + ', ' + chuGio(t)
+  : 'Nằm trong khoảng đã có người dùng ' + tenKhoang(e));
+
+/**
+ * Việc cần làm khi rời ô giờ của một bé (hàm thuần): chu = chữ trong ô, goc = giờ đang lưu (phút | null).
+ * Trả { kieu, v?, loi? }: 'giu' (không đổi gì), 'xoa' (ô rỗng: xoá giờ), 'sai' (chữ sai: không lưu),
+ * 'luu' (giờ mới, không trùng), 'hoi' (giờ mới nhưng trùng: phải hỏi trước, loi = các chỗ trùng).
+ */
+export function xuLyGoGio({ chu, goc, id, dong, khoang, moc } = {}) {
+  const g = coGio(goc) ? goc : null;
+  const v = docGio(chu);
+  if (v === g) return { kieu: 'giu' };
+  if (v === null) return { kieu: 'xoa' };
+  if (Number.isNaN(v)) return { kieu: 'sai' };
+  const loi = loiGio({ id, gio: v }, dong, khoang, moc);
+  return loi.length ? { kieu: 'hoi', v, loi } : { kieu: 'luu', v };
+}
+
+/**
+ * Chữ của hộp cảnh báo trùng giờ (hàm thuần): ma = mã bé, v = giờ định lưu, goc = giờ đang lưu, loi = loiGio(v), dongMa: id → mã.
+ * Trả { tieuDe, lyDo: [chữ có dấu chấm], nutGiu, nutLuu }.
+ */
+export function noiDungCanhBao({ ma, v, goc, loi, dongMa }) {
+  return {
+    tieuDe: 'Trùng giờ: ' + (ma || CHUA_MA) + ' - ' + chuGio(v),
+    lyDo: (loi || []).map((e) => chuLoiDai(e, v, dongMa) + '.'),
+    nutGiu: coGio(goc) ? 'Giữ giờ cũ ' + chuGio(goc) : 'Bỏ, không ghi giờ',
+    nutLuu: 'Vẫn lưu ' + chuGio(v)
+  };
+}

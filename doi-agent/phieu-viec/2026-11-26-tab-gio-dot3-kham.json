@@ -1,0 +1,46 @@
+{
+  "ten": "Tab Giờ, đợt 3: ô giờ nhập máy ở tab Khám (dòng bé, chi tiết bé, chế độ 2 ngày)",
+  "ngay": "2026-11-26",
+  "khuVuc": "Khám, Giờ",
+  "loai": "vua",
+  "canBacSiDuyet": true,
+  "trangThai": "Bác sĩ duyệt ảnh đợt 2 và cho làm đợt 3 (26/11/2026); làm xong, Kiểm thử ĐẠT 26/11/2026; ảnh chờ duyệt, chưa đẩy",
+  "banThu": "C:/Users/hnqh1/OneDrive/Desktop/Artifact - Ghi chú sơ sinh/V9.1/tab-gio-ban-thu.html (lần 6): phần tab Khám (veKham, oGioNhanh, canhBao, chiTiet; CSS .o-gio, .ct-dau)",
+  "agent": ["giao-dien", "kiem-thu", "ghi-chep"],
+  "fileDuocSua": [
+    "src/components/Exam.jsx",
+    "src/components/KhamHaiNgay.jsx",
+    "src/components/GioKham.jsx",
+    "src/components/Gio.jsx",
+    "src/components/ui.jsx",
+    "src/App.jsx",
+    "src/App.css",
+    "src/hooks.js",
+    "src/lib/gio.js",
+    "tests/*.test.js",
+    "scripts/chup-giao-dien.mjs",
+    "doi-agent/**"
+  ],
+  "yeuCau": [
+    "Dòng bé ở tab Khám (chế độ Hôm nay): ô giờ nhập máy ngay sau mã giường (ví dụ G01 08h01). Trống thì hiện biểu tượng đồng hồ có chuông. Có giờ: nền xanh nhạt. Trùng: nền đỏ nhạt, viền đỏ.",
+    "Ô giờ lưu khi gõ đủ 4 số, Enter hoặc rời ô. Rỗng thì xoá giờ (có Hoàn tác). Sai thì không lưu, báo cách gõ. Esc trả lại giờ cũ. Mỗi lần lưu có thanh Hoàn tác.",
+    "Trùng bé khác hoặc nằm trong khoảng người khác dùng: bảng cảnh báo 'Trùng giờ: G01 - 08h01', lý do, 'Chưa lưu.', ba nút: Sửa lại (mặc định, quay lại ô), Giữ giờ cũ hh:mm (hoặc 'Bỏ, không ghi giờ' khi chưa có giờ), Vẫn lưu hh:mm. Chưa chọn thì chưa lưu.",
+    "Chạm phần còn lại của dòng vẫn mở chi tiết bé; nút máy tính, vuốt phải 'đã khám', 'Còn n việc' giữ như cũ. Chạm hoặc vuốt bắt đầu trên ô giờ không mở chi tiết và không vuốt dòng. Ô giờ không nằm trong nút pat-open (HTML hợp lệ).",
+    "Chi tiết bé: một ô giờ có biểu tượng đồng hồ chuông ở bên trái chip phòng, cùng luật lưu và cảnh báo.",
+    "Chế độ 2 ngày: thẻ bé có dòng hôm nay chỉ HIỆN giờ (chữ, không ô nhập) cạnh mã; chi tiết bé (dòng hôm nay) có ô giờ như trên; chip 'Vào hh:mm' ở đầu chi tiết xuống hàng khi hết chỗ.",
+    "Giờ ghi ở tab Khám hiện ngay ở tab Giờ và ngược lại (cùng dữ liệu gioNhap). Kiểm trùng dùng cùng luật loiGio với tab Giờ (bé hôm nay, mã khác, khoảng người khác).",
+    "Bé mới thêm (chưa có mã) vẫn tự đặt con trỏ vào ô mã như cũ."
+  ],
+  "khongLam": [
+    "Không sửa src/db.js, src/lib/actions.js, backup.js, merge.js, Tasks.jsx, KhamNgayTruoc.jsx; ngày trước chưa có giờ (đợt 4).",
+    "Không đổi dữ liệu, không thêm thư viện; không --luu-chuan; không đẩy.",
+    "Nút máy tính chỉ đổi màu, vuốt 'đã khám' không ghi giờ."
+  ],
+  "tieuChiDat": [
+    "npm test, npm run build đạt; phạm vi đạt",
+    "Đúng bản thử lần 6; iPhone 393, 320 và PC 1280; sáng và tối; vùng chạm ≥44px, ô nhập ≥16px, không tràn ngang, chữ ≥4,5:1",
+    "Chromium và WebKit: gõ 801 lưu ngay, Enter, rời ô, rỗng xoá, sai, Esc, trùng bé, trùng khoảng, ba nút cảnh báo, Hoàn tác; chạm dòng mở chi tiết; chạm/vuốt trên ô giờ không mở, không vuốt; nút máy tính như cũ; 2 ngày chỉ hiện giờ",
+    "Tab Việc, ngày trước không đổi; tab Khám chỉ thêm ô giờ",
+    "Ảnh iPhone sáng và tối trước/sau gửi bác sĩ duyệt"
+  ]
+}

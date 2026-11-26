@@ -5,18 +5,16 @@ import {
   datGioBe, hoanTacGioBe, datGioMaKhac, dienGioNhanh, hoanTacDienGio, themKhoang, suaKhoang, xoaKhoang,
   khoiPhucGioMay, themMaKhac, xoaMaKhac
 } from '../lib/actions.js';
-import { coGio, docGio, chuGio, thuTu, loiGio, trongKhoang, khoangHopLe, phanBoGio, gopPhut, thanhGio } from '../lib/gio.js';
+import { coGio, docGio, chuGio, thuTu, loiGio, trongKhoang, khoangHopLe, phanBoGio, gopPhut, thanhGio, CHUA_MA, tenKhoang, chuLoiNgan, chuLoiDai } from '../lib/gio.js';
 import { useHoanTac } from './HoanTac.jsx';
 import { useVietTat } from './VietTat.jsx';
 import { Sheet, SheetHead, PlusIcon, useDongSheet } from './ui.jsx';
 
 const NGAY = 1440;
-const CHUA_MA = 'Chưa có mã';
 const NGOAI_KHAM = 'Ngoài tab Khám';
 const BUOC = [1, 2, 3, 5];
 
 const chuMa = (d) => d.ma || CHUA_MA;
-const tenKhoang = (k) => chuGio(k.tu) + '–' + chuGio(k.den) + (k.bs ? ' (' + k.bs + ')' : '');
 const laSo = (v) => typeof v === 'number' && !Number.isNaN(v);
 const gioKhoangChu = (t) => chuGio(((t % NGAY) + NGAY) % NGAY);
 
@@ -26,11 +24,7 @@ export function gioQMacDinh() {
   return { tu: d.getHours() * 60 + d.getMinutes(), den: null, buoc: 1, chon: null, mo: null };
 }
 
-// Một dòng trùng → chữ ngắn (trong danh sách) và chữ dài (trong bảng).
-const chuLoiNgan = (e, dongMa) => (e.kieu === 'be' ? 'Trùng giờ với ' + (dongMa(e.id) || CHUA_MA) : 'Giờ ' + (e.bs || 'người khác') + ' đã dùng');
-const chuLoiDai = (e, t, dongMa) => (e.kieu === 'be'
-  ? 'Trùng giờ nhập với ' + (dongMa(e.id) || CHUA_MA) + ', ' + chuGio(t)
-  : 'Nằm trong khoảng đã có người dùng ' + tenKhoang(e));
+// Chữ lý do trùng (chuLoiNgan, chuLoiDai) nằm ở src/lib/gio.js, dùng chung với ô giờ ở tab Khám.
 
 // ---------- Ô gõ giờ: 815 / 0815 / 8h15 → 08h15, kèm −1 / +1 vòng qua nửa đêm ----------
 // value = phút | null (trống) | NaN (đang gõ dở/sai). onChange(phút | null | NaN).
@@ -56,7 +50,7 @@ function OGio({ id, nhan, value, onChange, goiY = '815' }) {
           onChange={(e) => { setChu(e.target.value); onChange(docGio(e.target.value)); }}
           onFocus={(e) => { dangGo.current = true; vuaVao.current = true; boiDen(e.currentTarget); }}
           // Safari bỏ bôi đen khi nhấc tay: bôi lại ở cú click đầu sau khi vào ô
-          onClick={(e) => { if (vuaVao.current) { vuaVao.current = false; const o = e.currentTarget; setTimeout(() => boiDen(o), 0); } }}
+          onClick={(e) => { if (vuaVao.current) { vuaVao.current = false; const o = e.currentTarget, v = o.value; setTimeout(() => { if (o.value === v) boiDen(o); }, 0); } }}
           onBlur={() => { dangGo.current = false; const v = docGio(chu); if (coGio(v)) setChu(chuGio(v)); else if (v === null) setChu(laSo(value) ? chuGio(value) : ''); }}
           onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } }} />
         <button type="button" className="g-nho" aria-label={nhan + ' thêm 1 phút'} onClick={() => doi(1)}>+1</button>

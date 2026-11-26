@@ -62,6 +62,15 @@
 | 64 | Bỏ nhãn MT khi việc đang bật "đã nhập máy": cờ `daNhapMay` vẫn nằm trong dữ liệu nhưng không hiện nữa. | Lưu ý | Hỏi bác sĩ: khi bỏ nhãn MT thì cờ có cần tắt theo không. | Thuật toán |
 | 65 | `batTatDaNhapMay` trong `src/lib/actions.js` không còn ai gọi (mã thừa sau đợt 23/11 (2)). | Lưu ý | Đề xuất xoá hàm này; chờ bác sĩ đồng ý rồi mới làm. | Thuật toán |
 
+## 26/11/2026 — Tab Giờ đợt 3: ô giờ ở tab Khám (ảnh chờ bác sĩ duyệt, chưa đẩy)
+
+Phiếu: `doi-agent/phieu-viec/2026-11-26-tab-gio-dot3-kham.json`. Bác sĩ duyệt ảnh đợt 2 ngày 26/11/2026 (chưa lưu ảnh chuẩn, để lưu chung sau đợt 3). `npm test` 361/361, dựng đạt, phạm vi đạt, bộ chụp giao diện đạt, Kiểm thử độc lập ĐẠT (sau 1 vòng sửa).
+
+- **Bác sĩ thấy gì đổi:** dòng bé có ô giờ ngay sau mã (trống: đồng hồ chuông; trùng: đỏ); chi tiết bé có ô giờ bên trái chip phòng; 2 ngày chỉ hiện chữ giờ. Trùng thì hỏi Sửa lại / Giữ giờ cũ / Vẫn lưu. Dòng bé cao hơn khoảng 10px.
+- **Đã sửa sau Kiểm thử:** vào ô rồi bấm Hoàn tác, ô vẫn giữ giờ cũ và rời ô ghi lại (huỷ Hoàn tác). Nay ô theo giờ mới, chưa gõ thì không ghi. Tab Giờ: gõ nhanh ngay sau chạm không bị bôi đè.
+- **Lưu ý mức thấp (chưa sửa):** sau Giữ giờ cũ / Vẫn lưu con trỏ bàn phím về đầu trang; viền nét đứt của ô trống mờ (1,8:1), đồng hồ vẫn rõ; bé bị xoá ở máy khác lúc đang gõ sai thì thấy câu "Giờ chưa đúng".
+- **Chưa kiểm:** iPhone và Safari thật (bôi đen, bàn phím số, vuốt từ ô giờ), so ảnh chuẩn.
+
 ## 26/11/2026 — Tab Giờ đợt 2: màn hình tab Giờ (ảnh chờ bác sĩ duyệt, chưa đẩy)
 
 Phiếu: `doi-agent/phieu-viec/2026-11-26-tab-gio-dot2-man-hinh.json`. `npm test` 358/358, dựng đạt, phạm vi đạt, bộ chụp giao diện đạt (chưa lưu ảnh chuẩn), Kiểm thử độc lập ĐẠT.

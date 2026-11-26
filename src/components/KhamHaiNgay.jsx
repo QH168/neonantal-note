@@ -9,6 +9,7 @@ import { ghepHaiNgay, locThe } from '../lib/hai-ngay.js';
 import { useHaiNgayKham } from '../hooks.js';
 import { PatientDetail, NutMayBe } from './Exam.jsx';
 import { BeChiXem } from './KhamNgayTruoc.jsx';
+import { ChuGioKham } from './GioKham.jsx';
 import GiaoTour from './GiaoTour.jsx';
 import { Sheet, TickOk } from './ui.jsx';
 
@@ -78,6 +79,7 @@ export default function KhamHaiNgay({ homQua, homNay, mocPhut, ngayLich, wide })
         <button type="button" className="hn-mo" onClick={() => { setMsg(''); setSelKey(t.key); }}>
           <span className="hn-dau">
             <span className="pat-code">{t.ma || 'Chưa có mã'}</span>
+            {t.homNay && <ChuGioKham p={t.homNay} />}
             {so && <span className="hn-so">{so}</span>}
             {t.moiDemQua && <span className="hn-vao">Vào {t.gioVao} đêm qua</span>}
             {xong && <TickOk nhan="Đã khám hôm nay" />}

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { coGio, docGio, chuGio, thuTu, khoangHopLe, trongKhoang, loiGio, phanBoGio, gopPhut, dauCuoi, khoangTrong, maKhacHopLe, chuanBacSi, thanhGio, beTheoPhong } from '../src/lib/gio.js';
+import { coGio, docGio, chuGio, thuTu, khoangHopLe, trongKhoang, loiGio, phanBoGio, gopPhut, dauCuoi, khoangTrong, maKhacHopLe, chuanBacSi, thanhGio, beTheoPhong, xuLyGoGio, noiDungCanhBao, chuLoiNgan, chuLoiDai, tenKhoang, CHUA_MA } from '../src/lib/gio.js';
 
 const G = (h, m = 0) => h * 60 + m;
 const be = (n) => 'B' + n;
@@ -444,4 +444,60 @@ test('beTheoPhong: thứ tự phòng rồi thứ tự bé, bé lạc vào nhóm 
   assert.equal(k.tenPhong.get('p2'), 'Phòng 1');
   assert.deepEqual(beTheoPhong([], []).ds, []);
   assert.deepEqual(beTheoPhong(undefined, undefined).nhom, []);
+});
+
+// ---------- Ô giờ ở tab Khám (đợt 3) ----------
+const dongK = [{ id: 'a', ma: 'G01', gio: G(8, 1) }, { id: 'b', ma: 'G02', gio: null }, { id: 'c', ma: '', gio: G(8, 10) }];
+const khoangK = [{ id: 'k', tu: G(7, 30), den: G(7, 45), bs: 'BS A' }];
+const dongMaK = (id) => dongK.find((d) => d.id === id)?.ma || '';
+const xu = (chu, goc, id = 'b') => xuLyGoGio({ chu, goc, id, dong: dongK, khoang: khoangK, moc: 420 });
+
+test('xuLyGoGio: không đổi, xoá, sai, lưu', () => {
+  assert.deepEqual(xu('', null), { kieu: 'giu' });                      // ô trống, vào rồi ra
+  assert.deepEqual(xu('08h05', G(8, 5), 'b'), { kieu: 'giu' });         // gõ lại đúng giờ cũ (dạng khác)
+  assert.deepEqual(xu('805', G(8, 5), 'b'), { kieu: 'giu' });
+  assert.deepEqual(xu('', G(8, 5)), { kieu: 'xoa' });
+  assert.deepEqual(xu('   ', G(8, 5)), { kieu: 'xoa' });
+  for (const s of ['2575', '860', 'abc', '12345', '24h00']) assert.equal(xu(s, G(8, 5)).kieu, 'sai', s);
+  assert.equal(xu('abc', null).kieu, 'sai');
+  assert.deepEqual(xu('0805', null), { kieu: 'luu', v: G(8, 5) });
+  assert.deepEqual(xu('8h05', G(9)), { kieu: 'luu', v: G(8, 5) });
+  assert.deepEqual(xu('801', 'xx'), { kieu: 'hoi', v: G(8, 1), loi: [{ kieu: 'be', id: 'a', ma: 'G01', gio: G(8, 1) }] }); // giờ cũ hỏng coi như chưa có
+});
+
+test('xuLyGoGio: trùng bé khác, trùng khoảng, trùng cả hai; bỏ qua chính nó', () => {
+  const a = xu('0801', null);
+  assert.equal(a.kieu, 'hoi');
+  assert.deepEqual(a.loi.map((e) => e.kieu + ':' + e.id), ['be:a']);
+  const k = xu('0740', G(9));
+  assert.equal(k.kieu, 'hoi');
+  assert.deepEqual(k.loi.map((e) => e.kieu + ':' + e.id), ['khoang:k']);
+  const dong2 = [...dongK, { id: 'd', ma: 'G09', gio: G(7, 40) }];
+  const ca = xuLyGoGio({ chu: '740', goc: null, id: 'b', dong: dong2, khoang: khoangK, moc: 420 });
+  assert.deepEqual(ca.loi.map((e) => e.kieu + ':' + e.id), ['be:d', 'khoang:k']);
+  // chính bé a gõ 08h01 khi đang là 08h01: không đổi; gõ 08h10 (giờ của mã không tên c): trùng
+  assert.deepEqual(xu('0801', G(8, 1), 'a'), { kieu: 'giu' });
+  assert.equal(xu('0810', G(8, 1), 'a').kieu, 'hoi');
+  // khoảng người khác mà đầu mút trùng cũng tính
+  assert.equal(xu('0745', null).kieu, 'hoi');
+  assert.equal(xu('0746', null).kieu, 'luu');
+});
+
+test('chữ lý do và hộp cảnh báo giống tab Giờ', () => {
+  assert.equal(tenKhoang(khoangK[0]), '07h30–07h45 (BS A)');
+  assert.equal(tenKhoang({ tu: G(8), den: G(8, 5), bs: '' }), '08h00–08h05');
+  assert.equal(chuLoiNgan({ kieu: 'be', id: 'a' }, dongMaK), 'Trùng giờ với G01');
+  assert.equal(chuLoiNgan({ kieu: 'be', id: 'c' }, dongMaK), 'Trùng giờ với ' + CHUA_MA);
+  assert.equal(chuLoiNgan({ kieu: 'khoang', id: 'k', bs: 'BS A' }, dongMaK), 'Giờ BS A đã dùng');
+  assert.equal(chuLoiNgan({ kieu: 'khoang', id: 'k', bs: '' }, dongMaK), 'Giờ người khác đã dùng');
+  assert.equal(chuLoiDai({ kieu: 'be', id: 'a' }, G(8, 1), dongMaK), 'Trùng giờ nhập với G01, 08h01');
+  assert.equal(chuLoiDai({ kieu: 'khoang', ...khoangK[0] }, G(7, 40), dongMaK), 'Nằm trong khoảng đã có người dùng 07h30–07h45 (BS A)');
+  const loi = loiGio({ id: 'b', gio: G(8, 1) }, dongK, khoangK, 420);
+  const co = noiDungCanhBao({ ma: 'G02', v: G(8, 1), goc: G(8, 5), loi, dongMa: dongMaK });
+  assert.deepEqual(co, { tieuDe: 'Trùng giờ: G02 - 08h01', lyDo: ['Trùng giờ nhập với G01, 08h01.'], nutGiu: 'Giữ giờ cũ 08h05', nutLuu: 'Vẫn lưu 08h01' });
+  const chua = noiDungCanhBao({ ma: '', v: G(7, 40), goc: null, loi: loiGio({ id: 'b', gio: G(7, 40) }, dongK, khoangK, 420), dongMa: dongMaK });
+  assert.equal(chua.tieuDe, 'Trùng giờ: ' + CHUA_MA + ' - 07h40');
+  assert.equal(chua.nutGiu, 'Bỏ, không ghi giờ');
+  assert.deepEqual(chua.lyDo, ['Nằm trong khoảng đã có người dùng 07h30–07h45 (BS A).']);
+  assert.deepEqual(noiDungCanhBao({ ma: 'X', v: G(8), goc: null, loi: undefined, dongMa: dongMaK }).lyDo, []);
 });

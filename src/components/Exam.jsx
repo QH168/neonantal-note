@@ -11,6 +11,7 @@ import { nhomTheo } from '../lib/chung.js';
 import { useBaoTam, useChamHaiLan, useChamMay, useTuLuu } from '../hooks.js';
 import { useVietTat } from './VietTat.jsx';
 import { useHoanTac } from './HoanTac.jsx';
+import { OGioKham } from './GioKham.jsx';
 import { mucTangGiamCan } from '../lib/hai-ngay.js';
 import { Chevron, XIcon, SheetHead, SwipeRow, Sheet, DongBtn, TickOk, TrangThaiXong, TrashIcon, PlusIcon, MayTinhIcon, DauChiTietViec, ChanChiTietViec, giuConTro, CongTacMay } from './ui.jsx';
 
@@ -147,9 +148,15 @@ function PatientRow({ p, todos, selected, onOpen }) {
   return (
     <SwipeRow className={'pat-row' + (selected ? ' sel' : '') + (p.done ? ' xong' : '')} kind="bé" label={p.code || 'bệnh nhân'}
       daXong={!!p.done} onDone={() => { if (!p.done) setPatientDone(p, true); }}>
-      <button type="button" className="pat-open" onClick={onOpen}>
+      {/* 26/11 (tab Giờ đợt 3): ô giờ là ô nhập nên KHÔNG nằm trong nút. Nút mở chi tiết là lớp trống phủ cả vùng chữ (aria-label),
+          chữ nằm trên lớp đó với pointer-events:none; chỉ ô giờ nhận chạm. */}
+      <div className="pat-the">
+        <button type="button" className="pat-open" aria-label={'Mở chi tiết ' + (p.code?.trim() || 'bé chưa có mã')} onClick={onOpen} />
         <span className="pat-main">
-          <span className="pat-code">{p.code || 'Chưa có mã'}</span>
+          <span className="pat-d1">
+            <span className="pat-code">{p.code || 'Chưa có mã'}</span>
+            <OGioKham p={p} />
+          </span>
           <span className="muted small">{sub}</span>
           {todos.length > 0 && (
             <span className="pat-todos">
@@ -158,7 +165,7 @@ function PatientRow({ p, todos, selected, onOpen }) {
           )}
           {p.note?.trim() && <span className="pat-note">Ghi chú: {p.note}</span>}
         </span>
-      </button>
+      </div>
       {/* "Đã nhập máy tính" (22/11): nút riêng, ngay bên trái nhãn "Còn n việc"; độc lập với vuốt phải (đã khám) và với mở chi tiết */}
       <NutMayBe p={p} onMo={onOpen} />
       {left > 0 && <span className="left-badge" onClick={onOpen}>Còn {left} việc</span>}
@@ -325,6 +332,7 @@ export function PatientDetail({ p, todos, onClose, wide = false, phong = '', dem
         <label htmlFor="be-ma" className="sr-only">Mã / giường</label>
         <input id="be-ma" ref={maRef} type="text" className="be-ma" value={f.code} onChange={set('code')} onBlur={flush}
           autoComplete="off" placeholder="Mã / giường" />
+        <OGioKham p={p} to />
         {phong && <span className="be-phong">{phong}</span>}
         {dem?.moiDemQua && dem.gioVao && <span className="be-vao">Vào {dem.gioVao}</span>}
         <DongBtn className="icon-btn" aria-label="Đóng chi tiết" onClose={dong}><XIcon /></DongBtn>

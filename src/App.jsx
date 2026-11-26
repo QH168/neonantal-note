@@ -12,6 +12,7 @@ import MenuThem from './components/MenuThem.jsx';
 import KhamNgayTruoc from './components/KhamNgayTruoc.jsx';
 import KhamHaiNgay from './components/KhamHaiNgay.jsx';
 import TabGio, { gioQMacDinh } from './components/Gio.jsx';
+import { GioKhamProvider } from './components/GioKham.jsx';
 import { LichKham } from './components/Lich.jsx';
 import ThuVien from './components/ThuVien.jsx';
 import { VietTatProvider } from './components/VietTat.jsx';
@@ -130,6 +131,7 @@ function AppChinh({ mocPhut, homNay, homQua, ngayLich, cheDo, setCheDo }) {
     const ph = beTheoPhong(roomsHomNay, patients);
     return { ...ph, ...dongGio(ph.ds, gioRows) };
   }, [roomsHomNay, patients, gioRows]);
+  const moGioKham = useMemo(() => ({ dong: gioDl.dong, khoang: gioDl.khoang }), [gioDl]); // cho ô giờ ở tab Khám kiểm trùng (cùng dữ liệu với tab Giờ)
   const daCoGio = useMemo(() => gioDl.dong.reduce((n, d) => n + (coGio(d.gio) ? 1 : 0), 0), [gioDl]);
   const dayTasks = useMemo(() => tasks.filter((t) => t.date === viewDate), [tasks, viewDate]);
   const overdue = useMemo(() => tasks.reduce((n, t) => n + (t.date < homNay && !t.done ? 1 : 0), 0), [tasks, homNay]);
@@ -238,6 +240,7 @@ function AppChinh({ mocPhut, homNay, homQua, ngayLich, cheDo, setCheDo }) {
       </button>
     );
     return (
+      <GioKhamProvider dong={moGioKham.dong} khoang={moGioKham.khoang} moc={mocPhut}>
       <div className="pc">
         <div className="pc-top">
           {tabs}
@@ -314,6 +317,7 @@ function AppChinh({ mocPhut, homNay, homQua, ngayLich, cheDo, setCheDo }) {
         )}
         {bangChung}
       </div>
+      </GioKhamProvider>
     );
   }
 
@@ -324,6 +328,7 @@ function AppChinh({ mocPhut, homNay, homQua, ngayLich, cheDo, setCheDo }) {
     onDoiQuanLyPhong: () => setRoomEdit(!roomEdit), onMoThuVien: () => setVtOpen(true), onMoSaoLuu: () => setBackupOpen(true)
   });
   return (
+    <GioKhamProvider dong={moGioKham.dong} khoang={moGioKham.khoang} moc={mocPhut}>
     <div className="phone-app">
       <header className="ph-head">
         <div className="ph-r1">
@@ -400,5 +405,6 @@ function AppChinh({ mocPhut, homNay, homQua, ngayLich, cheDo, setCheDo }) {
       )}
       {bangChung}
     </div>
+    </GioKhamProvider>
   );
 }

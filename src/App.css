@@ -165,9 +165,14 @@ html.co-form-viec .ph-main{padding-bottom:calc(var(--tf-cao,0px) + 12px)} /* vi�
 .room-add:active .room-add-o{background:var(--accent);color:var(--accentInk);transform:scale(.94)}
 .pat-row{display:flex;align-items:center;gap:0;min-height:60px;padding:0 9px 0 14px;background:var(--surface);border:1px solid var(--line);border-radius:12px}
 .pat-row.sel{border-color:var(--accent)}
-.pat-open{flex:1;min-width:0;min-height:52px;align-self:stretch;display:flex;align-items:center;gap:8px;padding:6px 8px 6px 0;border:0;background:transparent;color:var(--ink);text-align:left;touch-action:manipulation}
+/* 26/11 (tab Giờ, đợt 3): .pat-the giữ chỗ; .pat-open là lớp nút trống phủ cả vùng chữ (ô giờ là ô nhập nên không nằm trong nút);
+   .pat-main nằm trên lớp đó, không nhận chạm (pointer-events:none) trừ ô giờ .o-gio */
+.pat-the{flex:1;min-width:0;min-height:52px;align-self:stretch;position:relative;display:flex;align-items:center}
+.pat-open{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;border:0;border-radius:8px;background:transparent;color:var(--ink);touch-action:manipulation}
 .pat-open:focus-visible{outline-offset:-2px;border-radius:8px}
-.pat-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.pat-main{position:relative;pointer-events:none;flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;padding:6px 8px 6px 0}
+.pat-d1{display:flex;flex-wrap:wrap;align-items:center;column-gap:8px;min-width:0;max-width:100%}
+.pat-d1 .pat-code{flex:none;max-width:100%}
 .pat-code{font-size:16px;font-weight:600;overflow-wrap:anywhere}
 .pat-todos{display:flex;flex-direction:column;gap:3px;padding-top:4px}
 .pat-todo{font-size:14px;line-height:1.4;overflow-wrap:anywhere}
@@ -268,7 +273,7 @@ html.co-form-viec .ph-main{padding-bottom:calc(var(--tf-cao,0px) + 12px)} /* vi�
 :is(.phone-app,.sheet-ph) .xsmall{font-size:12px}
 :is(.phone-app,.sheet-ph) .bold{font-size:15px}
 :is(.phone-app,.sheet-ph) .pat-row{min-height:54px}
-:is(.phone-app,.sheet-ph) .pat-open{min-height:50px}
+:is(.phone-app,.sheet-ph) .pat-the{min-height:50px}
 :is(.phone-app,.sheet-ph) .pat-code{font-size:15px}
 :is(.phone-app,.sheet-ph) .pat-main .small{font-size:12px}
 :is(.phone-app,.sheet-ph) .pat-todo{font-size:13px}
@@ -737,3 +742,47 @@ html.co-form-viec body:not(.co-bang) .hoantac-wrap{bottom:calc(var(--kb,0px) + v
 .g-phong-dong{overflow-wrap:anywhere}
 @media (max-width:370px){.g-hai-gio{grid-template-columns:minmax(0,1fr)}.g-dong .g{width:56px}}
 @media (min-width:900px){.pc-main.gio{max-width:680px}}
+
+/* ===== Tab Giờ, đợt 3 (26/11/2026, bản thử lần 6): ô giờ nhập máy ở tab Khám =====
+   .o-gio: ô trên dòng bé (vùng chạm 44px, ô thấy 34px; trống = đồng hồ chuông nét đứt 48px; có giờ = nền xanh nhạt 78px; trùng = nền đỏ nhạt, viền đỏ 2px).
+   .o-gio.to: bản lớn 44px trong chi tiết bé, đồng hồ nằm trong ô bên trái. Ô nhập 16px. Màu chỉ dùng token sẵn có. */
+.o-gio{position:relative;pointer-events:auto;flex:none;display:flex;align-items:center;min-height:44px;margin:-6px 0;padding:0 4px;cursor:text}
+.o-gio input{width:78px;height:34px;padding:0 4px;border:1px solid transparent;border-radius:10px;background:var(--tint);color:var(--tintInk);font-size:16px;font-weight:700;text-align:center;-webkit-appearance:none;appearance:none;-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+.o-gio input::placeholder{color:var(--muted);font-weight:500;opacity:1}
+.o-gio.trong input{background:transparent;border:1px dashed var(--edge)}
+.o-gio.trung input{background:var(--errBg);color:var(--errInk);border:2px solid var(--p1)}
+.o-gio svg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;color:var(--muted);display:none}
+.o-gio.trong svg{display:block}
+.o-gio:not(.to):focus-within svg{display:none}
+.o-gio:not(.to).trong:not(:focus-within) input{width:48px}
+.o-gio.to{margin:0;padding:0}
+.o-gio.to input{width:96px;height:44px;padding:0 6px 0 34px;border-radius:12px}
+.o-gio.to svg{display:block;left:10px;transform:translateY(-50%);color:var(--tintInk)}
+.o-gio.to.trong svg{color:var(--muted)}
+.o-gio.to.trung svg{color:var(--errInk)}
+.o-gio.to.trong:not(:focus-within) input{width:48px;padding:0}
+.o-gio.to.trong:not(:focus-within) svg{left:50%;transform:translate(-50%,-50%)}
+@media (max-width:370px){.o-gio.to input{width:90px;padding-left:30px}.o-gio.to svg{left:8px}.pat-d1{column-gap:4px}.pat-d1 .o-gio{padding:0 1px}} /* 320: mã + ô giờ còn vừa một hàng khi dòng có nút máy tính và "Còn n việc" */
+/* đầu chi tiết bé: mã, ô giờ, chip phòng, chip "Vào hh:mm" xuống hàng khi hết chỗ; nút đóng ghim góc phải */
+.be-head{position:relative;flex-wrap:wrap;padding-right:50px}
+.be-head>.icon-btn{position:absolute;top:2px;right:0}
+.be-head .be-ma{flex:1 1 110px}
+.be-head .o-gio.to{flex:none}
+/* thẻ 2 ngày: chỉ hiện giờ (chữ), trùng thì chữ đỏ */
+.hn-gio{flex:none;font-size:15px;font-weight:700;color:var(--tintInk);white-space:nowrap}
+.hn-gio.trung{color:var(--errInk)}
+/* dòng đầu thẻ 2 ngày có thêm giờ: hết chỗ thì xuống hàng cả cụm (mã không bị bẻ chữ), chip "Vào" dồn phải */
+.hn-dau{flex-wrap:wrap;row-gap:4px}
+.hn-dau .pat-code{flex:none;max-width:100%}
+/* hộp cảnh báo trùng giờ: nằm trên bảng chi tiết bé (z 50) và thanh Hoàn tác (z 70) */
+.gk-lop{position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;padding:24px}
+.gk-nen{position:absolute;inset:0;background:var(--overlay)}
+.gk-hop{position:relative;width:100%;max-width:360px;max-height:100%;overflow-y:auto;padding:18px 16px 14px;border:1px solid var(--line);border-radius:18px;background:var(--surface);color:var(--ink);box-shadow:0 8px 28px var(--shadow);display:flex;flex-direction:column;gap:10px}
+.gk-hop h2{margin:0;font-size:17px;font-weight:700;color:var(--errInk)}
+.gk-mota{display:flex;flex-direction:column;gap:6px}
+.gk-mota p{margin:0;font-size:15px;line-height:1.4;overflow-wrap:anywhere}
+.gk-mota .gk-ghi{font-size:13px;color:var(--muted)}
+.gk-chinh,.gk-vien{width:100%;min-height:48px;padding:0 12px;border-radius:14px;font-size:15px;line-height:1.25}
+.gk-chinh{border:0;background:var(--accent);color:var(--accentInk);font-weight:700}
+.gk-vien{border:1px solid var(--edge);background:var(--surface);color:var(--ink);font-weight:600}
+.gk-vien.do{border-color:var(--p1);color:var(--errInk)}
