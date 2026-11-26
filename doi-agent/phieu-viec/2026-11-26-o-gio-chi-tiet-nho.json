@@ -1,0 +1,29 @@
+{
+  "ten": "Chi tiết bé: thu nhỏ ô giờ bằng chip phòng, ô mã/tên rộng thêm về bên phải",
+  "ngay": "2026-11-26",
+  "khuVuc": "Khám",
+  "loai": "nho",
+  "canBacSiDuyet": true,
+  "trangThai": "Làm xong 26/11/2026 trên nhánh o-gio-nho: npm test 361 đạt, build đạt, bộ chụp giao diện đạt, phạm vi đạt; chờ bác sĩ duyệt ảnh; chưa lưu ảnh chuẩn, chưa đẩy",
+  "agent": ["dieu-phoi", "ghi-chep"],
+  "fileDuocSua": [
+    "src/App.css",
+    "scripts/chup-giao-dien.mjs",
+    "doi-agent/**"
+  ],
+  "yeuCau": [
+    "Ô giờ ở đầu chi tiết bé (.o-gio.to) thấy cao bằng chip phòng (khoảng 26px), bo góc như chip, biểu tượng đồng hồ nhỏ lại.",
+    "Vùng chạm của ô giờ vẫn ≥44px, chữ trong ô vẫn 16px (iPhone không phóng to).",
+    "Ô mã/tên tự rộng thêm về bên phải nhờ phần ô giờ nhỏ lại.",
+    "Trống, có giờ, trùng giữ màu như cũ."
+  ],
+  "khongLam": [
+    "Không đổi ô giờ trên dòng bé, tab Giờ, chế độ 2 ngày.",
+    "Không đổi JS, dữ liệu, thư viện; không --luu-chuan; không đẩy."
+  ],
+  "tieuChiDat": [
+    "npm test, npm run build đạt; phạm vi đạt",
+    "iPhone 393 và 320, sáng và tối: không tràn ngang, vùng chạm ≥44px",
+    "Ảnh trước/sau gửi bác sĩ duyệt"
+  ]
+}

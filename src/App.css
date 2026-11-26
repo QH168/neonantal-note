@@ -755,14 +755,15 @@ html.co-form-viec body:not(.co-bang) .hoantac-wrap{bottom:calc(var(--kb,0px) + v
 .o-gio.trong svg{display:block}
 .o-gio:not(.to):focus-within svg{display:none}
 .o-gio:not(.to).trong:not(:focus-within) input{width:48px}
-.o-gio.to{margin:0;padding:0}
-.o-gio.to input{width:96px;height:44px;padding:0 6px 0 34px;border-radius:12px}
-.o-gio.to svg{display:block;left:10px;transform:translateY(-50%);color:var(--tintInk)}
+/* 26/11/2026: ô giờ chi tiết bé thấy cao bằng chip phòng (28px); vùng chạm vẫn 44px nhờ khung .o-gio */
+.o-gio.to{margin:0;padding:0;min-width:44px;justify-content:center}
+.o-gio.to input{width:86px;height:28px;padding:0 6px 0 25px;border-radius:12px;font-weight:600}
+.o-gio.to svg{display:block;left:7px;width:16px;height:16px;transform:translateY(-50%);color:var(--tintInk)}
 .o-gio.to.trong svg{color:var(--muted)}
 .o-gio.to.trung svg{color:var(--errInk)}
-.o-gio.to.trong:not(:focus-within) input{width:48px;padding:0}
+.o-gio.to.trong:not(:focus-within) input{width:40px;padding:0}
 .o-gio.to.trong:not(:focus-within) svg{left:50%;transform:translate(-50%,-50%)}
-@media (max-width:370px){.o-gio.to input{width:90px;padding-left:30px}.o-gio.to svg{left:8px}.pat-d1{column-gap:4px}.pat-d1 .o-gio{padding:0 1px}} /* 320: mã + ô giờ còn vừa một hàng khi dòng có nút máy tính và "Còn n việc" */
+@media (max-width:370px){.o-gio.to input{width:84px;padding-left:24px}.o-gio.to svg{left:6px}.pat-d1{column-gap:4px}.pat-d1 .o-gio{padding:0 1px}} /* 320: mã + ô giờ còn vừa một hàng khi dòng có nút máy tính và "Còn n việc" */
 /* đầu chi tiết bé: mã, ô giờ, chip phòng, chip "Vào hh:mm" xuống hàng khi hết chỗ; nút đóng ghim góc phải */
 .be-head{position:relative;flex-wrap:wrap;padding-right:50px}
 .be-head>.icon-btn{position:absolute;top:2px;right:0}

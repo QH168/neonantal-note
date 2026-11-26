@@ -4890,9 +4890,10 @@ async function luongKhamGio(dark) {
   await page.waitForTimeout(800);
   if (!(await page.locator('.sheet-be .be-head .o-gio.to input').count())) E('chi tiết bé không có ô giờ');
   else {
-    const g = await page.evaluate(() => { const i = document.querySelector('.be-head .o-gio.to input').getBoundingClientRect(), p = document.querySelector('.be-head .be-phong').getBoundingClientRect(); return { h: Math.round(i.height), trai: i.right <= p.left + 1 || p.top > i.top }; });
+    // 26/11/2026: ô thấy cao gần bằng chip phòng, vùng chạm (khung .o-gio) vẫn ≥ 44px
+    const g = await page.evaluate(() => { const k = document.querySelector('.be-head .o-gio.to').getBoundingClientRect(), i = document.querySelector('.be-head .o-gio.to input').getBoundingClientRect(), p = document.querySelector('.be-head .be-phong').getBoundingClientRect(); return { cham: Math.round(k.height), h: Math.round(i.height), phong: Math.round(p.height), trai: i.right <= p.left + 1 || p.top > i.top, catChu: (() => { const o = document.querySelector('.be-head .o-gio.to input'); return o.scrollWidth > o.clientWidth; })() }; });
     T.chiTiet = g;
-    if (g.h < 44 || !g.trai) E('ô giờ trong chi tiết phải cao ≥ 44px và nằm bên trái chip phòng: ' + JSON.stringify(g));
+    if (g.cham < 44 || Math.abs(g.h - g.phong) > 6 || !g.trai || g.catChu) E('ô giờ trong chi tiết: vùng chạm ≥ 44px, ô thấy cao gần bằng chip phòng, nằm bên trái chip phòng: ' + JSON.stringify(g));
   }
   await chup(page, 'iphone-kham-gio-chi-tiet' + sfx, true);
   await ctx.close();
