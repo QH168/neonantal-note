@@ -2,10 +2,13 @@
 // Mọi luật tính nằm ở src/lib/gio.js; mọi thao tác ghi gọi hàm trong src/lib/actions.js (mục "Giờ nhập máy").
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  datGioBe, hoanTacGioBe, datGioMaKhac, dienGioNhanh, hoanTacDienGio, themKhoang, suaKhoang, xoaKhoang,
+  datGioBe, hoanTacGioBe, datGioMaKhac, dienGioNhanh, hoanTacDienGio, themKhoang, themGioLe, suaKhoang, xoaKhoang, xoaCacKhoang,
   khoiPhucGioMay, themMaKhac, xoaMaKhac
 } from '../lib/actions.js';
-import { coGio, docGio, chuGio, thuTu, loiGio, trongKhoang, khoangHopLe, phanBoGio, gopPhut, thanhGio, CHUA_MA, tenKhoang, chuLoiNgan, chuLoiDai } from '../lib/gio.js';
+import {
+  coGio, docGio, chuGio, thuTu, loiGio, trongKhoang, khoangHopLe, phanBoGio, gopPhut, thanhGio, CHUA_MA, tenKhoang, chuLoiNgan, chuLoiDai,
+  buocKhoang, phutKhoang, chuKhoang, chuBuoc
+} from '../lib/gio.js';
 import { useHoanTac } from './HoanTac.jsx';
 import { useVietTat } from './VietTat.jsx';
 import { Sheet, SheetHead, PlusIcon, useDongSheet } from './ui.jsx';
@@ -67,11 +70,13 @@ function ThanhGioView({ t, dong, khoang }) {
     : '';
   return (
     <section className="g-dai" aria-label="Thanh giờ">
-      <div className="g-dai-dau"><span>Giờ đã có</span><span>{t.vach.length} bé · {khoang.length} khoảng người khác</span></div>
+      <div className="g-dai-dau"><span>Giờ đã có</span><span>{t.vach.length} bé · {khoang.length} mục người khác</span></div>
       {t.coGio ? (
         <>
           <div className="g-lan" role="img" aria-label={aria}>
-            {t.khoi.map((k) => <b key={k.id} style={{ left: k.left + '%', width: k.rong + '%' }}>{k.nhan && <span>{k.nhan}</span>}</b>)}
+            {t.khoi.map((k) => <b key={k.id} className={k.nhip.length ? 'nen' : undefined} style={{ left: k.left + '%', width: k.rong + '%' }}>{k.nhan && <span>{k.nhan}</span>}</b>)}
+            {/* khoảng có bước: vạch nhỏ ở đáy cho từng phút đã dùng */}
+            {t.khoi.flatMap((k) => k.nhip.map((n) => <b key={k.id + '-' + n.gio} className="nhip" style={{ left: n.left + '%', width: n.rong + '%' }} />))}
             {t.vach.map((v) => <i key={v.id} className={v.trung ? 'trung' : ''} style={{ left: v.left + '%', width: v.rong + '%' }} />)}
             {t.tam.map((v) => <i key={'t' + v.id} className="tam" style={{ left: v.left + '%', width: v.rong + '%' }} />)}
           </div>
@@ -254,35 +259,102 @@ function BangKhoang({ khoangGoc, dong, khoang, moc, homNay }) {
   const hoanTac = useHoanTac();
   const dong_ = useDongSheet();
   const sua = !!khoangGoc;
-  const [f, setF] = useState(() => ({ tu: sua ? khoangGoc.tu : null, den: sua ? khoangGoc.den : null }));
+  // Giờ lẻ (bác sĩ duyệt 26/11/2026) = dòng khoảng có tu = den; mở một giờ lẻ thì vào thẳng kiểu Giờ lẻ.
+  const le0 = sua && khoangGoc.tu === khoangGoc.den;
+  const [kieu, setKieu] = useState(le0 ? 'le' : 'khoang');
+  const [f, setF] = useState(() => ({ tu: sua && !le0 ? khoangGoc.tu : null, den: sua && !le0 ? khoangGoc.den : null }));
+  // Bước nhảy tự gõ (không có sẵn): trống = liền, 1–60 = cách đều.
+  const [buocChu, setBuocChu] = useState(() => (sua && buocKhoang(khoangGoc) > 1 ? String(buocKhoang(khoangGoc)) : ''));
+  const [le, setLe] = useState(() => (le0 ? [khoangGoc.tu] : []));
+  const [go, setGo] = useState('');
   const [bs, setBs] = useState(sua ? khoangGoc.bs || '' : '');
   const [dangGhi, setDangGhi] = useState(false);
   const vt = useVietTat(bs, (v) => setBs(String(v).slice(0, 20)));
+  const oLe = useRef(null);
+
+  const sb = buocChu.trim();
+  const buoc = sb === '' ? 1 : /^\d{1,2}$/.test(sb) && +sb >= 1 && +sb <= 60 ? +sb : NaN;
+  const goV = docGio(go);
+  const xepGio = useCallback((a) => [...a].sort((x, y) => thuTu(x, moc) - thuTu(y, moc)), [moc]);
+  // Giờ lẻ sẽ lưu: các giờ đã thêm + giờ đang gõ đúng mà chưa bấm Thêm.
+  const dsLe = useMemo(() => xepGio(coGio(goV) && !le.includes(goV) ? [...le, goV] : le), [le, goV, xepGio]);
 
   const thongTin = useMemo(() => {
+    const khac = khoang.filter((o) => !sua || o.id !== khoangGoc.id);
+    if (kieu === 'le') {
+      if (go.trim() && Number.isNaN(goV)) return { sai: 'Giờ chưa đúng. Gõ 905 hoặc 09h05.' };
+      if (!dsLe.length) return { sai: 'Gõ từng giờ người khác đã dùng, ví dụ 905, 912, 940.' };
+      const trung = dong.filter((d) => coGio(d.gio) && dsLe.includes(d.gio));
+      const chong = khac.filter((o) => dsLe.some((v) => trongKhoang(v, o, moc)));
+      return { sai: '', trung, chong, ds: dsLe };
+    }
     if (f.tu === null || f.den === null) return { sai: 'Gõ giờ bắt đầu và kết thúc, ví dụ 820 và 835.' };
     if (Number.isNaN(f.tu) || Number.isNaN(f.den)) return { sai: 'Giờ chưa đúng. Gõ 820 hoặc 08h20.' };
     if (thuTu(f.den, moc) < thuTu(f.tu, moc)) return { sai: 'Giờ kết thúc sớm hơn giờ bắt đầu.' };
-    const trung = dong.filter((d) => coGio(d.gio) && trongKhoang(d.gio, f, moc));
-    const chong = khoang.filter((o) => (!sua || o.id !== khoangGoc.id) && khoangHopLe(o, moc) && thuTu(o.tu, moc) <= thuTu(f.den, moc) && thuTu(o.den, moc) >= thuTu(f.tu, moc));
-    return { sai: '', trung, chong };
-  }, [f, dong, khoang, moc, sua, khoangGoc]);
+    if (Number.isNaN(buoc)) return { sai: 'Cách mỗi gõ số phút từ 1 đến 60, hoặc để trống là liền.' };
+    const k = { tu: f.tu, den: f.den, buoc };
+    const ds = phutKhoang(k, moc);
+    const trung = dong.filter((d) => coGio(d.gio) && trongKhoang(d.gio, k, moc));
+    const chong = khac.filter((o) => ds.some((v) => trongKhoang(v, o, moc)));
+    return { sai: '', trung, chong, ds };
+  }, [kieu, f, buoc, go, goV, dsLe, dong, khoang, moc, sua, khoangGoc]);
   const co = thongTin.trung?.length > 0;
+  const n = thongTin.ds?.length || 0;
+
+  // Dòng đọc lại dưới ô Cách mỗi.
+  let xem = 'Để trống: dùng liền mọi phút, như một ca từ 07h00 đến 07h05. Gõ số phút (ví dụ 5) khi người khác nhập cách đều; phút ở giữa vẫn chọn được.';
+  if (kieu === 'khoang' && thongTin.ds) {
+    const ds = thongTin.ds;
+    const cuoi = ds[ds.length - 1];
+    xem = buocKhoang({ buoc }) === 1
+      ? `Dùng liền ${n} phút, từ ${chuGio(f.tu)} đến ${chuGio(f.den)}.`
+      : `Dùng ${n} giờ: ${n <= 6 ? ds.map(chuGio).join(', ') : ds.slice(0, 3).map(chuGio).join(', ') + ' … ' + chuGio(cuoi)}. Phút ở giữa vẫn chọn được.`
+        + (cuoi !== f.den ? ` ${chuGio(f.den)} lệch bước nên dừng ở ${chuGio(cuoi)}.` : '');
+  }
+
+  const doiKieu = (k) => {
+    if (k === kieu) return;
+    setKieu(k);
+    setTimeout(() => document.getElementById(k === 'le' ? 'g-b-le' : 'g-b-tu')?.focus(), 0);
+  };
+  const themLe = (v = docGio(go)) => {
+    if (v === null) { oLe.current?.focus(); return; }
+    if (!coGio(v)) return; // sai: dòng báo đã nói
+    setLe((a) => (a.includes(v) ? a : [...a, v]));
+    setGo('');
+    oLe.current?.focus();
+  };
 
   const luu = async () => {
     if (dangGhi || thongTin.sai) return;
     setDangGhi(true);
     try {
-      const yc = { tu: f.tu, den: f.den, bs };
-      const nhan = 'Đã lưu khoảng ' + chuGio(f.tu) + '–' + chuGio(f.den);
-      if (sua) {
-        const r = await suaKhoang(khoangGoc.id, yc, moc);
-        if (!r.ok) { hoanTac.hien({ nhan: 'Không lưu được, khoảng này không còn nữa.' }); dong_(); return; }
-        hoanTac.hien({ nhan, lam: async () => ((await suaKhoang(khoangGoc.id, r.cu, moc)).ok ? undefined : 'Không hoàn tác được.') });
+      if (kieu === 'le') {
+        const ds = thongTin.ds;
+        const nhan = 'Đã lưu ' + ds.length + ' giờ lẻ: ' + ds.map(chuGio).join(', ');
+        if (sua) {
+          // Giờ đầu thay vào dòng đang sửa, các giờ sau thành dòng mới.
+          const r = await suaKhoang(khoangGoc.id, { tu: ds[0], den: ds[0], bs, buoc: 1 }, moc);
+          if (!r.ok) { hoanTac.hien({ nhan: 'Không lưu được, giờ này không còn nữa.' }); dong_(); return; }
+          const them = ds.length > 1 ? await themGioLe(homNay, { ds: ds.slice(1), bs }) : { ok: true, ids: [] };
+          hoanTac.hien({ nhan, lam: async () => { await xoaCacKhoang(them.ids || []); return (await suaKhoang(khoangGoc.id, r.cu, moc)).ok ? undefined : 'Không hoàn tác được.'; } });
+        } else {
+          const r = await themGioLe(homNay, { ds, bs });
+          if (!r.ok) { hoanTac.hien({ nhan: 'Giờ chưa đúng, xem lại rồi bấm lần nữa.' }); setDangGhi(false); return; }
+          hoanTac.hien({ nhan, lam: async () => ((await xoaCacKhoang(r.ids)) ? undefined : 'Không hoàn tác được.') });
+        }
       } else {
-        const r = await themKhoang(homNay, yc, moc);
-        if (!r.ok) { hoanTac.hien({ nhan: 'Khoảng giờ chưa đúng, xem lại rồi bấm lần nữa.' }); setDangGhi(false); return; }
-        hoanTac.hien({ nhan, lam: async () => ((await xoaKhoang(r.id)).ok ? undefined : 'Không hoàn tác được.') });
+        const yc = { tu: f.tu, den: f.den, bs, buoc };
+        const nhan = 'Đã lưu khoảng ' + chuKhoang({ tu: f.tu, den: thongTin.ds[n - 1] }) + chuBuoc({ buoc });
+        if (sua) {
+          const r = await suaKhoang(khoangGoc.id, yc, moc);
+          if (!r.ok) { hoanTac.hien({ nhan: 'Không lưu được, khoảng này không còn nữa.' }); dong_(); return; }
+          hoanTac.hien({ nhan, lam: async () => ((await suaKhoang(khoangGoc.id, r.cu, moc)).ok ? undefined : 'Không hoàn tác được.') });
+        } else {
+          const r = await themKhoang(homNay, yc, moc);
+          if (!r.ok) { hoanTac.hien({ nhan: 'Khoảng giờ chưa đúng, xem lại rồi bấm lần nữa.' }); setDangGhi(false); return; }
+          hoanTac.hien({ nhan, lam: async () => ((await xoaKhoang(r.id)).ok ? undefined : 'Không hoàn tác được.') });
+        }
       }
       dong_();
     } catch {
@@ -296,29 +368,65 @@ function BangKhoang({ khoangGoc, dong, khoang, moc, homNay }) {
     let r;
     try { r = await xoaKhoang(khoangGoc.id); } catch { hoanTac.hien({ nhan: 'Chưa xoá được. Hãy thử lại.' }); setDangGhi(false); return; }
     if (r.ok) {
-      hoanTac.hien({ nhan: 'Đã xoá khoảng ' + chuGio(khoangGoc.tu) + '–' + chuGio(khoangGoc.den), lam: async () => ((await khoiPhucGioMay(khoangGoc.id)).ok ? undefined : 'Không khôi phục được.') });
+      hoanTac.hien({ nhan: (le0 ? 'Đã xoá giờ ' : 'Đã xoá khoảng ') + chuKhoang(khoangGoc) + chuBuoc(khoangGoc), lam: async () => ((await khoiPhucGioMay(khoangGoc.id)).ok ? undefined : 'Không khôi phục được.') });
     }
     dong_();
   };
 
+  const nhieu = n > 1 ? 'các giờ này.' : 'giờ này.';
   return (
     <>
-      <div className="g-hai-gio">
-        <OGio id="g-b-tu" nhan="Từ" value={f.tu} goiY="820" onChange={(v) => setF((c) => ({ ...c, tu: v }))} />
-        <OGio id="g-b-den" nhan="Đến" value={f.den} goiY="835" onChange={(v) => setF((c) => ({ ...c, den: v }))} />
+      <div className="seg full" role="group" aria-label="Kiểu giờ">
+        <button type="button" data-k="khoang" aria-pressed={kieu === 'khoang'} onClick={() => doiKieu('khoang')}>Khoảng giờ</button>
+        <button type="button" data-k="le" aria-pressed={kieu === 'le'} onClick={() => doiKieu('le')}>Giờ lẻ</button>
       </div>
+      {kieu === 'khoang' ? (
+        <>
+          <div className="g-hai-gio">
+            <OGio id="g-b-tu" nhan="Từ" value={f.tu} goiY="820" onChange={(v) => setF((c) => ({ ...c, tu: v }))} />
+            <OGio id="g-b-den" nhan="Đến" value={f.den} goiY="835" onChange={(v) => setF((c) => ({ ...c, den: v }))} />
+          </div>
+          <div className="g-nhom">
+            <label htmlFor="g-b-nhip">Cách mỗi (phút)</label>
+            <input id="g-b-nhip" className="g-in" inputMode="numeric" autoComplete="off" maxLength={2} placeholder="Để trống là liền" value={buocChu}
+              onChange={(e) => setBuocChu(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } }} />
+            <p className="g-goi-y">{xem}</p>
+          </div>
+        </>
+      ) : (
+        <div className="g-nhom">
+          <label htmlFor="g-b-le">Giờ người khác đã dùng</label>
+          <div className="g-them-ma">
+            <input id="g-b-le" ref={oLe} className="g-in" inputMode="numeric" autoComplete="off" maxLength={5} placeholder="905" value={go}
+              onChange={(e) => { const s = e.target.value; if (/^\d{4}$/.test(s.trim()) && coGio(docGio(s))) themLe(docGio(s)); else setGo(s); }}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); themLe(); } }} />
+            <button type="button" className="btn" onClick={() => themLe()}>Thêm</button>
+          </div>
+          <p className="g-goi-y">Gõ đủ 4 số là tự thêm, ví dụ 0905. Thêm được nhiều giờ liền nhau.</p>
+          {le.length > 0 && (
+            <div className="g-le-ds" role="group" aria-label="Các giờ lẻ đã thêm">
+              {xepGio(le).map((v) => (
+                <button key={v} type="button" className={'g-le' + (dong.some((d) => d.gio === v) ? ' trung' : '')} aria-label={'Bỏ ' + chuGio(v)}
+                  onClick={() => { setLe((a) => a.filter((z) => z !== v)); oLe.current?.focus(); }}>
+                  {chuGio(v)}<span className="bo" aria-hidden="true">×</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
       <input id="g-b-bs" className="g-in" placeholder="Bác Sĩ" aria-label="Bác sĩ, không bắt buộc" autoComplete="off" {...vt.props} />
       {vt.strip}
       <div className={'g-kq ' + (thongTin.sai ? '' : co ? 'do' : thongTin.chong.length ? 'vang' : 'kt')} role="status">
         {thongTin.sai && <span>{thongTin.sai}</span>}
         {co && <span className="dam">Trùng giờ của mình: {thongTin.trung.map((d) => chuMa(d) + ' - ' + chuGio(d.gio)).join(', ')}</span>}
-        {!thongTin.sai && thongTin.chong.length > 0 && <span>Chồng lên khoảng {thongTin.chong.map(tenKhoang).join(', ')}</span>}
-        {!thongTin.sai && !co && !thongTin.chong.length && <span>Không trùng. Chọn giờ nhanh sẽ nhảy qua khoảng này.</span>}
+        {!thongTin.sai && thongTin.chong.length > 0 && <span>{kieu === 'le' ? 'Đã nằm trong ' : 'Chồng lên '}{thongTin.chong.map(tenKhoang).join(', ')}</span>}
+        {!thongTin.sai && !co && !thongTin.chong.length && <span>Không trùng. Chọn giờ nhanh sẽ nhảy qua {kieu === 'le' || buocKhoang({ buoc }) > 1 ? nhieu : 'khoảng này.'}</span>}
       </div>
       <button type="button" className={'btn big ' + (co ? 'nguy' : 'primary')} disabled={!!thongTin.sai || dangGhi} onClick={luu}>
-        {co ? 'Lưu dù đang trùng' : 'Lưu khoảng giờ'}
+        {co ? 'Lưu dù đang trùng' : kieu === 'le' ? `Lưu ${n || ''} giờ lẻ` : buocKhoang({ buoc }) > 1 && n ? `Lưu ${n} giờ cách ${buoc} phút` : 'Lưu khoảng giờ'}
       </button>
-      {sua && <div className="g-chan"><button type="button" className="g-xoa" disabled={dangGhi} onClick={xoa}>Xoá khoảng này</button></div>}
+      {sua && <div className="g-chan"><button type="button" className="g-xoa" disabled={dangGhi} onClick={xoa}>{le0 ? 'Xoá giờ này' : 'Xoá khoảng này'}</button></div>}
     </>
   );
 }
@@ -482,11 +590,11 @@ export default function TabGio({ wide, homNay, mocPhut, gioMay, dong, khoang, nh
         moc={moc} homNay={homNay} mo={mo} onXong={veDau} />
       <div className="g-tieu g-trong-ngay">
         <h2>Trong ngày</h2>
-        <button type="button" className="btn" aria-label="Thêm khoảng giờ người khác dùng" onClick={() => setBang({ kieu: 'khoang', id: null })}>
+        <button type="button" className="btn" aria-label="Thêm giờ người khác dùng, khoảng giờ hoặc giờ lẻ" onClick={() => setBang({ kieu: 'khoang', id: null })}>
           <PlusIcon size={16} />Thêm giờ người khác
         </button>
       </div>
-      {!dsNgay.length && <p className="g-rong">Chưa có giờ nào. Chọn giờ nhanh ở trên, hoặc bấm "Thêm giờ người khác" để ghi khoảng đã có người dùng.</p>}
+      {!dsNgay.length && <p className="g-rong">Chưa có giờ nào. Chọn giờ nhanh ở trên, hoặc bấm "Thêm giờ người khác" để ghi giờ đã có người dùng.</p>}
       <div className="g-ds">
         {dsNgay.map((o) => {
           if (o.trong) return <div key={o.key} className="g-trong">trống {o.trong}</div>;
@@ -494,9 +602,10 @@ export default function TabGio({ wide, homNay, mocPhut, gioMay, dong, khoang, nh
             const dung = dong.filter((d) => coGio(d.gio) && trongKhoang(d.gio, o.k, moc));
             return (
               <button key={o.k.id} type="button" className={'g-dong ban' + (dung.length ? ' trung' : '')} onClick={() => setBang({ kieu: 'khoang', id: o.k.id })}>
-                <span className="g">{chuGio(o.k.tu)}–{chuGio(o.k.den)}</span>
+                <span className="g">{chuKhoang(o.k)}</span>
                 <span className="m">
                   <b>{o.k.bs ? o.k.bs + ' dùng' : 'Người khác dùng'}</b>
+                  {buocKhoang(o.k) > 1 && <small>Cách {buocKhoang(o.k)} phút · {phutKhoang(o.k, moc).length} giờ</small>}
                   {dung.length > 0 && <small className="x">Trùng với {dung.map(chuMa).join(', ')}</small>}
                 </span>
               </button>
@@ -527,7 +636,7 @@ export default function TabGio({ wide, homNay, mocPhut, gioMay, dong, khoang, nh
 
       {bang?.kieu === 'khoang' && (!bang.id || dangMo) && (
         <Sheet key={bang.id || 'moi'} label={bang.id ? 'Sửa khoảng giờ' : 'Giờ người khác dùng'} wide={wide} onClose={() => setBang(null)}>
-          <SheetHead title={bang.id ? 'Sửa khoảng giờ' : 'Giờ người khác dùng'} onClose={() => setBang(null)} />
+          <SheetHead title={!bang.id ? 'Giờ người khác dùng' : dangMo && dangMo.tu === dangMo.den ? 'Sửa giờ lẻ' : 'Sửa khoảng giờ'} onClose={() => setBang(null)} />
           <BangKhoang khoangGoc={bang.id ? dangMo : null} dong={dong} khoang={khoang} moc={moc} homNay={homNay} />
         </Sheet>
       )}

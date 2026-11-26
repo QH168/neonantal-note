@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { coGio, docGio, chuGio, thuTu, khoangHopLe, trongKhoang, loiGio, phanBoGio, gopPhut, dauCuoi, khoangTrong, maKhacHopLe, chuanBacSi, thanhGio, beTheoPhong, xuLyGoGio, noiDungCanhBao, chuLoiNgan, chuLoiDai, tenKhoang, CHUA_MA } from '../src/lib/gio.js';
+import { coGio, docGio, chuGio, thuTu, khoangHopLe, trongKhoang, loiGio, phanBoGio, gopPhut, dauCuoi, khoangTrong, maKhacHopLe, chuanBacSi, thanhGio, beTheoPhong, xuLyGoGio, noiDungCanhBao, chuLoiNgan, chuLoiDai, tenKhoang, CHUA_MA, buocKhoang, buocHopLe, phutKhoang, denDungBuoc, chuKhoang, chuBuoc } from '../src/lib/gio.js';
 
 const G = (h, m = 0) => h * 60 + m;
 const be = (n) => 'B' + n;
@@ -76,7 +76,7 @@ test('loiGio: trùng bé, trùng khoảng (cả hai đầu), bỏ qua chính nó
   assert.deepEqual(loiGio({ id: 'a', gio: G(8, 15) }, dong, khoang, 420), [{ kieu: 'be', id: 'b', ma: 'G02', gio: G(8, 15) }]);
   assert.deepEqual(loiGio({ id: 'x', gio: G(8, 15) }, dong, khoang, 420).map((l) => l.id), ['a', 'b']);
   assert.deepEqual(loiGio({ id: 'd', gio: G(9) }, dong, khoang, 420), []);
-  assert.deepEqual(loiGio({ id: 'x', gio: G(8, 20) }, dong, khoang, 420), [{ kieu: 'khoang', id: 'k', tu: G(8, 20), den: G(8, 35), bs: 'BS A' }]);
+  assert.deepEqual(loiGio({ id: 'x', gio: G(8, 20) }, dong, khoang, 420), [{ kieu: 'khoang', id: 'k', tu: G(8, 20), den: G(8, 35), buoc: 1, bs: 'BS A' }]);
   assert.equal(loiGio({ id: 'x', gio: G(8, 35) }, dong, khoang, 420).length, 1);
   assert.equal(loiGio({ id: 'x', gio: G(8, 36) }, dong, khoang, 420).length, 0);
   assert.equal(loiGio({ id: 'x', gio: G(8, 19) }, dong, khoang, 420).length, 0);
@@ -500,4 +500,73 @@ test('chữ lý do và hộp cảnh báo giống tab Giờ', () => {
   assert.equal(chua.nutGiu, 'Bỏ, không ghi giờ');
   assert.deepEqual(chua.lyDo, ['Nằm trong khoảng đã có người dùng 07h30–07h45 (BS A).']);
   assert.deepEqual(noiDungCanhBao({ ma: 'X', v: G(8), goc: null, loi: undefined, dongMa: dongMaK }).lyDo, []);
+});
+
+// ---------- Bước nhảy của khoảng và giờ lẻ (bác sĩ duyệt 26/11/2026) ----------
+test('buocKhoang, buocHopLe: khoảng cũ không có buoc là liền', () => {
+  assert.equal(buocKhoang({ tu: 1, den: 2 }), 1);
+  for (const b of [5, 2, 60]) assert.equal(buocKhoang({ buoc: b }), b);
+  for (const b of [1, 0, 61, 2.5, '5', null, -3]) assert.equal(buocKhoang({ buoc: b }), 1, String(b));
+  assert.equal(buocKhoang(null), 1);
+  for (const b of [null, undefined, 1, 5, 60]) assert.equal(buocHopLe(b), true, String(b));
+  for (const b of [0, 61, 2.5, '5', NaN]) assert.equal(buocHopLe(b), false, String(b));
+});
+
+test('trongKhoang theo bước: cách 5 chỉ trùng ở đúng bước, kể cả qua nửa đêm', () => {
+  const k = { tu: G(8, 20), den: G(8, 35), buoc: 5 };
+  for (const t of [G(8, 20), G(8, 25), G(8, 30), G(8, 35)]) assert.equal(trongKhoang(t, k, 420), true, chuGio(t));
+  for (const t of [G(8, 21), G(8, 24), G(8, 34), G(8, 40)]) assert.equal(trongKhoang(t, k, 420), false, chuGio(t));
+  const dem = { tu: G(23, 55), den: G(0, 10), buoc: 5 };
+  assert.equal(trongKhoang(G(0, 5), dem, 420), true);
+  assert.equal(trongKhoang(G(0, 3), dem, 420), false);
+  assert.equal(loiGio({ id: 'x', gio: G(8, 22) }, [], [k], 420).length, 0);
+  assert.equal(loiGio({ id: 'x', gio: G(8, 25) }, [], [k], 420)[0].buoc, 5);
+});
+
+test('phutKhoang, denDungBuoc: giờ cuối chốt đúng bước', () => {
+  assert.deepEqual(phutKhoang({ tu: G(9), den: G(9, 32), buoc: 5 }, 420).map(chuGio), ['09h00', '09h05', '09h10', '09h15', '09h20', '09h25', '09h30']);
+  assert.equal(denDungBuoc({ tu: G(9), den: G(9, 32), buoc: 5 }, 420), G(9, 30));
+  assert.equal(denDungBuoc({ tu: G(7), den: G(7, 5) }, 420), G(7, 5));
+  assert.equal(phutKhoang({ tu: G(7), den: G(7, 5) }, 420).length, 6, 'liền: mọi phút');
+  assert.deepEqual(phutKhoang({ tu: G(9), den: G(8) }, 420), []);
+});
+
+test('phanBoGio: khoảng cách 5 nhảy qua đúng phút đã dùng, điền được phút ở giữa', () => {
+  const kq = phanBoGio({ tu: G(8, 20), den: null, buoc: 1, chon: chonN(5) }, [], [{ id: 'k', tu: G(8, 20), den: G(8, 35), buoc: 5 }], 420);
+  assert.deepEqual(dsGio(kq, chonN(5)), ['08h21', '08h22', '08h23', '08h24', '08h26']);
+  assert.deepEqual(kq.bo.map(chuGio), ['08h20', '08h25']);
+  const lien = phanBoGio({ tu: G(8, 20), den: null, buoc: 1, chon: chonN(1) }, [], [{ id: 'k', tu: G(8, 20), den: G(8, 35) }], 420);
+  assert.equal(chuGio(gioCua(lien, 'B1')), '08h36', 'khoảng liền như cũ');
+});
+
+test('khoangTrong và thanhGio với khoảng có bước và giờ lẻ', () => {
+  const khoang = [{ id: 'k', tu: G(8), den: G(8, 30), buoc: 10, bs: 'BS B' }, { id: 'l', tu: G(9), den: G(9), bs: 'BS C' }];
+  assert.deepEqual(khoangTrong([], khoang, 420).map((d) => chuGio(d.tu) + '-' + chuGio(d.den)), ['08h01-08h09', '08h11-08h19', '08h21-08h29', '08h31-08h59']);
+  const t = thanhGio([], khoang, 420);
+  const kb = t.khoi.find((k) => k.id === 'k');
+  assert.equal(kb.buoc, 10);
+  assert.deepEqual(kb.nhip.map((n) => chuGio(n.gio)), ['08h00', '08h10', '08h20', '08h30']);
+  assert.deepEqual(t.khoi.find((k) => k.id === 'l').nhip, [], 'giờ lẻ / liền không có vạch');
+});
+
+test('tenKhoang, chuKhoang, chuBuoc, chuLoiDai cho bước và giờ lẻ', () => {
+  assert.equal(tenKhoang({ tu: G(9), den: G(9, 30), buoc: 5, bs: 'BS E' }), '09h00–09h30 cách 5 phút (BS E)');
+  assert.equal(tenKhoang({ tu: G(8, 50), den: G(8, 50), bs: 'BS C' }), '08h50 (BS C)');
+  assert.equal(chuKhoang({ tu: G(8, 50), den: G(8, 50) }), '08h50');
+  assert.equal(chuBuoc({ buoc: 1 }), '');
+  const dm = () => '';
+  assert.equal(chuLoiDai({ kieu: 'khoang', tu: G(8, 50), den: G(8, 50), bs: 'BS C' }, G(8, 50), dm), 'Trùng giờ người khác đã dùng 08h50 (BS C)');
+  assert.equal(chuLoiDai({ kieu: 'khoang', tu: G(9), den: G(9, 30), buoc: 5, bs: '' }, G(9, 5), dm), 'Nằm trong khoảng đã có người dùng 09h00–09h30 cách 5 phút');
+});
+
+test('sao lưu và gộp giữ nguyên trường buoc; dòng cũ không có buoc vẫn là liền', async () => {
+  const { mergeRows, validateBackup, BACKUP_FORMAT } = await import('../src/lib/merge.js');
+  const { dongGio } = await import('../src/lib/actions.js');
+  const dong = { id: 'k', loai: 'khoang', date: '2026-11-26', tu: G(9), den: G(9, 30), buoc: 5, bs: 'BS E', updatedAt: 2 };
+  const file = JSON.parse(JSON.stringify({ format: BACKUP_FORMAT, version: 1, tables: { gio_may: [dong] } }));
+  assert.equal(validateBackup(file, ['gio_may']), null);
+  const r = mergeRows([{ ...dong, buoc: undefined, updatedAt: 1 }], file.tables.gio_may);
+  assert.equal(r.toPut[0].buoc, 5);
+  const kq = dongGio([], [dong, { id: 'c', loai: 'khoang', tu: G(7), den: G(7, 5) }]);
+  assert.deepEqual(kq.khoang, [{ id: 'k', tu: G(9), den: G(9, 30), bs: 'BS E', buoc: 5 }, { id: 'c', tu: G(7), den: G(7, 5), bs: '' }]);
 });

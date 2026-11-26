@@ -671,6 +671,16 @@ html.co-form-viec body:not(.co-bang) .hoantac-wrap{bottom:calc(var(--kb,0px) + v
 .g-lan i{position:absolute;top:3px;height:28px;min-width:4px;border-radius:2px;background:var(--accent);box-shadow:inset -1px 0 0 var(--surface)}
 .g-lan i.trung{background:var(--p1)}
 .g-lan i.tam{background:transparent;border:1.5px solid var(--accent);box-shadow:none}
+/* 26/11/2026: khoảng có bước = khung nét đứt + vạch nhỏ ở đáy cho từng giờ đã dùng; phút ở giữa còn trống */
+.g-lan b.nen{border-style:dashed}
+.g-lan b.nhip{top:auto;bottom:2px;height:8px;min-width:3px;border:0;border-radius:2px;background:var(--hoDot)}
+/* 26/11/2026: bảng giờ người khác dùng — dòng đọc lại / gợi ý, nút giờ lẻ có × */
+.g-goi-y{margin:0;font-size:13px;line-height:1.4;color:var(--muted)}
+.g-le-ds{display:flex;flex-wrap:wrap;gap:8px}
+.g-le{min-height:44px;padding:0 8px 0 14px;border:1px solid var(--edge);border-radius:22px;background:var(--surface);color:var(--ink);font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;display:inline-flex;align-items:center;gap:6px}
+.g-le .bo{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:14px;font-size:18px;line-height:1;color:var(--muted)}
+.g-le.trung{border-color:var(--p1);background:var(--errBg);color:var(--errInk)}
+.g-le.trung .bo{color:inherit}
 .g-moc{position:relative;height:18px;font-size:12px;color:var(--muted)}
 .g-moc span{position:absolute;top:2px;white-space:nowrap}
 .g-moc .giua{transform:translateX(-50%)}

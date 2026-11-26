@@ -6,7 +6,7 @@ import { chuanKey, BO_MAU } from './viet-tat.js';
 import { KHOA_MOC_NGAY_LAM_VIEC, chuanHoaMoc } from './cai-dat.js';
 import { lapKeHoachDoiViec, keHoachHoanTacDoi, chonChepMotBe } from './hai-ngay.js';
 import { alive, nhomTheo } from './chung.js';
-import { coGio, khoangHopLe, chuanBacSi, maKhacHopLe, phanBoGio } from './gio.js';
+import { coGio, khoangHopLe, chuanBacSi, maKhacHopLe, phanBoGio, buocKhoang, buocHopLe, denDungBuoc } from './gio.js';
 import { db, addRow, updateRow, softDelete, getDeviceId, getMeta, setMeta } from '../db.js';
 
 /**
@@ -499,24 +499,42 @@ export async function hoanTacDienGio(cu) {
 }
 
 // ---------- Giờ người khác dùng (khoảng) ----------
-/** Thêm khoảng giờ người khác dùng. bs không bắt buộc (cắt 20 ký tự). Sai → { ok:false, ly:'khoang-sai' | 'ngay-sai' }. Trả { ok:true, id, row }. */
-export async function themKhoang(ngay, { tu, den, bs } = {}, moc) {
+// Bước nhảy (bác sĩ duyệt 26/11/2026): trường thường `buoc` 2–60 trên dòng khoảng; liền thì không ghi khi thêm. Giờ cuối chốt đúng bước.
+/** Thêm khoảng giờ người khác dùng. bs không bắt buộc (cắt 20 ký tự); buoc bỏ trống / 1 = liền, 2–60 = cách đều. Sai → { ok:false, ly:'khoang-sai' | 'ngay-sai' }. Trả { ok:true, id, row }. */
+export async function themKhoang(ngay, { tu, den, bs, buoc } = {}, moc) {
   if (typeof ngay !== 'string' || !DANG_NGAY_GIO.test(ngay)) return { ok: false, ly: 'ngay-sai' };
-  if (!khoangHopLe({ tu, den }, moc)) return { ok: false, ly: 'khoang-sai' };
-  const row = await addRow('gio_may', { date: ngay, loai: 'khoang', tu, den, bs: chuanBacSi(bs) });
+  if (!khoangHopLe({ tu, den }, moc) || !buocHopLe(buoc)) return { ok: false, ly: 'khoang-sai' };
+  const b = buocKhoang({ buoc });
+  const row = await addRow('gio_may', { date: ngay, loai: 'khoang', tu, den: denDungBuoc({ tu, den, buoc: b }, moc), bs: chuanBacSi(bs), ...(b > 1 ? { buoc: b } : {}) });
   return { ok: true, id: row.id, row };
 }
 
-/** Sửa khoảng (tu, den, bs; trường vắng giữ nguyên). Trả { ok:true, cu:{ tu, den, bs } } (Hoàn tác: suaKhoang(id, cu, moc)) | { ok:false, ly:'khoang-sai' | 'khong-thay' }. */
+/** Giờ lẻ (bác sĩ duyệt 26/11/2026): mỗi giờ thành một dòng khoảng có tu = den, ghi trong MỘT giao dịch. ds = [phút], bỏ trùng. Sai → { ok:false, ly:'khoang-sai' | 'ngay-sai' }. Trả { ok:true, ids, rows }. */
+export async function themGioLe(ngay, { ds, bs } = {}) {
+  if (typeof ngay !== 'string' || !DANG_NGAY_GIO.test(ngay)) return { ok: false, ly: 'ngay-sai' };
+  const gio = [...new Set(Array.isArray(ds) ? ds : [])];
+  if (!gio.length || gio.some((t) => !coGio(t))) return { ok: false, ly: 'khoang-sai' };
+  const rows = [];
+  await ghiMotLuot([db.gio_may], async () => {
+    for (const t of gio) rows.push(await addRow('gio_may', { date: ngay, loai: 'khoang', tu: t, den: t, bs: chuanBacSi(bs) }));
+  });
+  return { ok: true, ids: rows.map((r) => r.id), rows };
+}
+
+/** Sửa khoảng (tu, den, bs, buoc; trường vắng giữ nguyên). Trả { ok:true, cu:{ tu, den, bs, buoc } } (Hoàn tác: suaKhoang(id, cu, moc)) | { ok:false, ly:'khoang-sai' | 'khong-thay' }. */
 export async function suaKhoang(id, thayDoi = {}, moc) {
   let kq = { ok: false, ly: 'khong-thay' };
   await ghiMotLuot([db.gio_may], async () => {
     const row = await db.gio_may.get(id);
     if (!row || row.deleted || !laDongKhoang(row)) return;
+    if ('buoc' in thayDoi && !buocHopLe(thayDoi.buoc)) { kq = { ok: false, ly: 'khoang-sai' }; return; }
+    const b = buocKhoang('buoc' in thayDoi ? thayDoi : row);
     const moi = { tu: 'tu' in thayDoi ? thayDoi.tu : row.tu, den: 'den' in thayDoi ? thayDoi.den : row.den, bs: 'bs' in thayDoi ? chuanBacSi(thayDoi.bs) : row.bs ?? '' };
     if (!khoangHopLe(moi, moc)) { kq = { ok: false, ly: 'khoang-sai' }; return; }
+    moi.den = denDungBuoc({ ...moi, buoc: b }, moc);
+    if (b > 1 || 'buoc' in row) moi.buoc = b; // khoảng liền chưa từng có bước thì không thêm trường
     await updateRow('gio_may', id, moi);
-    kq = { ok: true, cu: { tu: row.tu, den: row.den, bs: row.bs ?? '' } };
+    kq = { ok: true, cu: { tu: row.tu, den: row.den, bs: row.bs ?? '', buoc: buocKhoang(row) } };
   });
   return kq;
 }
@@ -533,6 +551,19 @@ async function xoaDongGio(id, laDong) {
   return kq;
 }
 export const xoaKhoang = (id) => xoaDongGio(id, laDongKhoang);
+/** Hoàn tác themGioLe: xoá mềm các dòng vừa thêm trong MỘT giao dịch; dòng không còn thì bỏ qua. Trả số dòng đã xoá. */
+export async function xoaCacKhoang(ids) {
+  let n = 0;
+  await ghiMotLuot([db.gio_may], async () => {
+    for (const id of Array.isArray(ids) ? ids : []) {
+      const row = await db.gio_may.get(id);
+      if (!row || row.deleted || !laDongKhoang(row)) continue;
+      await softDelete('gio_may', id);
+      n++;
+    }
+  });
+  return n;
+}
 export const xoaMaKhac = (id) => xoaDongGio(id, laDongLe);
 
 /** Hoàn tác xoá khoảng / mã khác (chỉ đổi deleted). Mã khác mà trong lúc chờ đã có mã sống trùng cùng ngày → không khôi phục, { ok:false, ly:'trung', id }. */
@@ -583,6 +614,6 @@ export function dongGio(beNgay, gioMayNgay) {
   for (const r of gm.filter(laDongLe).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0) || String(a.id).localeCompare(String(b.id)))) {
     dong.push({ id: r.id, ma: r.ma || '', gio: gioHopLe(r.gioNhap), gioKham: gioHopLe(r.gioKham), bang: 'gio_may' });
   }
-  const khoang = gm.filter(laDongKhoang).map((r) => ({ id: r.id, tu: r.tu, den: r.den, bs: r.bs ?? '' }));
+  const khoang = gm.filter(laDongKhoang).map((r) => ({ id: r.id, tu: r.tu, den: r.den, bs: r.bs ?? '', ...(buocKhoang(r) > 1 ? { buoc: buocKhoang(r) } : {}) }));
   return { dong, khoang };
 }

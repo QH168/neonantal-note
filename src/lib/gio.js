@@ -46,12 +46,35 @@ export const thuTu = (t, moc) => {
 // Khoảng hợp lệ: cả hai đầu là giờ, đầu sau không trước đầu trước (theo thứ tự ngày làm việc).
 export const khoangHopLe = (k, moc) => !!k && coGio(k.tu) && coGio(k.den) && thuTu(k.den, moc) >= thuTu(k.tu, moc);
 
-// Giờ t nằm trong khoảng k (tính cả hai đầu). Khoảng không hợp lệ → false.
+// Bước nhảy của khoảng (bác sĩ duyệt 26/11/2026): trường thường `buoc` 2–60 = người khác chỉ dùng tu, tu+buoc, tu+2·buoc… đến den;
+// không có / 1 / giá trị lạ = liền (mọi phút trong khoảng), nên khoảng lưu trước đây vẫn hiểu như cũ.
+export const buocKhoang = (k) => (k && Number.isInteger(k.buoc) && k.buoc >= 2 && k.buoc <= 60 ? k.buoc : 1);
+// Bước gõ vào hợp lệ: bỏ trống (null/undefined) hoặc số nguyên 1–60.
+export const buocHopLe = (b) => b === null || b === undefined || (Number.isInteger(b) && b >= 1 && b <= 60);
+
+// Giờ t nằm trong khoảng k (tính cả hai đầu, theo bước). Khoảng không hợp lệ → false.
 export const trongKhoang = (t, k, moc) => {
   if (!coGio(t) || !khoangHopLe(k, moc)) return false;
   const x = thuTu(t, moc);
-  return x >= thuTu(k.tu, moc) && x <= thuTu(k.den, moc);
+  const a = thuTu(k.tu, moc);
+  return x >= a && x <= thuTu(k.den, moc) && (x - a) % buocKhoang(k) === 0;
 };
+
+// Các phút đã dùng của khoảng (giờ đồng hồ, theo thứ tự ngày làm việc). Khoảng không hợp lệ → [].
+export function phutKhoang(k, moc) {
+  const m = mocDung(moc);
+  if (!khoangHopLe(k, m)) return [];
+  const kq = [];
+  const b = buocKhoang(k);
+  for (let x = thuTu(k.tu, m); x <= thuTu(k.den, m); x += b) kq.push(x % NGAY);
+  return kq;
+}
+
+// Giờ cuối chốt về phút cuối đúng bước (09h00–09h32 cách 5 → 09h30). Khoảng không hợp lệ → den giữ nguyên.
+export function denDungBuoc(k, moc) {
+  const p = phutKhoang(k, moc);
+  return p.length ? p[p.length - 1] : k?.den;
+}
 
 const khacId = (a, id) => id === undefined || id === null || a.id !== id;
 
@@ -64,7 +87,7 @@ export function loiGio({ id, gio } = {}, dong = [], khoang = [], moc) {
     if (d && khacId(d, id) && coGio(d.gio) && d.gio === gio) kq.push({ kieu: 'be', id: d.id, ma: d.ma, gio: d.gio });
   }
   for (const k of khoang || []) {
-    if (k && khacId(k, id) && trongKhoang(gio, k, moc)) kq.push({ kieu: 'khoang', id: k.id, tu: k.tu, den: k.den, bs: k.bs });
+    if (k && khacId(k, id) && trongKhoang(gio, k, moc)) kq.push({ kieu: 'khoang', id: k.id, tu: k.tu, den: k.den, buoc: buocKhoang(k), bs: k.bs });
   }
   return kq;
 }
@@ -74,7 +97,8 @@ function bangKhoang(khoang, moc) {
   const ban = new Uint8Array(NGAY);
   for (const k of khoang || []) {
     if (!khoangHopLe(k, moc)) continue;
-    for (let x = thuTu(k.tu, moc); x <= thuTu(k.den, moc); x++) ban[x - moc] = 1;
+    const b = buocKhoang(k);
+    for (let x = thuTu(k.tu, moc); x <= thuTu(k.den, moc); x += b) ban[x - moc] = 1;
   }
   return ban;
 }
@@ -236,7 +260,10 @@ export function thanhGio(dong, khoang, moc, duKien) {
     const a = thuTu(k.tu, m);
     const z = thuTu(k.den, m);
     const r = rong(a, z);
-    khoi.push({ id: k.id, tu: k.tu, den: k.den, bs: k.bs || '', left: x(a), rong: r, nhan: r / 100 >= RONG_KHOI_CO_CHU ? k.bs || 'Khác' : '' });
+    const b = buocKhoang(k);
+    // Khoảng có bước: thêm vạch từng phút đã dùng (giao diện vẽ khung nét đứt + vạch).
+    const nhip = b > 1 ? phutKhoang(k, m).map((g) => ({ gio: g, left: x(thuTu(g, m)), rong: rong(thuTu(g, m), thuTu(g, m)) })) : [];
+    khoi.push({ id: k.id, tu: k.tu, den: k.den, buoc: b, bs: k.bs || '', left: x(a), rong: r, nhan: r / 100 >= RONG_KHOI_CO_CHU ? k.bs || 'Khác' : '', nhip });
   }
   const vach = [];
   for (const d of dong || []) {
@@ -295,14 +322,18 @@ export function beTheoPhong(rooms, patients) {
 // Chữ lý do trùng giờ dùng chung với tab Giờ (Gio.jsx) và hộp cảnh báo của ô giờ (GioKham.jsx).
 export const CHUA_MA = 'Chưa có mã';
 
-// Khoảng người khác dùng → '07h30–07h45 (BS A)' (không có tên bác sĩ thì bỏ phần trong ngoặc).
-export const tenKhoang = (k) => chuGio(k.tu) + '–' + chuGio(k.den) + (k.bs ? ' (' + k.bs + ')' : '');
+// Khoảng → '07h30–07h45'; giờ lẻ (tu = den) → '08h50'. Không kèm bước, không kèm bác sĩ.
+export const chuKhoang = (k) => (k.tu === k.den ? chuGio(k.tu) : chuGio(k.tu) + '–' + chuGio(k.den));
+// ' cách 5 phút' khi có bước, '' khi liền.
+export const chuBuoc = (k) => (buocKhoang(k) > 1 ? ' cách ' + buocKhoang(k) + ' phút' : '');
+// Khoảng người khác dùng → '07h30–07h45 (BS A)', '09h00–09h30 cách 5 phút (BS E)', '08h50 (BS C)' (không có tên bác sĩ thì bỏ phần trong ngoặc).
+export const tenKhoang = (k) => chuKhoang(k) + chuBuoc(k) + (k.bs ? ' (' + k.bs + ')' : '');
 
 // Một chỗ trùng (phần tử của loiGio) → chữ ngắn (trong danh sách) và chữ dài (trong bảng / hộp cảnh báo). dongMa: id → mã.
 export const chuLoiNgan = (e, dongMa) => (e.kieu === 'be' ? 'Trùng giờ với ' + (dongMa(e.id) || CHUA_MA) : 'Giờ ' + (e.bs || 'người khác') + ' đã dùng');
 export const chuLoiDai = (e, t, dongMa) => (e.kieu === 'be'
   ? 'Trùng giờ nhập với ' + (dongMa(e.id) || CHUA_MA) + ', ' + chuGio(t)
-  : 'Nằm trong khoảng đã có người dùng ' + tenKhoang(e));
+  : e.tu === e.den ? 'Trùng giờ người khác đã dùng ' + tenKhoang(e) : 'Nằm trong khoảng đã có người dùng ' + tenKhoang(e));
 
 /**
  * Việc cần làm khi rời ô giờ của một bé (hàm thuần): chu = chữ trong ô, goc = giờ đang lưu (phút | null).

@@ -1,0 +1,58 @@
+{
+  "ten": "Tab Giờ: khoảng giờ người khác dùng có bước nhảy (ô 'Cách mỗi (phút)')",
+  "ngay": "2026-11-26",
+  "khuVuc": "Giờ (dữ liệu và màn hình)",
+  "loai": "vua",
+  "canBacSiDuyet": true,
+  "trangThai": "Bác sĩ duyệt phiếu 26/11/2026 ('Duyệt hết': gồm cả Giờ lẻ). Làm xong 26/11/2026 trên nhánh o-gio-nho: npm test 368 đạt, build đạt, bộ chụp giao diện đạt, phạm vi đạt; chờ bác sĩ duyệt ảnh; chưa lưu ảnh chuẩn, chưa đẩy. Lich.jsx không phải sửa (chưa hiện giờ ngày trước).",
+  "bacSiDaQuyet": [
+    "1. Duyệt bản thử HTML lần 8 (26/11/2026): khoảng giờ có ô 'Cách mỗi (phút)' tự gõ, không có bước sẵn.",
+    "2. Để trống = liền (mọi phút trong khoảng đã dùng, như một ca 07h00–07h05). Gõ n = chỉ tu, tu+n, tu+2n… đến den là đã dùng; phút ở giữa vẫn trống.",
+    "3. Làm cùng đợt với ô giờ chi tiết bé thu nhỏ (nhánh o-gio-nho).",
+    "4. Làm luôn kiểu 'Giờ lẻ' (bản thử lần 7): nút chọn Khoảng giờ / Giờ lẻ; gõ 4 số tự thêm thành nút nhỏ có ×, trùng bé của mình thì đỏ; lưu mỗi giờ thành một dòng khoảng có tu = den; chạm giờ lẻ mở 'Sửa giờ lẻ' có 'Xoá giờ này'."
+  ],
+  "duLieu": {
+    "giuNguyen": "Không thêm db.version mới; db.version(1), (2), (3) không đổi một chữ. Không .upgrade().",
+    "truongMoi": "Dòng gio_may loai 'khoang' thêm trường thường 'buoc' (số nguyên 2–60), không đánh chỉ mục. Không có trường hoặc 1 = liền, nên mọi khoảng đã lưu vẫn hiểu là liền như cũ.",
+    "khiLuu": "Có bước: den chốt về phút cuối đúng bước (09h00–09h32 cách 5 → lưu den 09h30). Liền: không ghi trường buoc.",
+    "saoLuuGop": "backup.js và merge.js chép nguyên dòng nên không phải sửa; BACKUP_VERSION giữ 1. File có buoc nhập vào bản app cũ: bản cũ bỏ qua buoc và coi cả khoảng là đã dùng (hướng an toàn: chỉ báo trùng nhiều hơn, không bỏ sót)."
+  },
+  "luatThuan": [
+    "src/lib/gio.js: trongKhoang và bảng phút bận (bangKhoang) chỉ tính phút (x − tu) chia hết cho buoc.",
+    "phanBoGio: Chọn giờ nhanh nhảy qua đúng các phút đã dùng, điền được phút ở giữa.",
+    "khoangTrong, loiGio, tenKhoang theo bước; tenKhoang thêm ' cách n phút'.",
+    "thanhGio: khối có bước trả thêm danh sách vạch từng phút đã dùng."
+  ],
+  "manHinh": [
+    "Bảng 'Giờ người khác dùng': dưới ô Từ/Đến thêm ô 'Cách mỗi (phút)', bàn phím số, chữ mờ 'Để trống là liền'. Nhận 1–60; sai thì báo và chưa cho lưu.",
+    "Dòng đọc lại: 'Dùng liền 6 phút, từ 07h00 đến 07h05.' hoặc 'Dùng 7 giờ: 09h00, 09h05, 09h10 … 09h30. Phút ở giữa vẫn chọn được.' (lệch bước thì nói dừng ở đâu).",
+    "Nút lưu: 'Lưu khoảng giờ' (liền) hoặc 'Lưu 7 giờ cách 5 phút'. Sửa khoảng cũ: ô hiện đúng bước đã lưu.",
+    "Danh sách Trong ngày: dòng có bước thêm chữ nhỏ 'Cách 5 phút · 7 giờ'. Thanh giờ: khung nét đứt, vạch nhỏ ở đáy cho từng giờ đã dùng.",
+    "Thông báo, Hoàn tác, chép bảng giờ ghi kèm 'cách n phút'."
+  ],
+  "fileDuocSua": [
+    "src/lib/gio.js",
+    "src/lib/actions.js",
+    "src/components/Gio.jsx",
+    "src/components/Lich.jsx",
+    "src/App.css",
+    "tests/gio.test.js",
+    "scripts/chup-giao-dien.mjs",
+    "doi-agent/**"
+  ],
+  "agent": ["dieu-phoi", "thuat-toan", "giao-dien", "kiem-thu", "ghi-chep"],
+  "khongLam": [
+    "Không sửa src/db.js, backup.js, merge.js; không thêm thư viện.",
+    "Không đổi Chọn giờ nhanh (Mỗi bé cách 1/2/3/5 giữ như cũ).",
+    "Không --luu-chuan trước khi bác sĩ duyệt ảnh; không đẩy khi bác sĩ chưa nói 'đẩy'."
+  ],
+  "tieuChiDat": [
+    "npm test đạt, có bài mới: khoảng cách 5 chỉ trùng ở đúng bước, khoảng cũ không có buoc vẫn là liền, Chọn giờ nhanh điền phút ở giữa, den chốt đúng bước, bước sai bị từ chối",
+    "Sao lưu: xuất rồi nhập lại giữ buoc; nhập file cũ không có buoc vẫn là liền",
+    "Bộ chụp giao diện đạt, iPhone 393 và 320, sáng và tối, không tràn ngang",
+    "Phạm vi đạt: node scripts/kiem-pham-vi.mjs doi-agent/phieu-viec/2026-11-26-khoang-gio-buoc-nhay.json",
+    "Ảnh trước/sau gửi bác sĩ duyệt"
+  ],
+  "gioLe": "Bác sĩ duyệt 26/11/2026. Giờ lẻ lưu như khoảng có tu = den (khoangHopLe đã nhận), không thêm trường dữ liệu. Danh sách, thanh giờ, thông báo hiện một giờ, không có dấu gạch.",
+  "ghiChu": "Bản thử: tab-gio-ban-thu.html (thư mục V9.1, lần 8). Phiếu đợt 1 ghi 'giờ người khác dùng chỉ là khoảng từ … đến …'; phiếu này mở rộng thêm bước nhảy."
+}

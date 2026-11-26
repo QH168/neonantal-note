@@ -4769,12 +4769,67 @@ async function luongGio(dark) {
     await choHoanTacTat(page);
   }
   // bảng giờ người khác dùng (nhập 09h05–09h20, BS C)
-  await page.click('[aria-label="Thêm khoảng giờ người khác dùng"]');
+  await page.click('[aria-label="Thêm giờ người khác dùng, khoảng giờ hoặc giờ lẻ"]');
   await page.waitForTimeout(500);
   await page.fill('#g-b-tu', '0905');
   await page.fill('#g-b-den', '0920');
   await page.fill('#g-b-bs', 'BS C');
   await chup(page, 'iphone-gio-khoang' + sfx, true);
+  // 26/11/2026: bước nhảy tự gõ ("Cách mỗi (phút)") và giờ lẻ
+  {
+    const T = ketQua.thuChucNang['gioBuocNhay' + sfx] = {};
+    const nutLuu = () => page.locator('.sheet .btn.big').textContent().then((s) => (s || '').trim());
+    T.trong = { o: await page.inputValue('#g-b-nhip'), goiY: await page.getAttribute('#g-b-nhip', 'placeholder'), xem: doiMau(await page.locator('#g-b-nhip ~ .g-goi-y').innerText()), nut: await nutLuu() };
+    if (T.trong.o !== '' || T.trong.goiY !== 'Để trống là liền' || !/^Dùng liền 16 phút/.test(T.trong.xem) || T.trong.nut !== 'Lưu khoảng giờ') E('ô Cách mỗi để trống phải là liền: ' + JSON.stringify(T.trong));
+    await page.fill('#g-b-nhip', '99');
+    T.sai = { kq: doiMau(await page.locator('.sheet .g-kq').innerText()), tat: await page.locator('.sheet .btn.big').isDisabled() };
+    if (!/từ 1 đến 60/.test(T.sai.kq) || !T.sai.tat) E('Cách mỗi 99 phải báo và chưa cho lưu: ' + JSON.stringify(T.sai));
+    await page.fill('#g-b-den', '0922');
+    await page.fill('#g-b-nhip', '5');
+    T.cach5 = { xem: doiMau(await page.locator('#g-b-nhip ~ .g-goi-y').innerText()), nut: await nutLuu(), co: await page.evaluate(() => getComputedStyle(document.getElementById('g-b-nhip')).fontSize), tran: await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1) };
+    if (!/^Dùng 4 giờ: 09h05, 09h10, 09h15, 09h20\./.test(T.cach5.xem) || !/09h22 lệch bước nên dừng ở 09h20/.test(T.cach5.xem) || T.cach5.nut !== 'Lưu 4 giờ cách 5 phút' || T.cach5.co !== '16px' || T.cach5.tran) E('Cách mỗi 5: ' + JSON.stringify(T.cach5));
+    await chup(page, 'iphone-gio-khoang-cach' + sfx, true);
+    await page.locator('.sheet .btn.big').click();
+    await page.waitForTimeout(700);
+    const k5 = (await docBang(page, 'gio_may')).filter((r) => r.date === GIO_NGAY && r.loai === 'khoang' && r.bs === 'BS C' && !r.deleted);
+    T.dong5 = k5.map((r) => ({ tu: r.tu, den: r.den, buoc: r.buoc }));
+    if (k5.length !== 1 || k5[0].tu !== 545 || k5[0].den !== 560 || k5[0].buoc !== 5) E('lưu khoảng cách 5 phải chốt 09h05–09h20, buoc 5: ' + JSON.stringify(T.dong5));
+    await choHoanTacTat(page);
+    // giờ lẻ
+    await page.click('[aria-label="Thêm giờ người khác dùng, khoảng giờ hoặc giờ lẻ"]');
+    await page.waitForTimeout(500);
+    await page.locator('.sheet .seg button[data-k="le"]').click();
+    await page.waitForTimeout(200);
+    T.leVao = await page.evaluate(() => document.activeElement?.id);
+    await page.locator('#g-b-le').pressSequentially('0930');
+    await page.locator('#g-b-le').pressSequentially('0945');
+    await page.fill('#g-b-bs', 'BS D');
+    T.le = { chip: await page.locator('.g-le').allTextContents(), nut: await nutLuu(), tran: await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1) };
+    if (T.leVao !== 'g-b-le' || T.le.chip.join('|') !== '09h30×|09h45×' || T.le.nut !== 'Lưu 2 giờ lẻ' || T.le.tran) E('giờ lẻ: ' + JSON.stringify({ vao: T.leVao, ...T.le }));
+    await chup(page, 'iphone-gio-le' + sfx, true);
+    await page.locator('.sheet .btn.big').click();
+    await page.waitForTimeout(700);
+    const le = (await docBang(page, 'gio_may')).filter((r) => r.date === GIO_NGAY && r.loai === 'khoang' && r.bs === 'BS D' && !r.deleted);
+    T.dongLe = le.map((r) => [r.tu, r.den, 'buoc' in r]);
+    if (le.length !== 2 || le.some((r) => r.tu !== r.den || 'buoc' in r)) E('giờ lẻ phải thành 2 dòng tu = den, không có buoc: ' + JSON.stringify(T.dongLe));
+    await choHoanTacTat(page);
+    T.ds = doiMau(await page.locator('.g-ds').innerText());
+    if (!/09h05–09h20\s*BS C dùng\s*Cách 5 phút · 4 giờ/.test(T.ds) || !/09h30\s*BS D dùng/.test(T.ds) || !/09h45\s*BS D dùng/.test(T.ds)) E('danh sách Trong ngày với bước nhảy / giờ lẻ: ' + T.ds);
+    T.vach = await page.locator('.g-lan b.nhip').count();
+    if (T.vach !== 4) E('thanh giờ phải có 4 vạch cho khoảng cách 5: ' + T.vach);
+    await page.locator('.g-dong.ban').filter({ hasText: /^09h05/ }).scrollIntoViewIfNeeded();
+    await chup(page, 'iphone-gio-ds-buoc' + sfx, true);
+    await page.locator('.g-dong.ban').filter({ hasText: /^09h30/ }).click();
+    await page.waitForTimeout(500);
+    T.suaLe = { tieuDe: (await page.locator('.sheet h2').first().textContent())?.trim(), le: await page.getAttribute('.sheet .seg button[data-k="le"]', 'aria-pressed'), xoa: (await page.locator('.sheet .g-xoa').textContent())?.trim() };
+    if (T.suaLe.tieuDe !== 'Sửa giờ lẻ' || T.suaLe.le !== 'true' || T.suaLe.xoa !== 'Xoá giờ này') E('chạm giờ lẻ phải mở Sửa giờ lẻ: ' + JSON.stringify(T.suaLe));
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(500);
+    await page.locator('.g-dong.ban').filter({ hasText: /^09h05/ }).click();
+    await page.waitForTimeout(500);
+    T.suaBuoc = await page.inputValue('#g-b-nhip');
+    if (T.suaBuoc !== '5') E('sửa khoảng cách 5 phải hiện 5 trong ô Cách mỗi: ' + T.suaBuoc);
+  }
   await page.keyboard.press('Escape');
   await page.waitForTimeout(700);
   if (!dark) {

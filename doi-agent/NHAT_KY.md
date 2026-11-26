@@ -62,6 +62,15 @@
 | 64 | Bỏ nhãn MT khi việc đang bật "đã nhập máy": cờ `daNhapMay` vẫn nằm trong dữ liệu nhưng không hiện nữa. | Lưu ý | Hỏi bác sĩ: khi bỏ nhãn MT thì cờ có cần tắt theo không. | Thuật toán |
 | 65 | `batTatDaNhapMay` trong `src/lib/actions.js` không còn ai gọi (mã thừa sau đợt 23/11 (2)). | Lưu ý | Đề xuất xoá hàm này; chờ bác sĩ đồng ý rồi mới làm. | Thuật toán |
 
+## 26/11/2026 — Tab Giờ: khoảng giờ có bước nhảy, thêm Giờ lẻ (ảnh chờ bác sĩ duyệt, chưa đẩy)
+
+Phiếu: `doi-agent/phieu-viec/2026-11-26-khoang-gio-buoc-nhay.json`, nhánh `o-gio-nho` (chung đợt với ô giờ thu nhỏ). `npm test` 368/368, dựng đạt, phạm vi đạt, bộ chụp giao diện đạt.
+
+- **Bác sĩ thấy gì đổi:** bảng "Giờ người khác dùng" có nút chọn Khoảng giờ / Giờ lẻ. Khoảng giờ có ô "Cách mỗi (phút)": để trống là liền, gõ 5 là chỉ tính 09h05, 09h10… Dòng đọc lại các giờ sẽ ghi; nút "Lưu 4 giờ cách 5 phút". Giờ lẻ: gõ 4 số tự thêm thành nút nhỏ có ×. Danh sách ghi "Cách 5 phút · 4 giờ"; thanh giờ có khung nét đứt và vạch từng giờ.
+- **Dữ liệu:** dòng gio_may 'khoang' thêm trường thường `buoc` (2–60), không db.version mới; khoảng cũ không có `buoc` vẫn là liền. Giờ lẻ = dòng khoảng tu = den. Giờ cuối chốt đúng bước khi lưu.
+- **Lưu ý:** file sao lưu có `buoc` nhập vào bản app cũ thì bản cũ coi cả khoảng là đã dùng (chỉ báo trùng nhiều hơn).
+- **Chưa kiểm:** iPhone và Safari thật.
+
 ## 26/11/2026 — Chi tiết bé: ô giờ thu nhỏ đều 81% (bác sĩ duyệt ảnh 26/11/2026, đã lưu ảnh chuẩn bằng `--luu-chuan`; chưa đẩy)
 
 Phiếu: `doi-agent/phieu-viec/2026-11-26-o-gio-chi-tiet-nho.json`, nhánh `o-gio-nho`. `npm test` 361/361, dựng đạt, phạm vi đạt, bộ chụp giao diện đạt.
