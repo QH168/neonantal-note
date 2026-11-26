@@ -62,6 +62,14 @@
 | 64 | Bỏ nhãn MT khi việc đang bật "đã nhập máy": cờ `daNhapMay` vẫn nằm trong dữ liệu nhưng không hiện nữa. | Lưu ý | Hỏi bác sĩ: khi bỏ nhãn MT thì cờ có cần tắt theo không. | Thuật toán |
 | 65 | `batTatDaNhapMay` trong `src/lib/actions.js` không còn ai gọi (mã thừa sau đợt 23/11 (2)). | Lưu ý | Đề xuất xoá hàm này; chờ bác sĩ đồng ý rồi mới làm. | Thuật toán |
 
+## 26/11/2026 — Chi tiết bé: ô giờ thu nhỏ đều 81% (bác sĩ duyệt ảnh 26/11/2026, đã lưu ảnh chuẩn bằng `--luu-chuan`; chưa đẩy)
+
+Phiếu: `doi-agent/phieu-viec/2026-11-26-o-gio-chi-tiet-nho.json`, nhánh `o-gio-nho`. `npm test` 361/361, dựng đạt, phạm vi đạt, bộ chụp giao diện đạt.
+
+- **Bác sĩ thấy gì đổi:** ô giờ ở đầu chi tiết bé giữ hình dạng cũ, nhỏ đều còn 78×36px (trước 96×44); ô mã/tên dài thêm về bên phải. Dòng bé, tab Giờ, 2 ngày không đổi.
+- **Cách làm:** thu nhỏ bằng `transform: scale(.8125)`, chữ thật vẫn 16px (iPhone không phóng to), vùng chạm vẫn ≥44px. Lần đầu làm ô cao 28px khác tỷ lệ; bác sĩ bảo giữ tỷ lệ cũ nên đổi cách.
+- **Chưa kiểm:** iPhone và Safari thật.
+
 ## 26/11/2026 — Tab Giờ đợt 3: ô giờ ở tab Khám (bác sĩ duyệt ảnh 26/11/2026, đã lưu ảnh chuẩn đợt 2 và 3 bằng `--luu-chuan`; chưa đẩy)
 
 Phiếu: `doi-agent/phieu-viec/2026-11-26-tab-gio-dot3-kham.json`. Bác sĩ duyệt ảnh đợt 2 ngày 26/11/2026 (chưa lưu ảnh chuẩn, để lưu chung sau đợt 3). `npm test` 361/361, dựng đạt, phạm vi đạt, bộ chụp giao diện đạt, Kiểm thử độc lập ĐẠT (sau 1 vòng sửa).

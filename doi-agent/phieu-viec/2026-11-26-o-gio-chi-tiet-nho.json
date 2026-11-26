@@ -4,7 +4,7 @@
   "khuVuc": "Khám",
   "loai": "nho",
   "canBacSiDuyet": true,
-  "trangThai": "Làm xong 26/11/2026 trên nhánh o-gio-nho: npm test 361 đạt, build đạt, bộ chụp giao diện đạt, phạm vi đạt; chờ bác sĩ duyệt ảnh; chưa lưu ảnh chuẩn, chưa đẩy",
+  "trangThai": "Làm xong 26/11/2026 trên nhánh o-gio-nho: npm test 361 đạt, build đạt, bộ chụp giao diện đạt, phạm vi đạt; bác sĩ duyệt ảnh 26/11/2026 (bản thu nhỏ đều 81%, giữ tỷ lệ cũ); đã lưu ảnh chuẩn bằng --luu-chuan; chưa đẩy",
   "agent": ["dieu-phoi", "ghi-chep"],
   "fileDuocSua": [
     "src/App.css",
