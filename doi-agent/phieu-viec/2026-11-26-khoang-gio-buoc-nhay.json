@@ -4,7 +4,7 @@
   "khuVuc": "Giờ (dữ liệu và màn hình)",
   "loai": "vua",
   "canBacSiDuyet": true,
-  "trangThai": "Bác sĩ duyệt phiếu 26/11/2026 ('Duyệt hết': gồm cả Giờ lẻ). Làm xong 26/11/2026 trên nhánh o-gio-nho: npm test 368 đạt, build đạt, bộ chụp giao diện đạt, phạm vi đạt; chờ bác sĩ duyệt ảnh; chưa lưu ảnh chuẩn, chưa đẩy. Lich.jsx không phải sửa (chưa hiện giờ ngày trước).",
+  "trangThai": "Bác sĩ duyệt phiếu 26/11/2026 ('Duyệt hết': gồm cả Giờ lẻ). Làm xong 26/11/2026 trên nhánh o-gio-nho: npm test 368 đạt, build đạt, bộ chụp giao diện đạt, phạm vi đạt. Bác sĩ duyệt ảnh 26/11/2026; đã lưu ảnh chuẩn bằng --luu-chuan (bộ chụp ĐẠT); chưa đẩy. Lich.jsx không phải sửa (chưa hiện giờ ngày trước).",
   "bacSiDaQuyet": [
     "1. Duyệt bản thử HTML lần 8 (26/11/2026): khoảng giờ có ô 'Cách mỗi (phút)' tự gõ, không có bước sẵn.",
     "2. Để trống = liền (mọi phút trong khoảng đã dùng, như một ca 07h00–07h05). Gõ n = chỉ tu, tu+n, tu+2n… đến den là đã dùng; phút ở giữa vẫn trống.",
