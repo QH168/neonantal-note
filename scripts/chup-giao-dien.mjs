@@ -4890,10 +4890,14 @@ async function luongKhamGio(dark) {
   await page.waitForTimeout(800);
   if (!(await page.locator('.sheet-be .be-head .o-gio.to input').count())) E('chi tiết bé không có ô giờ');
   else {
-    // 26/11/2026: ô thấy cao gần bằng chip phòng, vùng chạm (khung .o-gio) vẫn ≥ 44px
-    const g = await page.evaluate(() => { const k = document.querySelector('.be-head .o-gio.to').getBoundingClientRect(), i = document.querySelector('.be-head .o-gio.to input').getBoundingClientRect(), p = document.querySelector('.be-head .be-phong').getBoundingClientRect(); return { cham: Math.round(k.height), h: Math.round(i.height), phong: Math.round(p.height), trai: i.right <= p.left + 1 || p.top > i.top, catChu: (() => { const o = document.querySelector('.be-head .o-gio.to input'); return o.scrollWidth > o.clientWidth; })() }; });
+    // 26/11/2026: ô thu nhỏ đều, giữ tỷ lệ cũ 96:44; chữ thật vẫn 16px; vùng chạm (đo bằng điểm chạm thật) ≥ 44px cao
+    const g = await page.evaluate(() => {
+      const k = document.querySelector('.be-head .o-gio.to'), o = k.querySelector('input'), i = o.getBoundingClientRect(), p = document.querySelector('.be-head .be-phong').getBoundingClientRect();
+      const cx = i.left + i.width / 2, cy = i.top + i.height / 2, trung = (y) => k.contains(document.elementFromPoint(cx, y));
+      return { vw: innerWidth, w: Math.round(i.width), h: Math.round(i.height), tiLe: +(i.width / i.height).toFixed(2), co: getComputedStyle(o).fontSize, cham: trung(cy - 21.5) && trung(cy + 21.5), trai: i.right <= p.left + 1 || p.top > i.top, catChu: o.scrollWidth > o.clientWidth };
+    });
     T.chiTiet = g;
-    if (g.cham < 44 || Math.abs(g.h - g.phong) > 6 || !g.trai || g.catChu) E('ô giờ trong chi tiết: vùng chạm ≥ 44px, ô thấy cao gần bằng chip phòng, nằm bên trái chip phòng: ' + JSON.stringify(g));
+    if (!g.cham || g.h > 40 || Math.abs(g.tiLe - (g.vw <= 370 ? 90 : 96) / 44) > 0.06 || g.co !== '16px' || !g.trai || g.catChu) E('ô giờ trong chi tiết: vùng chạm ≥ 44px, thu nhỏ đều giữ tỷ lệ cũ, chữ thật 16px, không cắt chữ, bên trái chip phòng: ' + JSON.stringify(g));
   }
   await chup(page, 'iphone-kham-gio-chi-tiet' + sfx, true);
   await ctx.close();
