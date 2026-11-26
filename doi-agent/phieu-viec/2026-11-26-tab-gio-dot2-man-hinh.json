@@ -1,0 +1,44 @@
+{
+  "ten": "Tab Giờ, đợt 2: màn hình tab Giờ (chưa đụng dòng bé và chi tiết bé ở tab Khám)",
+  "ngay": "2026-11-26",
+  "khuVuc": "Giờ (tab mới), Khung chung",
+  "loai": "vua",
+  "canBacSiDuyet": true,
+  "trangThai": "Bác sĩ duyệt bản thử lần 6 (25/11/2026) và cho làm đợt 2 (26/11/2026); làm xong, Kiểm thử ĐẠT 26/11/2026; bác sĩ duyệt ảnh 26/11/2026, đã lưu ảnh chuẩn; chưa đẩy",
+  "banThu": "C:/Users/hnqh1/OneDrive/Desktop/Artifact - Ghi chú sơ sinh/V9.1/tab-gio-ban-thu.html (lần 6): bố cục, chữ, màu, hành vi theo bản này",
+  "agent": ["giao-dien", "kiem-thu", "ghi-chep"],
+  "fileDuocSua": [
+    "src/App.jsx",
+    "src/App.css",
+    "src/hooks.js",
+    "src/components/Gio.jsx",
+    "src/components/ui.jsx",
+    "src/lib/gio.js",
+    "tests/gio.test.js",
+    "tests/*.test.js",
+    "scripts/chup-giao-dien.mjs",
+    "doi-agent/**"
+  ],
+  "yeuCau": [
+    "Tab thứ ba 'Giờ' cạnh Việc, Khám (iPhone và PC). Tiêu đề 'Giờ nhập máy', tiến độ 'Đã có giờ n/m' (bé hôm nay + mã khác). Tab Giờ không có nút '2 ngày', không có nút lịch (đợt 4); dải 'Ngày làm việc' vẫn hiện khi trước mốc.",
+    "Thanh giờ: từ giờ đầu đến giờ cuối đã có (dauCuoi), khối giờ người khác xám than có chữ bác sĩ khi đủ rộng, vạch giờ của mình xanh dương (đỏ khi trùng), vạch rỗng cho giờ đang xem trước; chưa có giờ thì 'Chưa có giờ nào.'",
+    "Khi có bé trùng: dải đỏ 'n bé đang trùng giờ' + Xem (cuộn tới dòng trùng đầu tiên).",
+    "Chọn giờ nhanh: nút Đóng / Mở; Từ, Đến (tự tính), −1/+1, mỗi bé cách 1/2/3/5 phút; chip bé theo phòng (chọn sẵn bé chưa có giờ) hiện giờ dự kiến; 'Mã khác'; câu kết quả; 'Kéo dài đến hhhmm'; 'Điền n giờ vào tab Khám' + Hoàn tác; điền đủ thì thu gọn.",
+    "Trong ngày: danh sách theo thứ tự ngày làm việc gồm bé, mã khác và khoảng người khác dùng (dòng xám than), đoạn trống từ 5 phút; nút 'Thêm giờ người khác'.",
+    "Bảng giờ người khác dùng: Từ, Đến, ô 'Bác Sĩ' (không bắt buộc), kiểm ngay, lưu dù trùng, sửa, xoá + Hoàn tác.",
+    "Bảng giờ của một bé (chạm dòng ở tab Giờ): giờ nhập máy, 'Bây giờ', 'Thêm giờ khám' (không bắt buộc), kiểm ngay, lưu dù trùng, xoá giờ + Hoàn tác, 'Xem ở tab Khám' (chuyển tab và mở chi tiết bé).",
+    "Màu: giờ người khác xám than; 'Không trùng' trắng viền xanh dương; thiếu giờ vàng; trùng đỏ. Không tím, không xanh lá."
+  ],
+  "khongLam": [
+    "Không sửa src/components/Exam.jsx, KhamHaiNgay.jsx, KhamNgayTruoc.jsx, Tasks.jsx, db.js, actions.js, backup.js, merge.js.",
+    "Không đổi dữ liệu, không thêm thư viện; không --luu-chuan; không đẩy.",
+    "Không có ô tên bệnh nhân; dữ liệu mẫu dùng G01…, BS A."
+  ],
+  "tieuChiDat": [
+    "npm test, npm run build đạt; phạm vi đạt",
+    "Đúng bản thử lần 6; iPhone 393, 320 và PC 1280; sáng và tối; vùng chạm ≥44px, ô nhập ≥16px, không tràn ngang, chữ đạt tương phản 4,5:1",
+    "Chromium và WebKit: gõ giờ, điền nhanh, hoàn tác, khoảng, mã khác, trùng, qua nửa đêm, đổi tab không mất lựa chọn, dữ liệu đổi giữa chừng (da-doi)",
+    "Tab Việc và Khám không đổi ngoài nút tab thứ ba",
+    "Ảnh iPhone sáng và tối trước/sau gửi bác sĩ duyệt"
+  ]
+}
