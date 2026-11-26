@@ -4779,15 +4779,15 @@ async function luongGio(dark) {
   {
     const T = ketQua.thuChucNang['gioBuocNhay' + sfx] = {};
     const nutLuu = () => page.locator('.sheet .btn.big').textContent().then((s) => (s || '').trim());
-    T.trong = { o: await page.inputValue('#g-b-nhip'), goiY: await page.getAttribute('#g-b-nhip', 'placeholder'), xem: doiMau(await page.locator('#g-b-nhip ~ .g-goi-y').innerText()), nut: await nutLuu() };
-    if (T.trong.o !== '' || T.trong.goiY !== 'Để trống là liền' || !/^Dùng liền 16 phút/.test(T.trong.xem) || T.trong.nut !== 'Lưu khoảng giờ') E('ô Cách mỗi để trống phải là liền: ' + JSON.stringify(T.trong));
+    T.trong = { o: await page.inputValue('#g-b-nhip'), goiY: await page.getAttribute('#g-b-nhip', 'placeholder'), xem: doiMau(await page.locator('.g-nhip ~ .g-goi-y').innerText()), nut: await nutLuu() };
+    if (T.trong.o !== '' || T.trong.goiY !== 'liền' || !/^Dùng liền 16 phút/.test(T.trong.xem) || T.trong.nut !== 'Lưu khoảng giờ') E('ô Cách mỗi để trống phải là liền: ' + JSON.stringify(T.trong));
     await page.fill('#g-b-nhip', '99');
     T.sai = { kq: doiMau(await page.locator('.sheet .g-kq').innerText()), tat: await page.locator('.sheet .btn.big').isDisabled() };
     if (!/từ 1 đến 60/.test(T.sai.kq) || !T.sai.tat) E('Cách mỗi 99 phải báo và chưa cho lưu: ' + JSON.stringify(T.sai));
     await page.fill('#g-b-den', '0922');
     await page.fill('#g-b-nhip', '5');
-    T.cach5 = { xem: doiMau(await page.locator('#g-b-nhip ~ .g-goi-y').innerText()), nut: await nutLuu(), co: await page.evaluate(() => getComputedStyle(document.getElementById('g-b-nhip')).fontSize), tran: await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1) };
-    if (!/^Dùng 4 giờ: 09h05, 09h10, 09h15, 09h20\./.test(T.cach5.xem) || !/09h22 lệch bước nên dừng ở 09h20/.test(T.cach5.xem) || T.cach5.nut !== 'Lưu 4 giờ cách 5 phút' || T.cach5.co !== '16px' || T.cach5.tran) E('Cách mỗi 5: ' + JSON.stringify(T.cach5));
+    T.cach5 = { xem: doiMau(await page.locator('.g-nhip ~ .g-goi-y').innerText()), nut: await nutLuu(), co: await page.evaluate(() => getComputedStyle(document.getElementById('g-b-nhip')).fontSize), tran: await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1) };
+    if (!/^Dùng 4 giờ: 09h05, 09h10, 09h15, 09h20\./.test(T.cach5.xem) || !/Dừng ở 09h20 vì 09h22 lệch bước/.test(T.cach5.xem) || T.cach5.nut !== 'Lưu 4 giờ cách 5 phút' || T.cach5.co !== '16px' || T.cach5.tran) E('Cách mỗi 5: ' + JSON.stringify(T.cach5));
     await chup(page, 'iphone-gio-khoang-cach' + sfx, true);
     await page.locator('.sheet .btn.big').click();
     await page.waitForTimeout(700);
@@ -4814,7 +4814,7 @@ async function luongGio(dark) {
     if (le.length !== 2 || le.some((r) => r.tu !== r.den || 'buoc' in r)) E('giờ lẻ phải thành 2 dòng tu = den, không có buoc: ' + JSON.stringify(T.dongLe));
     await choHoanTacTat(page);
     T.ds = doiMau(await page.locator('.g-ds').innerText());
-    if (!/09h05–09h20\s*BS C dùng\s*Cách 5 phút · 4 giờ/.test(T.ds) || !/09h30\s*BS D dùng/.test(T.ds) || !/09h45\s*BS D dùng/.test(T.ds)) E('danh sách Trong ngày với bước nhảy / giờ lẻ: ' + T.ds);
+    if (!/09h05\s*đến 09h20\s*BS C dùng\s*Cách 5 phút · 4 giờ/.test(T.ds) || !/09h30\s*BS D dùng/.test(T.ds) || !/09h45\s*BS D dùng/.test(T.ds)) E('danh sách Trong ngày với bước nhảy / giờ lẻ: ' + T.ds);
     T.vach = await page.locator('.g-lan b.nhip').count();
     if (T.vach !== 4) E('thanh giờ phải có 4 vạch cho khoảng cách 5: ' + T.vach);
     await page.locator('.g-dong.ban').filter({ hasText: /^09h05/ }).scrollIntoViewIfNeeded();

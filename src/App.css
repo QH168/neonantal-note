@@ -724,7 +724,13 @@ html.co-form-viec body:not(.co-bang) .hoantac-wrap{bottom:calc(var(--kb,0px) + v
 .g-kq{display:flex;flex-direction:column;gap:8px;padding:10px 14px;border-radius:12px;background:var(--surface2);font-size:13px;line-height:1.4}
 .g-kq.do{background:var(--errBg);color:var(--errInk)}
 .g-kq.vang{background:var(--noteBg);color:var(--noteInk)}
-.g-kq.kt{background:var(--ktBg);color:var(--ktInk);border:1px solid var(--ktLine)}
+/* Rà soát 26/11/2026: "Không trùng" là chữ báo, không phải nút — bỏ viền, chấm tròn xanh ở đầu. */
+.g-kq.kt{position:relative;padding:4px 0 4px 22px;background:transparent;color:var(--ktInk)}
+.g-kq.kt::before{content:"";position:absolute;left:4px;top:calc(4px + .7em - 5px);width:10px;height:10px;border-radius:50%;background:var(--ktLine)}
+/* Ô "Cách mỗi [ ] phút" nằm trong câu, nhỏ hơn ô Từ/Đến */
+.g-nhom>.g-nhip{display:flex;align-items:center;gap:10px;font-size:15px;color:var(--ink)}
+.g-nhip .g-in{flex:none;width:76px;padding:0 8px;text-align:center;font-weight:700}
+.g-nhip .g-in::placeholder{font-weight:500}
 .g-kq .dam{font-weight:700}
 .g-kq .btn{align-self:flex-start;color:inherit;background:transparent;border-color:currentColor}
 .btn.nguy{background:var(--p1);border-color:var(--p1);color:var(--p1i)}
@@ -738,7 +744,8 @@ html.co-form-viec body:not(.co-bang) .hoantac-wrap{bottom:calc(var(--kb,0px) + v
 .g-dong small{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
 .g-dong small.x{color:var(--errInk);font-weight:700}
 .g-dong.ban{min-height:52px;background:var(--hoBg);color:var(--hoInk);border-color:transparent}
-.g-dong.ban .g{width:auto;font-size:15px}
+.g-dong.ban .g{font-size:15px;display:flex;flex-direction:column;line-height:1.25}
+.g-dong.ban .g small{font-size:12px;font-weight:500;color:inherit;opacity:.8}
 .g-dong.ban b{font-weight:500}
 .g-dong.ban small.x{color:var(--errInk)}
 .g-dong.ban.trung{border:2px solid var(--p1)}

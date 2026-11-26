@@ -302,14 +302,15 @@ function BangKhoang({ khoangGoc, dong, khoang, moc, homNay }) {
   const n = thongTin.ds?.length || 0;
 
   // Dòng đọc lại dưới ô Cách mỗi.
-  let xem = 'Để trống: dùng liền mọi phút, như một ca từ 07h00 đến 07h05. Gõ số phút (ví dụ 5) khi người khác nhập cách đều; phút ở giữa vẫn chọn được.';
+  // Rà soát 26/11/2026 (skill frontend-design): một câu, không lặp ý của ô báo bên dưới.
+  let xem = 'Để trống là liền. Gõ 5 nếu người khác nhập cách 5 phút.';
   if (kieu === 'khoang' && thongTin.ds) {
     const ds = thongTin.ds;
     const cuoi = ds[ds.length - 1];
     xem = buocKhoang({ buoc }) === 1
-      ? `Dùng liền ${n} phút, từ ${chuGio(f.tu)} đến ${chuGio(f.den)}.`
-      : `Dùng ${n} giờ: ${n <= 6 ? ds.map(chuGio).join(', ') : ds.slice(0, 3).map(chuGio).join(', ') + ' … ' + chuGio(cuoi)}. Phút ở giữa vẫn chọn được.`
-        + (cuoi !== f.den ? ` ${chuGio(f.den)} lệch bước nên dừng ở ${chuGio(cuoi)}.` : '');
+      ? `Dùng liền ${n} phút, ${chuGio(f.tu)}–${chuGio(f.den)}.`
+      : `Dùng ${n} giờ: ${n <= 6 ? ds.map(chuGio).join(', ') : ds.slice(0, 3).map(chuGio).join(', ') + ' … ' + chuGio(cuoi)}.`
+        + (cuoi !== f.den ? ` Dừng ở ${chuGio(cuoi)} vì ${chuGio(f.den)} lệch bước.` : '');
   }
 
   const doiKieu = (k) => {
@@ -387,22 +388,26 @@ function BangKhoang({ khoangGoc, dong, khoang, moc, homNay }) {
             <OGio id="g-b-den" nhan="Đến" value={f.den} goiY="835" onChange={(v) => setF((c) => ({ ...c, den: v }))} />
           </div>
           <div className="g-nhom">
-            <label htmlFor="g-b-nhip">Cách mỗi (phút)</label>
-            <input id="g-b-nhip" className="g-in" inputMode="numeric" autoComplete="off" maxLength={2} placeholder="Để trống là liền" value={buocChu}
-              onChange={(e) => setBuocChu(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } }} />
+            {/* ô phụ: nằm trong câu "Cách mỗi [ ] phút", nhỏ hơn ô Từ/Đến */}
+            <label className="g-nhip" htmlFor="g-b-nhip">
+              <span>Cách mỗi</span>
+              <input id="g-b-nhip" className="g-in" inputMode="numeric" autoComplete="off" maxLength={2} placeholder="liền" value={buocChu}
+                onChange={(e) => setBuocChu(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } }} />
+              <span>phút</span>
+            </label>
             <p className="g-goi-y">{xem}</p>
           </div>
         </>
       ) : (
         <div className="g-nhom">
-          <label htmlFor="g-b-le">Giờ người khác đã dùng</label>
+          <label htmlFor="g-b-le">Thêm giờ</label>
           <div className="g-them-ma">
             <input id="g-b-le" ref={oLe} className="g-in" inputMode="numeric" autoComplete="off" maxLength={5} placeholder="905" value={go}
               onChange={(e) => { const s = e.target.value; if (/^\d{4}$/.test(s.trim()) && coGio(docGio(s))) themLe(docGio(s)); else setGo(s); }}
               onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); themLe(); } }} />
             <button type="button" className="btn" onClick={() => themLe()}>Thêm</button>
           </div>
-          <p className="g-goi-y">Gõ đủ 4 số là tự thêm, ví dụ 0905. Thêm được nhiều giờ liền nhau.</p>
+          <p className="g-goi-y">Gõ 4 số là tự thêm, ví dụ 0905.</p>
           {le.length > 0 && (
             <div className="g-le-ds" role="group" aria-label="Các giờ lẻ đã thêm">
               {xepGio(le).map((v) => (
@@ -415,7 +420,10 @@ function BangKhoang({ khoangGoc, dong, khoang, moc, homNay }) {
           )}
         </div>
       )}
-      <input id="g-b-bs" className="g-in" placeholder="Bác Sĩ" aria-label="Bác sĩ, không bắt buộc" autoComplete="off" {...vt.props} />
+      <div className="g-nhom">
+        <label htmlFor="g-b-bs">Ai dùng (không bắt buộc)</label>
+        <input id="g-b-bs" className="g-in" placeholder="Bác Sĩ" autoComplete="off" {...vt.props} />
+      </div>
       {vt.strip}
       <div className={'g-kq ' + (thongTin.sai ? '' : co ? 'do' : thongTin.chong.length ? 'vang' : 'kt')} role="status">
         {thongTin.sai && <span>{thongTin.sai}</span>}
@@ -602,7 +610,8 @@ export default function TabGio({ wide, homNay, mocPhut, gioMay, dong, khoang, nh
             const dung = dong.filter((d) => coGio(d.gio) && trongKhoang(d.gio, o.k, moc));
             return (
               <button key={o.k.id} type="button" className={'g-dong ban' + (dung.length ? ' trung' : '')} onClick={() => setBang({ kieu: 'khoang', id: o.k.id })}>
-                <span className="g">{chuKhoang(o.k)}</span>
+                {/* cột giờ rộng bằng dòng bé để tên thẳng hàng với mã bé; khoảng ghi giờ đầu, giờ cuối xuống dòng nhỏ */}
+                <span className="g">{chuGio(o.k.tu)}{o.k.tu !== o.k.den && <small>đến {chuGio(o.k.den)}</small>}</span>
                 <span className="m">
                   <b>{o.k.bs ? o.k.bs + ' dùng' : 'Người khác dùng'}</b>
                   {buocKhoang(o.k) > 1 && <small>Cách {buocKhoang(o.k)} phút · {phutKhoang(o.k, moc).length} giờ</small>}

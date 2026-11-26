@@ -1,0 +1,34 @@
+{
+  "ten": "Tab Giờ: rà soát bằng skill frontend-design, chỉnh nhẹ 5 điểm",
+  "ngay": "2026-11-26",
+  "khuVuc": "Giờ (màn hình)",
+  "loai": "nho",
+  "canBacSiDuyet": true,
+  "trangThai": "Bác sĩ chọn 'Làm 1-5' 26/11/2026. Bản thử làm thẳng trên nhánh ra-soat-gio (chưa gộp main, chưa đẩy); chờ bác sĩ duyệt ảnh trước/sau.",
+  "bacSiDaQuyet": [
+    "Rà lại phần vừa làm theo skill frontend-design; làm cả 5 điểm đề xuất."
+  ],
+  "manHinh": [
+    "1. Ô 'Cách mỗi (phút)' thu thành ô nhỏ 76px nằm trong câu 'Cách mỗi [ ] phút', chữ mờ 'liền'.",
+    "2. Dòng đọc lại ngắn: 'Dùng 4 giờ: 09h05, 09h10, 09h15, 09h20. Dừng ở 09h20 vì 09h22 lệch bước.'; bỏ câu 'Phút ở giữa vẫn chọn được' (ô báo đã nói).",
+    "3. Danh sách: cột giờ của dòng người khác rộng 64px như dòng bé; khoảng ghi giờ đầu, dòng nhỏ 'đến 09h20' bên dưới; tên thẳng hàng với mã bé.",
+    "4. Giờ lẻ: nhãn 'Thêm giờ'; gợi ý một dòng 'Gõ 4 số là tự thêm, ví dụ 0905.'",
+    "5. Báo 'Không trùng' bỏ viền (khỏi giống nút), thêm chấm tròn xanh ở đầu; giữ màu chữ đã duyệt. Ô bác sĩ có nhãn 'Ai dùng (không bắt buộc)'. Điểm 5 đổi quyết định màu 26/11 ('trắng viền xanh dương') nên cần bác sĩ duyệt riêng."
+  ],
+  "fileDuocSua": [
+    "src/components/Gio.jsx",
+    "src/App.css",
+    "scripts/chup-giao-dien.mjs",
+    "doi-agent/**"
+  ],
+  "khongLam": [
+    "Không đổi dữ liệu, không db.version, không thêm thư viện.",
+    "Không --luu-chuan trước khi bác sĩ duyệt ảnh; không đẩy khi bác sĩ chưa nói 'đẩy'."
+  ],
+  "tieuChiDat": [
+    "npm test đạt",
+    "Bộ chụp giao diện đạt, iPhone 393 và 320, sáng và tối, không tràn ngang",
+    "Phạm vi đạt: node scripts/kiem-pham-vi.mjs doi-agent/phieu-viec/2026-11-26-ra-soat-gio-frontend-design.json",
+    "Ảnh trước/sau gửi bác sĩ duyệt"
+  ]
+}
