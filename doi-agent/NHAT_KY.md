@@ -62,6 +62,15 @@
 | 64 | Bỏ nhãn MT khi việc đang bật "đã nhập máy": cờ `daNhapMay` vẫn nằm trong dữ liệu nhưng không hiện nữa. | Lưu ý | Hỏi bác sĩ: khi bỏ nhãn MT thì cờ có cần tắt theo không. | Thuật toán |
 | 65 | `batTatDaNhapMay` trong `src/lib/actions.js` không còn ai gọi (mã thừa sau đợt 23/11 (2)). | Lưu ý | Đề xuất xoá hàm này; chờ bác sĩ đồng ý rồi mới làm. | Thuật toán |
 
+## 26/11/2026 — Tab Giờ: rà soát bằng skill frontend-design, chỉnh nhẹ 5 điểm (bác sĩ duyệt ảnh 26/11/2026, đã lưu ảnh chuẩn bằng `--luu-chuan`; chưa đẩy)
+
+Phiếu: `doi-agent/phieu-viec/2026-11-26-ra-soat-gio-frontend-design.json`, nhánh `ra-soat-gio`. `npm test` 368/368, dựng đạt, phạm vi đạt, bộ chụp giao diện đạt.
+
+- **Bác sĩ thấy gì đổi:** ô "Cách mỗi [ ] phút" nhỏ nằm trong câu; dòng đọc lại một câu ngắn; danh sách ghi giờ đầu + "đến hh:mm" nhỏ, tên bác sĩ thẳng hàng mã bé; giờ lẻ nhãn "Thêm giờ", gợi ý một dòng; báo "Không trùng" bỏ khung viền, có chấm xanh; ô bác sĩ có nhãn "Ai dùng (không bắt buộc)".
+- **Quyết định đổi:** màu báo "Không trùng" (mục Tab Giờ số 5 trong `QUYET_DINH_DA_CHOT.md`).
+- **Bài học:** đợt bước nhảy/giờ lẻ làm mà chưa nạp skill frontend-design như `CLAUDE.md` yêu cầu; từ nay việc giao diện nạp skill trước khi làm.
+- **Chưa kiểm:** iPhone và Safari thật.
+
 ## 26/11/2026 — Tab Giờ: khoảng giờ có bước nhảy, thêm Giờ lẻ (bác sĩ duyệt ảnh 26/11/2026, đã lưu ảnh chuẩn bằng `--luu-chuan`; chưa đẩy)
 
 Phiếu: `doi-agent/phieu-viec/2026-11-26-khoang-gio-buoc-nhay.json`, nhánh `o-gio-nho` (chung đợt với ô giờ thu nhỏ). `npm test` 368/368, dựng đạt, phạm vi đạt, bộ chụp giao diện đạt.

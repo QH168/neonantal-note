@@ -149,5 +149,5 @@ Phiếu: `doi-agent/phieu-viec/2026-11-25-tab-gio-dot1-du-lieu.json`.
 2. Giờ người khác dùng chỉ là khoảng từ … đến …; một ô "Bác Sĩ" không bắt buộc.
 3. Chọn giờ nhanh: theo thứ tự phòng ở tab Khám, cách n phút, gặp giờ đã dùng thì nhảy qua; có nút Đóng / Mở. Thanh giờ chỉ từ giờ đầu đến giờ cuối đã có.
 4. Tab Khám: ô giờ kế tên, trống thì hiện đồng hồ chuông; chạm dòng bé vẫn mở chi tiết, nút máy tính chỉ đổi màu, vuốt "đã khám" không ghi giờ. Chi tiết bé: một ô giờ bên trái chip phòng. Chế độ 2 ngày chỉ hiện giờ.
-5. Màu: giờ người khác dùng xám than; báo "Không trùng" trắng viền xanh dương. Không dùng tím và xanh lá ở tab này.
+5. Màu: giờ người khác dùng xám than; báo "Không trùng" ~~trắng viền xanh dương~~ → từ 26/11/2026 (bác sĩ duyệt rà soát frontend-design): chữ xanh `--ktInk`, không nền, không viền, chấm tròn `--ktLine` ở đầu dòng (để khỏi giống nút). Không dùng tím và xanh lá ở tab này.
 6. Dữ liệu: `db.version(3)` bảng `gio_may`; `gioNhap`, `gioKham` trên dòng bé; không mang giờ sang ngày mới.

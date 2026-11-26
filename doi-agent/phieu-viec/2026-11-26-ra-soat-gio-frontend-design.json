@@ -4,7 +4,7 @@
   "khuVuc": "Giờ (màn hình)",
   "loai": "nho",
   "canBacSiDuyet": true,
-  "trangThai": "Bác sĩ chọn 'Làm 1-5' 26/11/2026. Bản thử làm thẳng trên nhánh ra-soat-gio (chưa gộp main, chưa đẩy); chờ bác sĩ duyệt ảnh trước/sau.",
+  "trangThai": "Bác sĩ chọn 'Làm 1-5' 26/11/2026. Bản thử làm thẳng trên nhánh ra-soat-gio (chưa gộp main, chưa đẩy); npm test 368 đạt, build, bộ chụp, phạm vi đạt. Bác sĩ duyệt ảnh 26/11/2026 ('Duyệt cả 5', gồm đổi màu báo Không trùng); đã lưu ảnh chuẩn bằng --luu-chuan; chưa gộp main, chưa đẩy.",
   "bacSiDaQuyet": [
     "Rà lại phần vừa làm theo skill frontend-design; làm cả 5 điểm đề xuất."
   ],
